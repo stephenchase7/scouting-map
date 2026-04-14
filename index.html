@@ -17,7 +17,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 #sidebar-header {
   background:linear-gradient(135deg,#8B0000 0%,#cc0000 50%,#8B0000 100%);
-  padding:18px 16px; flex-shrink:0;
+  padding:18px 16px; flex-shrink:0; position:relative;
 }
 #sidebar-header h1 { font-size:15px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#fff; }
 #sidebar-header p { font-size:11px; color:rgba(255,255,255,0.85); margin-top:3px; }
@@ -78,6 +78,20 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .popup-label { color:#666; }
 .popup-value { color:#1a1a2e; font-weight:600; }
 
+.popup-buttons { display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #e0e0e0; }
+.popup-btn {
+  flex:1; padding:8px 12px; border-radius:5px; font-size:11px; font-weight:600;
+  text-align:center; text-decoration:none; cursor:pointer; transition:all 0.15s;
+}
+.popup-btn-primary {
+  background:#cc0000; color:#fff; border:none;
+}
+.popup-btn-primary:hover { background:#a00000; }
+.popup-btn-secondary {
+  background:#f5f5f5; color:#666; border:1px solid #ddd;
+}
+.popup-btn-secondary:hover { background:#eee; color:#1a1a2e; }
+
 .club-marker {
   border-radius:50%; border:2.5px solid rgba(0,0,0,0.15);
   display:flex; align-items:center; justify-content:center;
@@ -121,6 +135,27 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .zoom-btn:hover { background:#f5f5f5; border-color:#cc0000; }
 
+#sidebar-toggle {
+  position:absolute; top:50%; right:10px; transform:translateY(-50%);
+  width:28px; height:28px; background:rgba(255,255,255,0.2); border:none;
+  border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+#sidebar-toggle:hover { background:rgba(255,255,255,0.35); }
+#sidebar-toggle svg { width:18px; height:18px; fill:#fff; }
+#sidebar.collapsed { margin-left:-320px; }
+#sidebar { transition:margin-left 0.3s ease; }
+
+#sidebar-open {
+  position:absolute; top:10px; left:10px; z-index:1001;
+  width:36px; height:36px; background:#cc0000; border:none;
+  border-radius:4px; cursor:pointer; display:none; align-items:center; justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2); transition:all 0.15s;
+}
+#sidebar-open:hover { background:#a00000; }
+#sidebar-open svg { width:20px; height:20px; fill:#fff; }
+#sidebar-open.visible { display:flex; }
+
 #club-count {
   padding:6px 14px; background:#fafafa; border-bottom:1px solid #e0e0e0;
   font-size:11px; color:#666; flex-shrink:0;
@@ -133,7 +168,10 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 <div id="sidebar">
   <div id="sidebar-header">
     <h1>NY Red Bulls Scouting Map</h1>
-    <p>MLS NEXT | Northeast Division</p>
+    <p>MLS NEXT | Multi-Conference</p>
+    <button id="sidebar-toggle" onclick="toggleSidebar()">
+      <svg id="toggle-icon" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    </button>
   </div>
 
   <div id="selected-card" class="empty">
@@ -178,6 +216,9 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 
 <div id="map-container">
   <div id="map"></div>
+  <button id="sidebar-open" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
   <div id="zoom-controls">
     <button class="zoom-btn" onclick="zoomIn()">+</button>
     <button class="zoom-btn" onclick="zoomOut()">−</button>
@@ -193,6 +234,7 @@ var DIVISION_COLORS = {
   'Mid-Atlantic': '#C0392B',
   'New England': '#2471A3',
   'Virginia': '#1E8449',
+  'Great Lakes': '#16A085',
   // ECNL
   'North Atlantic': '#E67E22',
   'ECNL New England': '#3498DB'
@@ -210,37 +252,41 @@ var clubs = [
   // ══════════════════════════════════════════════════════════════
   // MLS PRO CLUBS (U16-U19 Pro Pathway)
   // ══════════════════════════════════════════════════════════════
-  {name:"New York Red Bulls", state:"NJ", league:"HD", division:"Northeast", lat:40.8167, lng:-74.4028, logo:"MLS Logos/NY Red Bulls.png", website:"https://www.newyorkredbulls.com", driveMiles:0, driveTime:"0m", initials:"NYRB", isPro:true, pathway:"both"},
-  {name:"New York City FC", state:"NY", league:"HD", division:"Northeast", lat:40.829, lng:-73.926, logo:"MLS Logos/NYCFC.png", website:"https://www.nycfc.com", driveMiles:28, driveTime:"45m", initials:"NYCFC", isPro:true, pathway:"both"},
-  {name:"New England Revolution", state:"MA", league:"HD", division:"Northeast", lat:42.09, lng:-71.26, logo:"MLS Logos/NE Revolution.png", website:"https://www.revolutionsoccer.net", driveMiles:210, driveTime:"3h 25m", initials:"NER", isPro:true, pathway:"both"},
-  {name:"Philadelphia Union", state:"PA", league:"HD", division:"Northeast", lat:39.832, lng:-75.379, logo:"MLS Logos/Philadelphia Union.png", website:"https://www.philadelphiaunion.com", driveMiles:95, driveTime:"1h 40m", initials:"PHI", isPro:true, pathway:"u16-u19"},
-  {name:"Toronto FC", state:"ON", league:"HD", division:"Northeast", lat:43.633, lng:-79.418, logo:"MLS Logos/Toronto FC.png", website:"https://www.torontofc.ca", driveMiles:475, driveTime:"7h 30m", initials:"TFC", isPro:true, pathway:"u16-u19"},
-  {name:"CF Montreal", state:"QC", league:"HD", division:"Northeast", lat:45.563, lng:-73.553, logo:"MLS Logos/CF Montreal.png", website:"https://www.cfmontreal.com", driveMiles:380, driveTime:"6h 0m", initials:"MTL", isPro:true, pathway:"u16-u19"},
-  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19"},
+  {name:"New York Red Bulls", state:"NJ", league:"HD", division:"Tri-State", lat:40.8167, lng:-74.4028, logo:"MLS Logos/NY Red Bulls.png", website:"https://www.newyorkredbulls.com", driveMiles:0, driveTime:"0m", initials:"NYRB", isPro:true, pathway:"both", clubId:"nyrb"},
+  {name:"New York City FC", state:"NY", league:"HD", division:"Tri-State", lat:40.829, lng:-73.926, logo:"MLS Logos/NYCFC.png", website:"https://www.nycfc.com", driveMiles:28, driveTime:"45m", initials:"NYCFC", isPro:true, pathway:"both", clubId:"nycfc"},
+  {name:"New England Revolution", state:"MA", league:"HD", division:"New England", lat:42.09, lng:-71.26, logo:"MLS Logos/NE Revolution.png", website:"https://www.revolutionsoccer.net", driveMiles:210, driveTime:"3h 25m", initials:"NER", isPro:true, pathway:"both", clubId:"ne_rev"},
+  {name:"Philadelphia Union", state:"PA", league:"HD", division:"Mid-Atlantic", lat:39.832, lng:-75.379, logo:"MLS Logos/Philadelphia Union.jpg", website:"https://www.philadelphiaunion.com", driveMiles:95, driveTime:"1h 40m", initials:"PHI", isPro:true, pathway:"both", clubId:"philly"},
+  {name:"Toronto FC", state:"ON", league:"HD", division:"Northeast", lat:43.633, lng:-79.418, logo:"MLS Logos/Toronto FC.png", website:"https://www.torontofc.ca", driveMiles:475, driveTime:"7h 30m", initials:"TFC", isPro:true, pathway:"u16-u19", clubId:"tfc"},
+  {name:"CF Montreal", state:"QC", league:"HD", division:"Northeast", lat:45.563, lng:-73.553, logo:"MLS Logos/CF Montreal.png", website:"https://www.cfmontreal.com", driveMiles:380, driveTime:"6h 0m", initials:"MTL", isPro:true, pathway:"u16-u19", clubId:"mtl"},
+  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19", clubId:"dcu"},
 
   // ══════════════════════════════════════════════════════════════
   // NORTHEAST DIVISION CLUBS (U13-U19)
   // ══════════════════════════════════════════════════════════════
-  {name:"Beachside SC", state:"CT", league:"HD", division:"Northeast", lat:41.14, lng:-73.36, logo:"MLS Logos/beachside.png", website:"https://beachsidesoccer.org", driveMiles:72, driveTime:"1h 20m", initials:"BSC", isPro:false, pathway:"both"},
-  {name:"Blau Weiss Gottschee", state:"NY", league:"HD", division:"Northeast", lat:40.745, lng:-73.90, logo:"MLS Logos/BW Gottschee.png", website:"https://bwgottschee.org", driveMiles:26, driveTime:"45m", initials:"BWG", isPro:false, pathway:"both"},
-  {name:"Cedar Stars Academy Bergen", state:"NJ", league:"HD", division:"Northeast", lat:40.955, lng:-74.07, logo:"MLS Logos/CSA Bergen.png", website:"https://cedarstars.com", driveMiles:19, driveTime:"30m", initials:"CSA", isPro:false, pathway:"both"},
-  {name:"Connecticut United FC", state:"CT", league:"HD", division:"Northeast", lat:41.22, lng:-73.06, logo:"MLS Logos/ct united.png", website:"https://ctunited.com", driveMiles:85, driveTime:"1h 25m", initials:"CTU", isPro:false, pathway:"u13-u15"},
-  {name:"Downtown United SC", state:"NY", league:"HD", division:"Northeast", lat:40.762, lng:-73.98, logo:"MLS Logos/dusc.png", website:"https://dusc.net", driveMiles:30, driveTime:"50m", initials:"DUSC", isPro:false, pathway:"both"},
-  {name:"FA Euro New York", state:"NY", league:"HD", division:"Northeast", lat:40.575, lng:-74.15, logo:"MLS Logos/fa euro.png", website:"https://faeuro.com", driveMiles:35, driveTime:"50m", initials:"FAE", isPro:false, pathway:"both"},
-  {name:"FC Westchester", state:"NY", league:"HD", division:"Northeast", lat:41.055, lng:-73.82, logo:"MLS Logos/FC Westchester.png", website:"https://fcwestchester.com", driveMiles:24, driveTime:"38m", initials:"FCW", isPro:false, pathway:"both"},
-  {name:"Ironbound SC", state:"NJ", league:"HD", division:"Northeast", lat:40.73, lng:-74.175, logo:"MLS Logos/Ironbound SC.png", website:"https://ironboundsoccer.com", driveMiles:16, driveTime:"28m", initials:"ISC", isPro:false, pathway:"both"},
-  {name:"Long Island SC", state:"NY", league:"HD", division:"Northeast", lat:40.680, lng:-73.55, logo:"MLS Logos/LISC.png", website:"https://longisland-soccerclub.com", driveMiles:58, driveTime:"1h 5m", initials:"LISC", isPro:false, pathway:"both"},
-  {name:"Metropolitan Oval", state:"NY", league:"HD", division:"Northeast", lat:40.872, lng:-73.89, logo:"MLS Logos/Met Oval.png", website:"https://metropolitanoval.org", driveMiles:27, driveTime:"42m", initials:"MO", isPro:false, pathway:"both"},
-  {name:"New York SC", state:"NY", league:"HD", division:"Northeast", lat:41.025, lng:-73.90, logo:"MLS Logos/NYSC.png", website:"https://newyorksoccerclub.org", driveMiles:23, driveTime:"38m", initials:"NYSC", isPro:false, pathway:"both"},
-  {name:"TSF Academy", state:"NJ", league:"HD", division:"Northeast", lat:40.67, lng:-74.65, logo:"MLS Logos/TSF.png", website:"https://tsfacademy.com", driveMiles:22, driveTime:"35m", initials:"TSF", isPro:false, pathway:"both"},
-  {name:"FC Greater Boston Bolts", state:"MA", league:"HD", division:"Northeast", lat:42.20, lng:-71.00, logo:"MLS Logos/FC Greater Boston Bolts.png", website:"https://bostonbolts.com", driveMiles:234, driveTime:"3h 48m", initials:"BOLT", isPro:false, pathway:"both"},
-  {name:"Intercontinental FA", state:"MA", league:"HD", division:"Northeast", lat:42.475, lng:-71.10, logo:"MLS Logos/Intercontinental FA.jpg", website:"https://ifane.org", driveMiles:224, driveTime:"3h 38m", initials:"IFA", isPro:false, pathway:"both"},
-  {name:"NEFC", state:"MA", league:"HD", division:"Northeast", lat:42.30, lng:-71.68, logo:"MLS Logos/NEFC.png", website:"https://nefc.us", driveMiles:202, driveTime:"3h 18m", initials:"NEFC", isPro:false, pathway:"both"},
-  {name:"Oakwood SC", state:"CT", league:"HD", division:"Northeast", lat:41.285, lng:-73.03, logo:"MLS Logos/Oakwood Soccer Club.jpg", website:"https://oakwoodsoccer.com", driveMiles:91, driveTime:"1h 38m", initials:"OSC", isPro:false, pathway:"both"},
-  {name:"Rochester NY FC", state:"NY", league:"HD", division:"Northeast", lat:43.155, lng:-77.61, logo:"MLS Logos/Rochester NY FC Academy.jpg", website:"https://www.rnyfc-youth.com", driveMiles:327, driveTime:"5h 2m", initials:"ROC", isPro:false, pathway:"both"},
-  {name:"Seacoast United", state:"NH", league:"HD", division:"Northeast", lat:43.07, lng:-70.76, logo:"MLS Logos/Seacoast United.jpg", website:"https://seacoastunited.com", driveMiles:314, driveTime:"4h 58m", initials:"SCU", isPro:false, pathway:"both"},
-  {name:"Valeo FC", state:"MA", league:"HD", division:"Northeast", lat:42.51, lng:-71.20, logo:"MLS Logos/Valeo FC.png", website:"https://valeofc.com", driveMiles:222, driveTime:"3h 34m", initials:"VFC", isPro:false, pathway:"both"},
-  {name:"Bayside FC", state:"MA", league:"HD", division:"Northeast", lat:41.745, lng:-71.31, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both"}
+  {name:"Beachside SC", state:"CT", league:"HD", division:"Tri-State", lat:41.14, lng:-73.36, logo:"MLS Logos/beachside.png", website:"https://beachsidesoccer.org", driveMiles:72, driveTime:"1h 20m", initials:"BSC", isPro:false, pathway:"both", clubId:"beachside"},
+  {name:"Blau Weiss Gottschee", state:"NY", league:"HD", division:"Tri-State", lat:40.745, lng:-73.90, logo:"MLS Logos/BW Gottschee.png", website:"https://bwgottschee.org", driveMiles:26, driveTime:"45m", initials:"BWG", isPro:false, pathway:"both", clubId:"bwg"},
+  {name:"Cedar Stars Academy Bergen", state:"NJ", league:"HD", division:"Tri-State", lat:40.955, lng:-74.07, logo:"MLS Logos/CSA Bergen.png", website:"https://cedarstars.com", driveMiles:19, driveTime:"30m", initials:"CSA", isPro:false, pathway:"both", clubId:"csa_bergen"},
+  {name:"Cedar Stars Academy Monmouth", state:"NJ", league:"HD", division:"Mid-Atlantic", lat:40.28, lng:-74.08, logo:"MLS Logos/CSA Monmouth.png", website:"https://cedarstars.com", driveMiles:52, driveTime:"1h 0m", initials:"CSAM", isPro:false, pathway:"both", clubId:"csa_monmouth"},
+  {name:"Connecticut United FC", state:"CT", league:"HD", division:"New England", lat:41.22, lng:-73.06, logo:"MLS Logos/ct united.png", website:"https://ctunited.com", driveMiles:85, driveTime:"1h 25m", initials:"CTU", isPro:false, pathway:"u13-u15", clubId:"ct_united"},
+  {name:"Downtown United SC", state:"NY", league:"HD", division:"Tri-State", lat:40.762, lng:-73.98, logo:"MLS Logos/dusc.png", website:"https://dusc.net", driveMiles:30, driveTime:"50m", initials:"DUSC", isPro:false, pathway:"both", clubId:"dusc"},
+  {name:"FA Euro New York", state:"NY", league:"HD", division:"Tri-State", lat:40.575, lng:-74.15, logo:"MLS Logos/fa euro.png", website:"https://faeuro.com", driveMiles:35, driveTime:"50m", initials:"FAE", isPro:false, pathway:"both", clubId:"fa_euro"},
+  {name:"FC Westchester", state:"NY", league:"HD", division:"Tri-State", lat:41.055, lng:-73.82, logo:"MLS Logos/FC Westchester.png", website:"https://fcwestchester.com", driveMiles:24, driveTime:"38m", initials:"FCW", isPro:false, pathway:"both", clubId:"fc_westchester"},
+  {name:"Ironbound SC", state:"NJ", league:"HD", division:"Tri-State", lat:40.73, lng:-74.175, logo:"MLS Logos/Ironbound SC.png", website:"https://ironboundsoccer.com", driveMiles:16, driveTime:"28m", initials:"ISC", isPro:false, pathway:"both", clubId:"ironbound"},
+  {name:"Long Island SC", state:"NY", league:"HD", division:"Tri-State", lat:40.680, lng:-73.55, logo:"MLS Logos/LISC.png", website:"https://longisland-soccerclub.com", driveMiles:58, driveTime:"1h 5m", initials:"LISC", isPro:false, pathway:"both", clubId:"lisc"},
+  {name:"Metropolitan Oval", state:"NY", league:"HD", division:"Tri-State", lat:40.872, lng:-73.89, logo:"MLS Logos/Met Oval.png", website:"https://metropolitanoval.org", driveMiles:27, driveTime:"42m", initials:"MO", isPro:false, pathway:"both", clubId:"met_oval"},
+  {name:"New York SC", state:"NY", league:"HD", division:"Tri-State", lat:41.025, lng:-73.90, logo:"MLS Logos/NYSC.png", website:"https://newyorksoccerclub.org", driveMiles:23, driveTime:"38m", initials:"NYSC", isPro:false, pathway:"both", clubId:"nysc"},
+  {name:"TSF Academy", state:"NJ", league:"HD", division:"Tri-State", lat:40.67, lng:-74.65, logo:"MLS Logos/TSF.png", website:"https://tsfacademy.com", driveMiles:22, driveTime:"35m", initials:"TSF", isPro:false, pathway:"both", clubId:"tsf"},
+  {name:"FC Greater Boston Bolts", state:"MA", league:"HD", division:"New England", lat:42.20, lng:-71.00, logo:"MLS Logos/FC Greater Boston Bolts.png", website:"https://bostonbolts.com", driveMiles:234, driveTime:"3h 48m", initials:"BOLT", isPro:false, pathway:"both", clubId:"boston_bolts"},
+  {name:"Intercontinental FA", state:"MA", league:"HD", division:"New England", lat:42.475, lng:-71.10, logo:"MLS Logos/Intercontinental FA.jpg", website:"https://ifane.org", driveMiles:224, driveTime:"3h 38m", initials:"IFA", isPro:false, pathway:"both", clubId:"ifa"},
+  {name:"NEFC", state:"MA", league:"HD", division:"New England", lat:42.30, lng:-71.68, logo:"MLS Logos/NEFC.png", website:"https://nefc.us", driveMiles:202, driveTime:"3h 18m", initials:"NEFC", isPro:false, pathway:"both", clubId:"nefc"},
+  {name:"Oakwood SC", state:"CT", league:"HD", division:"New England", lat:41.285, lng:-73.03, logo:"MLS Logos/Oakwood Soccer Club.jpg", website:"https://oakwoodsoccer.com", driveMiles:91, driveTime:"1h 38m", initials:"OSC", isPro:false, pathway:"both", clubId:"oakwood"},
+  {name:"Rochester NY FC", state:"NY", league:"HD", division:"Mid-Atlantic", lat:43.155, lng:-77.61, logo:"MLS Logos/Rochester NY FC Academy.jpg", website:"https://www.rnyfc-youth.com", driveMiles:327, driveTime:"5h 2m", initials:"ROC", isPro:false, pathway:"both", clubId:"rochester"},
+  {name:"Seacoast United", state:"NH", league:"HD", division:"New England", lat:43.07, lng:-70.76, logo:"MLS Logos/Seacoast United.jpg", website:"https://seacoastunited.com", driveMiles:314, driveTime:"4h 58m", initials:"SCU", isPro:false, pathway:"both", clubId:"seacoast"},
+  {name:"Valeo FC", state:"MA", league:"HD", division:"New England", lat:42.51, lng:-71.20, logo:"MLS Logos/Valeo FC.png", website:"https://valeofc.com", driveMiles:222, driveTime:"3h 34m", initials:"VFC", isPro:false, pathway:"both", clubId:"valeo"},
+  {name:"Bayside FC", state:"MA", league:"HD", division:"New England", lat:41.745, lng:-71.31, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both", clubId:"bayside"},
+  {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Tri-State", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"rfa"},
+  {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Great Lakes", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
+  {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"}
 ];
 
 // ── FILTER STATE ──
@@ -267,6 +313,22 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 // ── ZOOM CONTROLS ──
 function zoomIn() { map.zoomIn(0.5); }
 function zoomOut() { map.zoomOut(0.5); }
+
+// ── SIDEBAR TOGGLE ──
+var sidebarVisible = true;
+function toggleSidebar() {
+  var sidebar = document.getElementById('sidebar');
+  var openBtn = document.getElementById('sidebar-open');
+  sidebarVisible = !sidebarVisible;
+  if (sidebarVisible) {
+    sidebar.classList.remove('collapsed');
+    openBtn.classList.remove('visible');
+  } else {
+    sidebar.classList.add('collapsed');
+    openBtn.classList.add('visible');
+  }
+  setTimeout(function() { map.invalidateSize(); }, 350);
+}
 
 // ── RB MARKER ──
 function makeRBHtml() {
@@ -313,21 +375,26 @@ function getClubColor(club) {
 function makeClubIcon(club, size) {
   size = size || 38;
   var color = getClubColor(club);
+  // Use slightly larger size for MLS Pro clubs to fit logos better
+  var displaySize = club.isPro ? 42 : size;
+  var innerSize = displaySize - 6; // Account for border and padding
   var inner = '';
   if (club.logo) {
-    inner = '<img src="' + club.logo + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;border-radius:50%;display:block;" ' +
-            'onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';" />' +
-            '<div style="display:none;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
+    inner = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">' +
+            '<img src="' + club.logo + '" style="width:' + innerSize + 'px;height:' + innerSize + 'px;object-fit:contain;border-radius:50%;" ' +
+            'onerror="this.parentElement.style.display=\'none\';this.parentElement.nextSibling.style.display=\'flex\';" />' +
+            '</div>' +
+            '<div style="display:none;width:100%;height:100%;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
   } else {
-    inner = '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
+    inner = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
   }
-  var html = '<div style="position:relative;width:' + size + 'px;height:' + size + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#ffffff;">' + inner + '</div>';
+  var html = '<div style="position:relative;width:' + displaySize + 'px;height:' + displaySize + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#ffffff;display:flex;align-items:center;justify-content:center;">' + inner + '</div>';
   return L.divIcon({
     html: html,
     className: '',
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -(size/2 + 5)]
+    iconSize: [displaySize, displaySize],
+    iconAnchor: [displaySize/2, displaySize/2],
+    popupAnchor: [0, -(displaySize/2 + 5)]
   });
 }
 
@@ -340,12 +407,26 @@ function makePopupHtml(club) {
   } else {
     logoHtml = '<div class="popup-initials" style="background:' + color + ';">' + club.initials + '</div>';
   }
+
+  // Build buttons
+  var buttonsHtml = '<div class="popup-buttons">';
+  if (club.clubId) {
+    buttonsHtml += '<a href="team.html?club=' + club.clubId + '" class="popup-btn popup-btn-primary">View Teams</a>';
+  } else {
+    buttonsHtml += '<span class="popup-btn popup-btn-secondary" style="cursor:default;opacity:0.5;">No Data</span>';
+  }
+  if (club.website) {
+    buttonsHtml += '<a href="' + club.website + '" target="_blank" class="popup-btn popup-btn-secondary">Website</a>';
+  }
+  buttonsHtml += '</div>';
+
   return '<div class="popup-inner">' +
     '<div class="popup-header">' + logoHtml +
     '<div class="popup-title"><h3>' + club.name + '</h3><small>' + club.state + ' &bull; ' + club.division + '</small></div>' +
     '</div>' +
     '<div class="popup-row"><span class="popup-label">League</span><span class="popup-value" style="color:' + color + '">' + club.league + '</span></div>' +
     '<div class="popup-row"><span class="popup-label">Drive from NYRB</span><span class="popup-value">' + club.driveMiles + ' mi &bull; ' + club.driveTime + '</span></div>' +
+    buttonsHtml +
     '</div>';
 }
 
