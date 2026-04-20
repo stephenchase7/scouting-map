@@ -161,6 +161,52 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   font-size:11px; color:#666; flex-shrink:0;
 }
 #club-count span { color:#cc0000; font-weight:700; }
+
+/* Add Club Modal */
+.modal-overlay {
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;
+}
+.modal-overlay.active { display:flex; }
+.modal-content {
+  background:#fff; border-radius:12px; width:400px; max-width:90vw; max-height:90vh;
+  overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+.modal-header {
+  background:linear-gradient(135deg,#8B0000 0%,#cc0000 50%,#8B0000 100%);
+  padding:16px 20px; border-radius:12px 12px 0 0;
+}
+.modal-header h2 { color:#fff; font-size:16px; font-weight:700; margin:0; }
+.modal-body { padding:20px; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:12px; font-weight:600; color:#333; margin-bottom:6px; }
+.form-group input, .form-group select {
+  width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px;
+  font-size:13px; transition:border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus { border-color:#cc0000; outline:none; }
+.form-group input[type="file"] { padding:8px; background:#f9f9f9; }
+.form-group small { display:block; margin-top:4px; font-size:10px; color:#888; }
+.modal-footer { padding:16px 20px; border-top:1px solid #eee; display:flex; gap:10px; justify-content:flex-end; }
+.modal-btn {
+  padding:10px 20px; border-radius:6px; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all 0.15s; border:none;
+}
+.modal-btn-primary { background:#cc0000; color:#fff; }
+.modal-btn-primary:hover { background:#a00000; }
+.modal-btn-primary:disabled { background:#ccc; cursor:not-allowed; }
+.modal-btn-secondary { background:#f5f5f5; color:#666; border:1px solid #ddd; }
+.modal-btn-secondary:hover { background:#eee; }
+.add-club-btn {
+  position:absolute; bottom:12px; right:12px; padding:6px 12px;
+  background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);
+  border-radius:4px; color:#fff; font-size:11px; font-weight:600;
+  cursor:pointer; transition:all 0.15s;
+}
+.add-club-btn:hover { background:rgba(255,255,255,0.35); }
+.loading { opacity:0.7; pointer-events:none; }
+.form-error { color:#cc0000; font-size:11px; margin-top:4px; display:none; }
+.form-success { color:#2ecc71; font-size:12px; text-align:center; padding:10px; display:none; }
 </style>
 </head>
 <body>
@@ -169,6 +215,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   <div id="sidebar-header">
     <h1>NY Red Bulls Scouting Map</h1>
     <p>MLS NEXT | Multi-Conference</p>
+    <button class="add-club-btn" onclick="openAddClubModal()">+ Add Club</button>
     <button id="sidebar-toggle" onclick="toggleSidebar()">
       <svg id="toggle-icon" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
     </button>
@@ -588,6 +635,129 @@ function applyFilters() {
 updateDivisionFilter();
 buildList();
 applyFilters();
+
+// ── ADD CLUB MODAL ──
+function openAddClubModal() {
+  document.getElementById('addClubModal').classList.add('active');
+  document.getElementById('addClubForm').reset();
+  document.getElementById('addClubSuccess').style.display = 'none';
+  document.getElementById('addClubError').style.display = 'none';
+}
+
+function closeAddClubModal() {
+  document.getElementById('addClubModal').classList.remove('active');
+}
+
+async function submitAddClub(event) {
+  event.preventDefault();
+  var form = document.getElementById('addClubForm');
+  var submitBtn = document.getElementById('addClubSubmit');
+  var errorEl = document.getElementById('addClubError');
+  var successEl = document.getElementById('addClubSuccess');
+
+  // Reset messages
+  errorEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  // Disable form
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Adding...';
+  form.classList.add('loading');
+
+  try {
+    var formData = new FormData(form);
+    var response = await fetch('/api/add-club', {
+      method: 'POST',
+      body: formData
+    });
+
+    var result = await response.json();
+
+    if (result.success) {
+      successEl.textContent = result.message + '. Refreshing page...';
+      successEl.style.display = 'block';
+      setTimeout(function() {
+        window.location.reload();
+      }, 1500);
+    } else {
+      errorEl.textContent = result.error || 'Failed to add club';
+      errorEl.style.display = 'block';
+    }
+  } catch (err) {
+    errorEl.textContent = 'Error: ' + err.message;
+    errorEl.style.display = 'block';
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Add Club';
+    form.classList.remove('loading');
+  }
+}
+
+// Close modal on overlay click
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    closeAddClubModal();
+  }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeAddClubModal();
+  }
+});
 </script>
+
+<!-- Add Club Modal -->
+<div id="addClubModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Add New Club</h2>
+    </div>
+    <form id="addClubForm" onsubmit="submitAddClub(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Club Name (as it appears in Kitman Labs)</label>
+          <input type="text" name="name" required placeholder="e.g., Sockers FC Chicago">
+          <small>Use the exact name from Kitman Labs for scraper compatibility</small>
+        </div>
+
+        <div class="form-group">
+          <label>League</label>
+          <select name="league" required>
+            <option value="HD">MLS Next (HD)</option>
+            <option value="AD">MLS Next (AD)</option>
+            <option value="ECNL">ECNL</option>
+            <option value="ECNL_RL">ECNL RL</option>
+            <option value="NAL">NAL</option>
+            <option value="EAL">EAL</option>
+            <option value="NPL">NPL</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Club Logo</label>
+          <input type="file" name="logo" accept="image/*" required>
+          <small>PNG, JPG, or SVG recommended</small>
+        </div>
+
+        <div class="form-group">
+          <label>Club Address</label>
+          <input type="text" name="address" required placeholder="e.g., 545 S Consumers Ave, Palatine, IL 60074">
+          <small>Full address for geocoding - division will be auto-assigned from state</small>
+        </div>
+
+        <div id="addClubError" class="form-error"></div>
+        <div id="addClubSuccess" class="form-success"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="modal-btn modal-btn-secondary" onclick="closeAddClubModal()">Cancel</button>
+        <button type="submit" id="addClubSubmit" class="modal-btn modal-btn-primary">Add Club</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 </body>
 </html>
