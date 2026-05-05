@@ -1126,6 +1126,14 @@ var clubId = urlParams.get('club');
 var currentClub = null;
 var currentTeam = 'u13';
 
+// Check URL hash for squad override (e.g., #u14-squad)
+if (window.location.hash) {
+  var hashMatch = window.location.hash.match(/#(u\d+)-squad/);
+  if (hashMatch && hashMatch[1]) {
+    currentTeam = hashMatch[1];
+  }
+}
+
 // Import Missing Data - Constants
 var ALL_AGE_GROUPS = ['u13', 'u14', 'u15', 'u16', 'u17', 'u19'];
 var CLUB_ID_TO_SCRAPER_NAME = {
@@ -1185,10 +1193,17 @@ function init() {
   document.title = 'Team Roster – ' + currentClub.name;
   renderPage();
 
-  // Show first available squad (or u13 as fallback)
+  // Show squad from hash, or first available squad as fallback
   var availableSquads = getAvailableSquads();
-  var firstSquad = availableSquads.length > 0 ? availableSquads[0] : 'u13';
-  showTeam(firstSquad);
+
+  // If currentTeam was set from hash and exists in available squads, use it
+  // Otherwise fall back to first available squad (or u13)
+  var squadToShow = currentTeam;
+  if (!squadToShow || availableSquads.indexOf(squadToShow) === -1) {
+    squadToShow = availableSquads.length > 0 ? availableSquads[0] : 'u13';
+  }
+
+  showTeam(squadToShow);
 }
 
 function showError(title, message) {
@@ -1226,7 +1241,7 @@ function generateTabsHtml() {
 
   var tabsHtml = '<div class="tabs">';
   availableSquads.forEach(function(squad, i) {
-    var activeClass = i === 0 ? ' active' : '';
+    var activeClass = squad === currentTeam ? ' active' : '';
     tabsHtml += '<div class="tab' + activeClass + '" onclick="showTeam(\'' + squad + '\')">' +
                 squad.toUpperCase() + '</div>';
   });
@@ -1343,6 +1358,9 @@ function renderPage() {
 
 function showTeam(ageGroup) {
   currentTeam = ageGroup;
+
+  // Update URL hash to keep URL in sync with displayed tab
+  window.location.hash = ageGroup + '-squad';
 
   document.querySelectorAll('.tab').forEach(function(t) {
     t.classList.remove('active');

@@ -357,6 +357,14 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .filter-actions {
   display:flex; gap:10px; margin-top:16px;
 }
+.quick-filter-btn {
+  padding:6px 12px; border-radius:6px; font-size:12px; font-weight:500;
+  cursor:pointer; transition:all 0.15s; border:1px solid #ddd;
+  background:#fff; color:#333;
+}
+.quick-filter-btn:hover {
+  background:#f0f0f0; border-color:#ccc;
+}
 #search-results-table {
   width:100%; border-collapse:collapse; font-size:13px;
 }
@@ -375,6 +383,27 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 #search-results-table a:hover {
   text-decoration:underline;
+}
+#search-results-table th.sortable {
+  cursor:pointer;
+  user-select:none;
+  transition:background 0.15s;
+}
+#search-results-table th.sortable:hover {
+  background:#e8e8e8;
+}
+#search-results-table .sort-indicator {
+  opacity:0.3;
+  font-size:10px;
+  margin-left:4px;
+}
+#search-results-table th.sort-asc .sort-indicator::after {
+  content:'▲';
+  opacity:1;
+}
+#search-results-table th.sort-desc .sort-indicator::after {
+  content:'▼';
+  opacity:1;
 }
 #add-club-section {
   padding:12px 14px; border-bottom:1px solid #e0e0e0; background:#fff; flex-shrink:0;
@@ -1370,6 +1399,11 @@ function closeAddClubModal() {
 // SEARCH MODAL FUNCTIONS
 // ══════════════════════════════════════════════════════════════
 
+// Global variables for search results and sorting
+var currentSearchResults = [];
+var currentSortColumn = 'goals'; // Default sort by goals
+var currentSortDirection = 'desc'; // Default descending
+
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
 }
@@ -1387,6 +1421,43 @@ function clearSearchFilters() {
 
   // Hide results
   document.getElementById('search-results-container').style.display = 'none';
+}
+
+function quickFilter(type) {
+  // Clear all filters first
+  clearSearchFilters();
+
+  // Set filters based on type
+  switch(type) {
+    case 'top_scorers':
+      // All age groups, all divisions, min 7 goals
+      document.getElementById('filter-min-goals').value = '7';
+      break;
+
+    case 'playing_up':
+      // Playing up only, min 5 goals
+      document.getElementById('filter-playing-up').checked = true;
+      document.getElementById('filter-min-goals').value = '5';
+      break;
+
+    case 'u13_scorers':
+      document.getElementById('filter-age-group').value = 'u13';
+      document.getElementById('filter-min-goals').value = '7';
+      break;
+
+    case 'u14_scorers':
+      document.getElementById('filter-age-group').value = 'u14';
+      document.getElementById('filter-min-goals').value = '7';
+      break;
+
+    case 'u15_scorers':
+      document.getElementById('filter-age-group').value = 'u15';
+      document.getElementById('filter-min-goals').value = '7';
+      break;
+  }
+
+  // Automatically perform the search
+  performSearch();
 }
 
 function performSearch() {
@@ -1512,6 +1583,116 @@ function displaySearchResults(results) {
   });
 
   container.style.display = 'block';
+
+  // Store results globally for sorting
+  currentSearchResults = results;
+
+  // Update sort indicators
+  updateSortIndicators();
+}
+
+function sortSearchResults(column) {
+  if (!currentSearchResults.length) return;
+
+  // Toggle direction if clicking same column, otherwise default to desc
+  if (currentSortColumn === column) {
+    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSortColumn = column;
+    currentSortDirection = 'desc';
+  }
+
+  // Sort the results
+  currentSearchResults.sort(function(a, b) {
+    var aVal = a[column];
+    var bVal = b[column];
+
+    // Handle '-' for missing values
+    if (aVal === '-') aVal = '';
+    if (bVal === '-') bVal = '';
+
+    // Handle numbers
+    if (column === 'jersey' || column === 'yob' || column === 'games' || column === 'goals') {
+      aVal = parseInt(aVal) || 0;
+      bVal = parseInt(bVal) || 0;
+    }
+
+    // Handle strings (case-insensitive)
+    if (typeof aVal === 'string') {
+      aVal = aVal.toLowerCase();
+      bVal = bVal.toLowerCase();
+    }
+
+    if (currentSortDirection === 'asc') {
+      return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+    } else {
+      return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+    }
+  });
+
+  // Re-render the table
+  displaySearchResults(currentSearchResults);
+}
+
+function updateSortIndicators() {
+  // Remove all sort classes
+  var headers = document.querySelectorAll('#search-results-table th.sortable');
+  headers.forEach(function(th) {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+
+  // Add class to current sort column
+  var columnMap = {
+    'jersey': 0,
+    'club': 1,
+    'name': 2,
+    'yob': 3,
+    'position': 4,
+    'games': 5,
+    'goals': 6
+  };
+
+  var columnIndex = columnMap[currentSortColumn];
+  if (columnIndex !== undefined && headers[columnIndex]) {
+    headers[columnIndex].classList.add('sort-' + currentSortDirection);
+  }
+}
+
+function exportSearchResultsToCSV() {
+  if (!currentSearchResults || currentSearchResults.length === 0) {
+    alert('No search results to export');
+    return;
+  }
+
+  // CSV headers
+  var csv = '#,Club,Name,YOB,Position,Games,Goals,Link\n';
+
+  // Add each row
+  currentSearchResults.forEach(function(player) {
+    var row = [
+      player.jersey,
+      '"' + player.club + '"', // Quoted in case club name has commas
+      '"' + player.name + '"',
+      player.yob === '-' ? '' : player.yob,
+      player.position === '-' ? '' : player.position,
+      player.games,
+      player.goals,
+      player.link || ''
+    ];
+    csv += row.join(',') + '\n';
+  });
+
+  // Create download link
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'search-results-' + new Date().toISOString().split('T')[0] + '.csv');
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 // Geocode address using OpenStreetMap Nominatim API
@@ -2054,6 +2235,15 @@ document.addEventListener('keydown', function(e) {
     </div>
 
     <div class="modal-body">
+      <!-- QUICK FILTERS -->
+      <div class="quick-filters" style="margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:600; color:#666; margin-bottom:8px;">Quick Searches:</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="quick-filter-btn" onclick="quickFilter('top_scorers')">🏆 Top Scorers</button>
+          <button class="quick-filter-btn" onclick="quickFilter('playing_up')">⭐ Playing Up</button>
+        </div>
+      </div>
+
       <!-- FILTERS -->
       <div class="search-filters">
         <div class="filter-row">
@@ -2120,19 +2310,20 @@ document.addEventListener('keydown', function(e) {
       <div id="search-results-container" style="display:none; margin-top:20px;">
         <div id="search-results-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <h3 id="search-results-count" style="margin:0; color:#1a1a2e; font-size:16px;">0 players found</h3>
+          <button onclick="exportSearchResultsToCSV()" class="modal-btn modal-btn-secondary" style="padding:8px 16px; font-size:12px;">📥 Export CSV</button>
         </div>
 
         <div id="search-results-table-wrapper" style="max-height:400px; overflow-y:auto;">
           <table id="search-results-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Club</th>
-                <th>Name</th>
-                <th>YOB</th>
-                <th>Pos</th>
-                <th>Games</th>
-                <th>Goals</th>
+                <th class="sortable" onclick="sortSearchResults('jersey')"># <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('club')">Club <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('name')">Name <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('yob')">YOB <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('position')">Pos <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('games')">Games <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('goals')">Goals <span class="sort-indicator"></span></th>
                 <th>Link</th>
               </tr>
             </thead>
