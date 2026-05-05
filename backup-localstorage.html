@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backup LocalStorage - Scouting Map</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #cc0000;
+      margin-top: 0;
+    }
+    button {
+      background: #cc0000;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #a00000;
+    }
+    button.secondary {
+      background: #666;
+    }
+    button.secondary:hover {
+      background: #444;
+    }
+    .info {
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background: #e8f5e9;
+      border-left: 4px solid #4CAF50;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+      display: none;
+    }
+    .data-preview {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    input[type="file"] {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Backup & Restore LocalStorage</h1>
+
+    <div class="info">
+      <strong>What this does:</strong><br>
+      • Backup: Exports all localStorage data (custom clubs, settings, etc.) to a JSON file<br>
+      • Restore: Imports localStorage data from a previously saved backup file<br>
+      • Safe: Your original data is never deleted unless you explicitly clear it
+    </div>
+
+    <h2>📦 Backup LocalStorage</h2>
+    <button onclick="backupLocalStorage()">Download Backup</button>
+    <button onclick="viewLocalStorage()" class="secondary">Preview Data</button>
+
+    <div id="preview" class="data-preview" style="display:none;"></div>
+
+    <h2>📥 Restore LocalStorage</h2>
+    <input type="file" id="restoreFile" accept=".json">
+    <br>
+    <button onclick="restoreLocalStorage()" class="secondary">Restore from Backup</button>
+
+    <div id="successMsg" class="success"></div>
+  </div>
+
+  <script>
+    function backupLocalStorage() {
+      // Get all localStorage data
+      const backup = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        backup[key] = localStorage.getItem(key);
+      }
+
+      // Create backup object with metadata
+      const backupData = {
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        data: backup
+      };
+
+      // Convert to JSON
+      const json = JSON.stringify(backupData, null, 2);
+
+      // Create download link
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `scouting-map-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showSuccess('✅ Backup downloaded successfully!');
+    }
+
+    function viewLocalStorage() {
+      const preview = document.getElementById('preview');
+      const backup = {};
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+
+        // Try to parse JSON for better display
+        try {
+          backup[key] = JSON.parse(value);
+        } catch (e) {
+          backup[key] = value;
+        }
+      }
+
+      preview.textContent = JSON.stringify(backup, null, 2);
+      preview.style.display = 'block';
+    }
+
+    function restoreLocalStorage() {
+      const fileInput = document.getElementById('restoreFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please select a backup file first!');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const backupData = JSON.parse(e.target.result);
+
+          // Confirm restore
+          const customClubsCount = backupData.data.customClubs ?
+            JSON.parse(backupData.data.customClubs).length : 0;
+
+          const confirmMsg = `This will restore localStorage from backup created on:\n\n` +
+            `${new Date(backupData.timestamp).toLocaleString()}\n\n` +
+            `Custom clubs in backup: ${customClubsCount}\n\n` +
+            `This will OVERWRITE your current localStorage data.\n\n` +
+            `Continue?`;
+
+          if (!confirm(confirmMsg)) {
+            return;
+          }
+
+          // Restore data
+          for (const key in backupData.data) {
+            localStorage.setItem(key, backupData.data[key]);
+          }
+
+          showSuccess('✅ LocalStorage restored successfully! Refresh the page to see changes.');
+        } catch (error) {
+          alert('Error restoring backup: ' + error.message);
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function showSuccess(message) {
+      const successMsg = document.getElementById('successMsg');
+      successMsg.textContent = message;
+      successMsg.style.display = 'block';
+      setTimeout(() => {
+        successMsg.style.display = 'none';
+      }, 5000);
+    }
+
+    // Show current localStorage stats on load
+    window.addEventListener('DOMContentLoaded', function() {
+      let customClubsCount = 0;
+      try {
+        const customClubs = localStorage.getItem('customClubs');
+        if (customClubs) {
+          customClubsCount = JSON.parse(customClubs).length;
+        }
+      } catch (e) {
+        // Ignore
+      }
+
+      console.log('LocalStorage Stats:');
+      console.log('- Total keys:', localStorage.length);
+      console.log('- Custom clubs:', customClubsCount);
+    });
+  </script>
+</body>
+</html>

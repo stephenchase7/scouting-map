@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clear Custom Clubs</title>
+</head>
+<body>
+  <h1>Clear Custom Clubs</h1>
+  <button onclick="clearCustomClubs()">Clear All Custom Clubs</button>
+  <div id="result"></div>
+
+  <script>
+    function clearCustomClubs() {
+      localStorage.removeItem('customClubs');
+      document.getElementById('result').innerHTML = '<p style="color:green;">✓ Custom clubs cleared! Redirecting to map...</p>';
+      setTimeout(function() {
+        window.location.href = 'index.html';
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

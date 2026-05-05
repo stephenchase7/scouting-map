@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auto-Backup LocalStorage</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 { color: #cc0000; }
+    .data {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Auto-Backup LocalStorage</h1>
+    <p id="status">Backing up localStorage data...</p>
+    <div id="data" class="data"></div>
+  </div>
+
+  <script>
+    // Auto-backup on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        // Get all localStorage data
+        const backup = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          backup[key] = localStorage.getItem(key);
+        }
+
+        // Create backup object with metadata
+        const backupData = {
+          timestamp: new Date().toISOString(),
+          location: window.location.href,
+          data: backup
+        };
+
+        // Convert to JSON
+        const json = JSON.stringify(backupData, null, 2);
+
+        // Display in browser
+        document.getElementById('data').textContent = json;
+
+        // Auto-download
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+        a.download = `localstorage-backup-${timestamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Update status
+        let customClubsCount = 0;
+        try {
+          if (backup.customClubs) {
+            customClubsCount = JSON.parse(backup.customClubs).length;
+          }
+        } catch (e) {}
+
+        document.getElementById('status').innerHTML =
+          `✅ <strong>Backup Complete!</strong><br>` +
+          `File downloaded to your Downloads folder<br>` +
+          `Custom clubs backed up: ${customClubsCount}`;
+
+      } catch (error) {
+        document.getElementById('status').innerHTML =
+          `❌ Error: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

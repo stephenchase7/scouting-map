@@ -320,6 +320,62 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .modal-btn-primary:disabled { background:#ccc; cursor:not-allowed; }
 .modal-btn-secondary { background:#f5f5f5; color:#666; border:1px solid #ddd; }
 .modal-btn-secondary:hover { background:#eee; }
+.modal-close {
+  position:absolute; top:12px; right:16px; background:none; border:none;
+  font-size:32px; line-height:24px; color:#fff; cursor:pointer; padding:0;
+}
+.modal-close:hover { opacity:0.8; }
+.modal-container {
+  background:#fff; border-radius:12px; width:500px; max-width:90vw; max-height:90vh;
+  overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.3); position:relative;
+}
+.search-modal-container {
+  width:900px; max-width:95vw;
+}
+.search-filters {
+  background:#f9f9f9; padding:16px; border-radius:8px;
+}
+.filter-row {
+  display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;
+}
+.filter-group {
+  flex:1; min-width:150px;
+}
+.filter-group label {
+  display:block; font-size:12px; font-weight:600; color:#333; margin-bottom:6px;
+}
+.filter-group input[type="checkbox"] {
+  margin-right:6px;
+}
+.filter-group select, .filter-group input[type="number"] {
+  width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:6px;
+  font-size:13px; transition:border-color 0.2s;
+}
+.filter-group select:focus, .filter-group input:focus {
+  border-color:#1a73e8; outline:none;
+}
+.filter-actions {
+  display:flex; gap:10px; margin-top:16px;
+}
+#search-results-table {
+  width:100%; border-collapse:collapse; font-size:13px;
+}
+#search-results-table th {
+  background:#f5f5f5; padding:10px 12px; text-align:left; font-weight:600;
+  border-bottom:2px solid #ddd; position:sticky; top:0; z-index:10;
+}
+#search-results-table td {
+  padding:10px 12px; border-bottom:1px solid #eee;
+}
+#search-results-table tr:hover {
+  background:#f9f9f9;
+}
+#search-results-table a {
+  color:#1a73e8; text-decoration:none;
+}
+#search-results-table a:hover {
+  text-decoration:underline;
+}
 #add-club-section {
   padding:12px 14px; border-bottom:1px solid #e0e0e0; background:#fff; flex-shrink:0;
 }
@@ -333,10 +389,21 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   background:linear-gradient(135deg, #a00000 0%, #700000 100%);
   box-shadow:0 2px 8px rgba(204, 0, 0, 0.3);
 }
+.search-btn {
+  width:100%; padding:10px 16px;
+  background:linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:700;
+  cursor:pointer; transition:all 0.15s; text-align:center;
+}
+.search-btn:hover {
+  background:linear-gradient(135deg, #1557b0 0%, #0a3d91 100%);
+  box-shadow:0 2px 8px rgba(26, 115, 232, 0.3);
+}
 .loading { opacity:0.7; pointer-events:none; }
 .form-error { color:#cc0000; font-size:11px; margin-top:4px; display:none; }
 .form-success { color:#2ecc71; font-size:12px; text-align:center; padding:10px; display:none; }
 </style>
+<script src="playersData.js"></script>
 </head>
 <body>
 
@@ -351,6 +418,10 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 
   <div id="add-club-section">
     <button class="add-club-btn" onclick="openAddClubModal()">+ Add Club</button>
+  </div>
+
+  <div id="search-section" style="margin-top:10px;">
+    <button class="search-btn" onclick="openSearchModal()">🔍 Search Players</button>
   </div>
 
   <div id="selected-card" class="empty">
@@ -525,7 +596,13 @@ var clubs = [
   {name:"Sporting Athletic Club", state:"DE", league:"HD", division:"Mid-Atlantic", lat:39.7471805, lng:-75.5500972, logo:"MLS Logos/Sporting Athletic Club.jpg", website:"", driveMiles:120, driveTime:"2h 0m", initials:"SAC", isPro:false, pathway:"both", clubId:"sporting_athletic_club"},
   {name:"Beadling SC", state:"PA", league:"HD", division:"Mid-Atlantic", lat:40.7022913, lng:-80.2860955, logo:"MLS Logos/Beadling SC.jpg", website:"", driveMiles:320, driveTime:"5h 10m", initials:"BSC", isPro:false, pathway:"both", clubId:"beadling_sc"},
   {name:"Players Development Academy", state:"NJ", league:"HD", division:"Mid-Atlantic", lat:40.532801, lng:-74.575501, logo:"MLS Logos/Players Development Academy.png", website:"", driveMiles:22, driveTime:"43m", initials:"PDA", isPro:false, pathway:"both", clubId:"players_development_academy"},
-  {name:"The Football Academy", state:"NJ", league:"HD", division:"Tri-State", lat:40.7557497, lng:-74.3613575, logo:"MLS Logos/The Football Academy.jpg", website:"", driveMiles:5, driveTime:"9m", initials:"TFA", isPro:false, pathway:"both", clubId:"the_football_academy"}
+  {name:"The Football Academy", state:"NJ", league:"HD", division:"Tri-State", lat:40.7557497, lng:-74.3613575, logo:"MLS Logos/The Football Academy.jpg", website:"", driveMiles:5, driveTime:"9m", initials:"TFA", isPro:false, pathway:"both", clubId:"the_football_academy"},
+  {name:"Keystone FC", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.214, lng:-77.008, logo:"MLS Logos/Keystone Fc.jpg", website:"https://www.keystonefc.com", driveMiles:150, driveTime:"2h 30m", initials:"KFC", isPro:false, pathway:"both", clubId:"keystone_fc"},
+  {name:"PA Classics", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.163, lng:-76.396, logo:"MLS Logos/PA Classics .png", website:"https://www.paclassics.org", driveMiles:120, driveTime:"2h 0m", initials:"PAC", isPro:false, pathway:"both", clubId:"pa_classics"},
+  {name:"Bethesda SC", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.1399187, lng:-77.1929215, logo:"MLS Logos/Bethesda SC.jpg", website:"", driveMiles:188, driveTime:"6h 16m", initials:"BSC", isPro:false, pathway:"both", clubId:"bethesda_sc"},
+  {name:"Northern Virginia Alliance", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:39.077885, lng:-77.5532296, logo:"MLS Logos/Northern Virginia Alliance.png", website:"", driveMiles:206, driveTime:"6h 52m", initials:"NVA", isPro:false, pathway:"both", clubId:"northern_virginia_alliance"},
+  {name:"Alexandria SA", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7970174, lng:-77.0527447, logo:"MLS Logos/Alexandria SA.jpg", website:"", driveMiles:198, driveTime:"6h 36m", initials:"ASA", isPro:false, pathway:"both", clubId:"alexandria_sa"},
+  {name:"Achilles FC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.962983, lng:-77.0545673, logo:"MLS Logos/Achilles FC.jpg", website:"", driveMiles:190, driveTime:"6h 20m", initials:"AFC", isPro:false, pathway:"both", clubId:"achilles_fc"}
 ];
 
 // Load clubs from localStorage and merge with base clubs
@@ -549,6 +626,30 @@ try {
       localStorage.setItem('customClubs', JSON.stringify(filteredCustomClubs));
       console.log('Removed ' + (customClubs.length - filteredCustomClubs.length) + ' duplicate custom club(s)');
     }
+
+    // Ensure custom clubs have distance data (for backwards compatibility)
+    filteredCustomClubs = filteredCustomClubs.map(function(club) {
+      if (club.driveMiles === undefined || club.driveTime === undefined) {
+        var NYRB_LAT = 40.8167;
+        var NYRB_LNG = -74.4028;
+        if (club.lat && club.lng) {
+          var R = 3958.8;
+          var dLat = (club.lat - NYRB_LAT) * Math.PI / 180;
+          var dLng = (club.lng - NYRB_LNG) * Math.PI / 180;
+          var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(NYRB_LAT * Math.PI / 180) * Math.cos(club.lat * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+          var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          club.driveMiles = Math.round(R * c);
+          var minutes = Math.round(club.driveMiles * 2);
+          club.driveTime = minutes < 60 ? minutes + 'm' : Math.floor(minutes / 60) + 'h' + (minutes % 60 > 0 ? ' ' + (minutes % 60) + 'm' : '');
+        } else {
+          club.driveMiles = 0;
+          club.driveTime = '0m';
+        }
+      }
+      return club;
+    });
 
     clubs = clubs.concat(filteredCustomClubs);
     console.log('Loaded ' + filteredCustomClubs.length + ' custom club(s) from localStorage');
@@ -855,7 +956,51 @@ function makeClubIcon(club, size) {
   });
 }
 
+// ── DISTANCE CALCULATION (FALLBACK) ──
+function calculateDistance(lat1, lng1, lat2, lng2) {
+  // Haversine formula for great-circle distance
+  var R = 3958.8; // Earth's radius in miles
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLng = (lng2 - lng1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round(R * c);
+}
+
+function formatDriveTime(miles) {
+  var minutes = Math.round(miles * 2); // Assume 30 mph average
+  if (minutes < 60) return minutes + 'm';
+  var hours = Math.floor(minutes / 60);
+  var mins = minutes % 60;
+  return hours + 'h' + (mins > 0 ? ' ' + mins + 'm' : '');
+}
+
+function ensureDistanceData(club) {
+  // If club already has distance data, return as-is
+  if (club.driveMiles !== undefined && club.driveTime !== undefined) {
+    return club;
+  }
+
+  // Calculate distance from NYRB (40.8167, -74.4028)
+  var NYRB_LAT = 40.8167;
+  var NYRB_LNG = -74.4028;
+
+  if (club.lat && club.lng) {
+    club.driveMiles = calculateDistance(NYRB_LAT, NYRB_LNG, club.lat, club.lng);
+    club.driveTime = formatDriveTime(club.driveMiles);
+  } else {
+    // Fallback if no coordinates
+    club.driveMiles = 0;
+    club.driveTime = '0m';
+  }
+
+  return club;
+}
+
 function makePopupHtml(club) {
+  club = ensureDistanceData(club);
   var color = getClubColor(club);
   var logoHtml = '';
   if (club.logo) {
@@ -888,6 +1033,7 @@ function makePopupHtml(club) {
 }
 
 function makeCardHtml(club) {
+  club = ensureDistanceData(club);
   var color = getClubColor(club);
   var logoHtml = '';
   if (club.logo) {
@@ -1218,6 +1364,154 @@ function openAddClubModal() {
 
 function closeAddClubModal() {
   document.getElementById('addClubModal').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════════════════
+// SEARCH MODAL FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+function openSearchModal() {
+  document.getElementById('search-modal').style.display = 'flex';
+}
+
+function closeSearchModal() {
+  document.getElementById('search-modal').style.display = 'none';
+}
+
+function clearSearchFilters() {
+  document.getElementById('filter-age-group').value = '';
+  document.getElementById('filter-division').value = '';
+  document.getElementById('filter-position').value = '';
+  document.getElementById('filter-min-goals').value = '';
+  document.getElementById('filter-playing-up').checked = false;
+
+  // Hide results
+  document.getElementById('search-results-container').style.display = 'none';
+}
+
+function performSearch() {
+  // Get filter values
+  var ageGroup = document.getElementById('filter-age-group').value;
+  var division = document.getElementById('filter-division').value;
+  var position = document.getElementById('filter-position').value;
+  var minGoals = parseInt(document.getElementById('filter-min-goals').value) || 0;
+  var playingUpOnly = document.getElementById('filter-playing-up').checked;
+
+  var results = [];
+
+  // Squad year mapping for "playing up" detection
+  var squadYearMap = {
+    'u13': 2013,
+    'u14': 2014,
+    'u15': 2015,
+    'u16': 2016,
+    'u17': 2017,
+    'u19': 2019
+  };
+
+  // Iterate through all clubs
+  clubs.forEach(function(club) {
+    var clubPlayers = playersData[club.clubId];
+    if (!clubPlayers) return;
+
+    // Iterate through squads
+    Object.keys(clubPlayers).forEach(function(squad) {
+      // Filter by age group
+      if (ageGroup && squad !== ageGroup) return;
+
+      var squadData = clubPlayers[squad];
+      if (!squadData || !squadData.players) return;
+
+      // Filter by division
+      if (division && club.division !== division) return;
+
+      var expectedYOB = squadYearMap[squad];
+
+      // Iterate through players
+      squadData.players.forEach(function(player) {
+        // Filter by position
+        if (position) {
+          var playerPos = player.position || '';
+          if (position === 'GK' && playerPos !== 'GK') return;
+          if (position === 'DEF' && !playerPos.includes('DEF') && playerPos !== 'LB' && playerPos !== 'RB' && playerPos !== 'CB' && playerPos !== 'LWB' && playerPos !== 'RWB' && playerPos !== 'SW') return;
+          if (position === 'MID' && !playerPos.includes('MID') && playerPos !== 'DM' && playerPos !== 'CM' && playerPos !== 'AM' && playerPos !== 'LM' && playerPos !== 'RM') return;
+          if (position === 'FOR' && !playerPos.includes('FOR') && playerPos !== 'LW' && playerPos !== 'RW' && playerPos !== 'WF' && playerPos !== 'CF' && playerPos !== 'ST' && playerPos !== 'SS') return;
+        }
+
+        // Filter by min goals
+        if (player.goals < minGoals) return;
+
+        // Filter by playing up
+        if (playingUpOnly) {
+          if (!player.yob || !expectedYOB) return;
+          if (player.yob >= expectedYOB) return; // Not playing up
+        }
+
+        // Add to results
+        results.push({
+          jersey: player.jersey,
+          club: club.name,
+          clubId: club.clubId,
+          squad: squad,
+          name: player.name,
+          yob: player.yob || '-',
+          position: player.position || '-',
+          games: player.games,
+          goals: player.goals,
+          link: player.link || ''
+        });
+      });
+    });
+  });
+
+  // Sort by goals descending (top scorers first)
+  results.sort(function(a, b) {
+    return b.goals - a.goals;
+  });
+
+  // Display results
+  displaySearchResults(results);
+}
+
+function displaySearchResults(results) {
+  var tbody = document.getElementById('search-results-body');
+  var container = document.getElementById('search-results-container');
+  var countEl = document.getElementById('search-results-count');
+
+  // Update count
+  countEl.textContent = results.length + ' player' + (results.length !== 1 ? 's' : '') + ' found';
+
+  // Clear previous results
+  tbody.innerHTML = '';
+
+  if (results.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">No players match your search criteria</td></tr>';
+    container.style.display = 'block';
+    return;
+  }
+
+  // Populate results
+  results.forEach(function(player) {
+    var row = document.createElement('tr');
+
+    var linkHtml = player.link ?
+      '<a href="' + player.link + '" target="_blank">🎥</a>' :
+      '<span style="color:#ccc;">—</span>';
+
+    row.innerHTML =
+      '<td>' + player.jersey + '</td>' +
+      '<td>' + player.club + '</td>' +
+      '<td><a href="team.html?club=' + player.clubId + '#' + player.squad + '-squad">' + player.name + '</a></td>' +
+      '<td>' + player.yob + '</td>' +
+      '<td>' + player.position + '</td>' +
+      '<td>' + player.games + '</td>' +
+      '<td><strong>' + player.goals + '</strong></td>' +
+      '<td>' + linkHtml + '</td>';
+
+    tbody.appendChild(row);
+  });
+
+  container.style.display = 'block';
 }
 
 // Geocode address using OpenStreetMap Nominatim API
@@ -1748,6 +2042,107 @@ document.addEventListener('keydown', function(e) {
         <button type="submit" id="addClubSubmit" class="modal-btn modal-btn-primary">Add Club</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- SEARCH MODAL -->
+<div id="search-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeSearchModal()">
+  <div class="modal-container search-modal-container" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>🔍 Search Players</h2>
+      <button class="modal-close" onclick="closeSearchModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- FILTERS -->
+      <div class="search-filters">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Age Group</label>
+            <select id="filter-age-group">
+              <option value="">All</option>
+              <option value="u13">U13</option>
+              <option value="u14">U14</option>
+              <option value="u15">U15</option>
+              <option value="u16">U16</option>
+              <option value="u17">U17</option>
+              <option value="u19">U19</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Division</label>
+            <select id="filter-division">
+              <option value="">All</option>
+              <option value="Northeast Division">Northeast Division</option>
+              <option value="Mid-Atlantic Division">Mid-Atlantic Division</option>
+              <option value="New England">New England</option>
+              <option value="Tri-State">Tri-State</option>
+              <option value="Southeast">Southeast</option>
+              <option value="Mid-America Division">Mid-America Division</option>
+              <option value="Southwest">Southwest</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Position</label>
+            <select id="filter-position">
+              <option value="">All</option>
+              <option value="GK">Goalkeeper</option>
+              <option value="DEF">Defender</option>
+              <option value="MID">Midfielder</option>
+              <option value="FOR">Forward</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Min Goals</label>
+            <input type="number" id="filter-min-goals" placeholder="0" min="0" />
+          </div>
+
+          <div class="filter-group">
+            <label>
+              <input type="checkbox" id="filter-playing-up" />
+              Playing Up Only
+            </label>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button class="modal-btn modal-btn-primary" onclick="performSearch()">Search</button>
+          <button class="modal-btn modal-btn-secondary" onclick="clearSearchFilters()">Clear</button>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="search-results-container" style="display:none; margin-top:20px;">
+        <div id="search-results-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h3 id="search-results-count" style="margin:0; color:#1a1a2e; font-size:16px;">0 players found</h3>
+        </div>
+
+        <div id="search-results-table-wrapper" style="max-height:400px; overflow-y:auto;">
+          <table id="search-results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Club</th>
+                <th>Name</th>
+                <th>YOB</th>
+                <th>Pos</th>
+                <th>Games</th>
+                <th>Goals</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody id="search-results-body">
+              <!-- Results populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
