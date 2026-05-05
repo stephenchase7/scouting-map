@@ -54,7 +54,29 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 
 #map-container { flex:1; position:relative; }
-#map { width:100%; height:100%; }
+#map {
+  width:100%;
+  height:100%;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 
 .leaflet-popup-content-wrapper {
   background:#ffffff; border:1px solid #e0e0e0; border-radius:8px; color:#1a1a2e;
@@ -111,9 +133,21 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 #search-input:focus { border-color:#cc0000; background:#fff; }
 
 .filter-section {
-  padding:8px 14px; border-bottom:1px solid #e0e0e0; flex-shrink:0; background:#fff;
+  padding:12px 14px; border-bottom:1px solid #e0e0e0; flex-shrink:0; background:#fff;
 }
-.filter-section h3 { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#888; margin-bottom:8px; }
+.filter-section h3 {
+  font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#888; margin-bottom:8px;
+  font-weight:600;
+}
+.filter-dropdown {
+  width:100%; padding:9px 12px; background:#f9f9f9; border:1px solid #ddd;
+  border-radius:6px; color:#333; font-size:12px; font-weight:500;
+  cursor:pointer; transition:all 0.15s; outline:none;
+  appearance:none; background-image:url('data:image/svg+xml;utf8,<svg fill="%23666" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat:no-repeat; background-position:right 8px center; padding-right:32px;
+}
+.filter-dropdown:hover { background:#f0f0f0; border-color:#bbb; }
+.filter-dropdown:focus { border-color:#cc0000; background:#fff; }
 .filter-btns { display:flex; gap:6px; flex-wrap:wrap; }
 .filter-btn {
   flex:1; min-width:45px; padding:6px 8px; background:#f5f5f5; border:1px solid #ddd;
@@ -122,6 +156,95 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .filter-btn:hover { background:#eee; color:#1a1a2e; }
 .filter-btn.active { background:#cc0000; border-color:#cc0000; color:#fff; }
+.active-filters {
+  padding:8px 14px; background:#fafafa; border-bottom:1px solid #e0e0e0; flex-shrink:0;
+  display:none; flex-wrap:wrap; gap:6px; align-items:center;
+}
+.active-filters.visible { display:flex; }
+.active-filters-label {
+  font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;
+}
+.filter-chip {
+  display:inline-flex; align-items:center; gap:4px; padding:4px 8px;
+  background:#fff5f5; border:1px solid:#cc0000; border-radius:12px;
+  font-size:10px; color:#cc0000; font-weight:600;
+}
+.filter-chip-close {
+  cursor:pointer; font-size:13px; line-height:1; color:#cc0000; font-weight:700;
+  padding:0 2px; transition:color 0.15s;
+}
+.filter-chip-close:hover { color:#a00000; }
+.clear-all-btn {
+  font-size:10px; color:#888; text-decoration:underline; cursor:pointer; font-weight:600;
+  margin-left:auto; transition:color 0.15s;
+}
+.clear-all-btn:hover { color:#cc0000; }
+
+.division-checkboxes {
+  display:flex; flex-direction:column; gap:8px;
+}
+.division-checkbox-item {
+  display:flex; align-items:center; gap:8px; padding:8px 10px;
+  background:#f9f9f9; border:1px solid #e0e0e0; border-radius:5px;
+  cursor:pointer; transition:all 0.15s;
+}
+.division-checkbox-item:hover { background:#f0f0f0; border-color:#cc0000; }
+.division-checkbox-item input[type="checkbox"] {
+  width:16px; height:16px; cursor:pointer; accent-color:#cc0000;
+}
+.division-checkbox-item label {
+  flex:1; font-size:11px; font-weight:600; color:#333; cursor:pointer;
+}
+.division-checkbox-item.checked {
+  background:#fff5f5; border-color:#cc0000;
+}
+
+.division-hierarchical {
+  display:flex; flex-direction:column; gap:4px;
+}
+.age-group-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 10px; background:#f5f5f5; border:1px solid #ddd;
+  border-radius:5px; cursor:pointer; font-weight:600; font-size:11px;
+  transition:all 0.15s;
+}
+.age-group-header:hover {
+  background:#eee; border-color:#cc0000;
+}
+.age-group-header.expanded {
+  background:#fff5f5; border-color:#cc0000;
+}
+.age-group-chevron {
+  font-size:10px; transition:transform 0.2s; color:#999;
+}
+.age-group-header.expanded .age-group-chevron {
+  transform:rotate(90deg);
+}
+.age-group-divisions {
+  display:none; flex-direction:column; gap:6px;
+  padding:8px 0 8px 16px;
+}
+.age-group-divisions.visible {
+  display:flex;
+}
+.division-checkbox-labeled {
+  display:flex; align-items:center; gap:8px; padding:6px 8px;
+  background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px;
+  cursor:pointer; transition:all 0.15s;
+}
+.division-checkbox-labeled:hover {
+  background:#f0f0f0; border-color:#cc0000;
+}
+.division-checkbox-labeled.checked {
+  background:#fff5f5; border-color:#cc0000;
+}
+.division-checkbox-labeled input[type="checkbox"] {
+  width:14px; height:14px; cursor:pointer; accent-color:#cc0000;
+}
+.division-checkbox-labeled label {
+  flex:1; font-size:10px; font-weight:500; color:#333;
+  cursor:pointer; user-select:none;
+}
 
 #zoom-controls {
   position:absolute; top:10px; right:10px; z-index:1000;
@@ -197,13 +320,19 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .modal-btn-primary:disabled { background:#ccc; cursor:not-allowed; }
 .modal-btn-secondary { background:#f5f5f5; color:#666; border:1px solid #ddd; }
 .modal-btn-secondary:hover { background:#eee; }
-.add-club-btn {
-  position:absolute; bottom:12px; right:12px; padding:6px 12px;
-  background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);
-  border-radius:4px; color:#fff; font-size:11px; font-weight:600;
-  cursor:pointer; transition:all 0.15s;
+#add-club-section {
+  padding:12px 14px; border-bottom:1px solid #e0e0e0; background:#fff; flex-shrink:0;
 }
-.add-club-btn:hover { background:rgba(255,255,255,0.35); }
+.add-club-btn {
+  width:100%; padding:10px 16px;
+  background:linear-gradient(135deg, #cc0000 0%, #8B0000 100%);
+  border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:700;
+  cursor:pointer; transition:all 0.15s; text-align:center;
+}
+.add-club-btn:hover {
+  background:linear-gradient(135deg, #a00000 0%, #700000 100%);
+  box-shadow:0 2px 8px rgba(204, 0, 0, 0.3);
+}
 .loading { opacity:0.7; pointer-events:none; }
 .form-error { color:#cc0000; font-size:11px; margin-top:4px; display:none; }
 .form-success { color:#2ecc71; font-size:12px; text-align:center; padding:10px; display:none; }
@@ -215,10 +344,13 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   <div id="sidebar-header">
     <h1>NY Red Bulls Scouting Map</h1>
     <p>MLS NEXT | Multi-Conference</p>
-    <button class="add-club-btn" onclick="openAddClubModal()">+ Add Club</button>
     <button id="sidebar-toggle" onclick="toggleSidebar()">
       <svg id="toggle-icon" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
     </button>
+  </div>
+
+  <div id="add-club-section">
+    <button class="add-club-btn" onclick="openAddClubModal()">+ Add Club</button>
   </div>
 
   <div id="selected-card" class="empty">
@@ -229,31 +361,40 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
     <input type="text" id="search-input" placeholder="Search clubs..." oninput="applyFilters()">
   </div>
 
-  <div class="filter-section">
-    <h3>Pathway</h3>
-    <div class="filter-btns">
-      <button class="filter-btn active" data-filter="pathway" data-value="u13-u15" onclick="setFilter('pathway','u13-u15')">U13-U15 Dev</button>
-      <button class="filter-btn" data-filter="pathway" data-value="u16-u19" onclick="setFilter('pathway','u16-u19')">U16-U19</button>
-    </div>
+  <div class="active-filters" id="active-filters">
+    <span class="active-filters-label">Active:</span>
+    <div id="active-chips"></div>
+    <span class="clear-all-btn" onclick="clearAllFilters()">Clear All</span>
   </div>
 
-  <div class="filter-section" id="division-filter" style="display:none;">
+  <div class="filter-section">
     <h3>Division</h3>
-    <div class="filter-btns" id="division-btns">
-      <button class="filter-btn active" data-filter="division" data-value="all" onclick="setFilter('division','all')">All</button>
-      <button class="filter-btn" data-filter="division" data-value="pro" onclick="setFilter('division','pro')">Pro Pathway</button>
-      <button class="filter-btn" data-filter="division" data-value="northeast" onclick="setFilter('division','northeast')">Northeast</button>
-    </div>
+    <select class="filter-dropdown" id="division-filter" onchange="updateAgeDropdown(); applyFilters();">
+      <option value="">All Divisions</option>
+    </select>
+  </div>
+
+  <div class="filter-section">
+    <h3>Age Group</h3>
+    <select class="filter-dropdown" id="age-filter" onchange="applyFilters()">
+      <option value="">All Age Groups</option>
+      <option value="U13">U13</option>
+      <option value="U14">U14</option>
+      <option value="U15">U15</option>
+      <option value="U16">U16</option>
+      <option value="U17">U17</option>
+      <option value="U19">U19</option>
+    </select>
   </div>
 
   <div class="filter-section">
     <h3>Distance from NYRB</h3>
-    <div class="filter-btns">
-      <button class="filter-btn active" data-filter="distance" data-value="all" onclick="setFilter('distance','all')">All</button>
-      <button class="filter-btn" data-filter="distance" data-value="50" onclick="setFilter('distance',50)">&lt;50mi</button>
-      <button class="filter-btn" data-filter="distance" data-value="100" onclick="setFilter('distance',100)">&lt;100mi</button>
-      <button class="filter-btn" data-filter="distance" data-value="200" onclick="setFilter('distance',200)">&lt;200mi</button>
-    </div>
+    <select class="filter-dropdown" id="distance-filter" onchange="applyFilters()">
+      <option value="">All distances</option>
+      <option value="50">&lt; 50 miles</option>
+      <option value="100">&lt; 100 miles</option>
+      <option value="200">&lt; 200 miles</option>
+    </select>
   </div>
 
   <div id="club-count">Showing <span id="count-num">0</span> clubs</div>
@@ -293,56 +434,309 @@ var LEAGUE_COLORS = {
   'AD': '#8B0000'
 };
 
+// State name to abbreviation mapping
+var US_STATE_NAMES = {
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+  'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+  'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+  'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+  'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+  'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+  'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+  'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+  'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+  'District of Columbia': 'DC', 'Ontario': 'ON', 'Quebec': 'QC'
+};
+
+// State to Division mapping for auto-assigning divisions
+var STATE_TO_DIVISION = {
+  'NJ': 'Tri-State',
+  'NY': 'Tri-State',
+  'CT': 'New England',
+  'MA': 'New England',
+  'NH': 'New England',
+  'VT': 'New England',
+  'ME': 'New England',
+  'RI': 'New England',
+  'PA': 'Mid-Atlantic',
+  'DE': 'Mid-Atlantic',
+  'MD': 'Mid-Atlantic',
+  'DC': 'Mid-Atlantic',
+  'VA': 'Virginia',
+  'WV': 'Virginia',
+  'NC': 'Virginia',
+  'OH': 'Great Lakes',
+  'MI': 'Great Lakes',
+  'IN': 'Great Lakes',
+  'IL': 'Great Lakes',
+  'WI': 'Great Lakes',
+  'ON': 'Northeast',
+  'QC': 'Northeast'
+};
+
 // ── CLUBS DATA ──
 // Northeast Division - MLS NEXT
 var clubs = [
   // ══════════════════════════════════════════════════════════════
   // MLS PRO CLUBS (U16-U19 Pro Pathway)
   // ══════════════════════════════════════════════════════════════
-  {name:"New York Red Bulls", state:"NJ", league:"HD", division:"Tri-State", lat:40.8167, lng:-74.4028, logo:"MLS Logos/NY Red Bulls.png", website:"https://www.newyorkredbulls.com", driveMiles:0, driveTime:"0m", initials:"NYRB", isPro:true, pathway:"both", clubId:"nyrb"},
-  {name:"New York City FC", state:"NY", league:"HD", division:"Tri-State", lat:40.829, lng:-73.926, logo:"MLS Logos/NYCFC.png", website:"https://www.nycfc.com", driveMiles:28, driveTime:"45m", initials:"NYCFC", isPro:true, pathway:"both", clubId:"nycfc"},
-  {name:"New England Revolution", state:"MA", league:"HD", division:"New England", lat:42.09, lng:-71.26, logo:"MLS Logos/NE Revolution.png", website:"https://www.revolutionsoccer.net", driveMiles:210, driveTime:"3h 25m", initials:"NER", isPro:true, pathway:"both", clubId:"ne_rev"},
-  {name:"Philadelphia Union", state:"PA", league:"HD", division:"Mid-Atlantic", lat:39.832, lng:-75.379, logo:"MLS Logos/Philadelphia Union.jpg", website:"https://www.philadelphiaunion.com", driveMiles:95, driveTime:"1h 40m", initials:"PHI", isPro:true, pathway:"both", clubId:"philly"},
-  {name:"Toronto FC", state:"ON", league:"HD", division:"Northeast", lat:43.633, lng:-79.418, logo:"MLS Logos/Toronto FC.png", website:"https://www.torontofc.ca", driveMiles:475, driveTime:"7h 30m", initials:"TFC", isPro:true, pathway:"u16-u19", clubId:"tfc"},
-  {name:"CF Montreal", state:"QC", league:"HD", division:"Northeast", lat:45.563, lng:-73.553, logo:"MLS Logos/CF Montreal.png", website:"https://www.cfmontreal.com", driveMiles:380, driveTime:"6h 0m", initials:"MTL", isPro:true, pathway:"u16-u19", clubId:"mtl"},
-  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19", clubId:"dcu"},
+  {name:"New York Red Bulls", state:"NJ", league:"HD", division:"Northeast Division", lat:40.8167, lng:-74.4028, logo:"MLS Logos/NY Red Bulls.png", website:"https://www.newyorkredbulls.com", driveMiles:0, driveTime:"0m", initials:"NYRB", isPro:true, pathway:"both", clubId:"nyrb"},
+  {name:"New York City FC", state:"NY", league:"HD", division:"Northeast Division", lat:40.829, lng:-73.926, logo:"MLS Logos/NYCFC.png", website:"https://www.nycfc.com", driveMiles:28, driveTime:"45m", initials:"NYCFC", isPro:true, pathway:"both", clubId:"nycfc"},
+  {name:"New England Revolution", state:"MA", league:"HD", division:"Northeast Division", lat:42.09, lng:-71.26, logo:"MLS Logos/NE Revolution.png", website:"https://www.revolutionsoccer.net", driveMiles:210, driveTime:"3h 25m", initials:"NER", isPro:true, pathway:"both", clubId:"ne_rev"},
+  {name:"Philadelphia Union", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:39.832, lng:-75.379, logo:"MLS Logos/Philadelphia Union.jpg", website:"https://www.philadelphiaunion.com", driveMiles:95, driveTime:"1h 40m", initials:"PHI", isPro:true, pathway:"both", clubId:"philly"},
+  {name:"Toronto FC", state:"ON", league:"HD", division:"Northeast (Pro Player Pathway)", lat:43.633, lng:-79.418, logo:"MLS Logos/Toronto FC.png", website:"https://www.torontofc.ca", driveMiles:475, driveTime:"7h 30m", initials:"TFC", isPro:true, pathway:"u16-u19", clubId:"tfc"},
+  {name:"CF Montreal", state:"QC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:45.563, lng:-73.553, logo:"MLS Logos/CF Montreal.png", website:"https://www.cfmontreal.com", driveMiles:380, driveTime:"6h 0m", initials:"MTL", isPro:true, pathway:"u16-u19", clubId:"mtl"},
+  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19", clubId:"dcu"},
 
   // ══════════════════════════════════════════════════════════════
   // NORTHEAST DIVISION CLUBS (U13-U19)
   // ══════════════════════════════════════════════════════════════
-  {name:"Beachside SC", state:"CT", league:"HD", division:"Tri-State", lat:41.14, lng:-73.36, logo:"MLS Logos/beachside.png", website:"https://beachsidesoccer.org", driveMiles:72, driveTime:"1h 20m", initials:"BSC", isPro:false, pathway:"both", clubId:"beachside"},
-  {name:"Blau Weiss Gottschee", state:"NY", league:"HD", division:"Tri-State", lat:40.745, lng:-73.90, logo:"MLS Logos/BW Gottschee.png", website:"https://bwgottschee.org", driveMiles:26, driveTime:"45m", initials:"BWG", isPro:false, pathway:"both", clubId:"bwg"},
-  {name:"Cedar Stars Academy Bergen", state:"NJ", league:"HD", division:"Tri-State", lat:40.955, lng:-74.07, logo:"MLS Logos/CSA Bergen.png", website:"https://cedarstars.com", driveMiles:19, driveTime:"30m", initials:"CSA", isPro:false, pathway:"both", clubId:"csa_bergen"},
-  {name:"Cedar Stars Academy Monmouth", state:"NJ", league:"HD", division:"Mid-Atlantic", lat:40.28, lng:-74.08, logo:"MLS Logos/CSA Monmouth.png", website:"https://cedarstars.com", driveMiles:52, driveTime:"1h 0m", initials:"CSAM", isPro:false, pathway:"both", clubId:"csa_monmouth"},
-  {name:"Connecticut United FC", state:"CT", league:"HD", division:"New England", lat:41.22, lng:-73.06, logo:"MLS Logos/ct united.png", website:"https://ctunited.com", driveMiles:85, driveTime:"1h 25m", initials:"CTU", isPro:false, pathway:"u13-u15", clubId:"ct_united"},
-  {name:"Downtown United SC", state:"NY", league:"HD", division:"Tri-State", lat:40.762, lng:-73.98, logo:"MLS Logos/dusc.png", website:"https://dusc.net", driveMiles:30, driveTime:"50m", initials:"DUSC", isPro:false, pathway:"both", clubId:"dusc"},
-  {name:"FA Euro New York", state:"NY", league:"HD", division:"Tri-State", lat:40.575, lng:-74.15, logo:"MLS Logos/fa euro.png", website:"https://faeuro.com", driveMiles:35, driveTime:"50m", initials:"FAE", isPro:false, pathway:"both", clubId:"fa_euro"},
-  {name:"FC Westchester", state:"NY", league:"HD", division:"Tri-State", lat:41.055, lng:-73.82, logo:"MLS Logos/FC Westchester.png", website:"https://fcwestchester.com", driveMiles:24, driveTime:"38m", initials:"FCW", isPro:false, pathway:"both", clubId:"fc_westchester"},
-  {name:"Ironbound SC", state:"NJ", league:"HD", division:"Tri-State", lat:40.73, lng:-74.175, logo:"MLS Logos/Ironbound SC.png", website:"https://ironboundsoccer.com", driveMiles:16, driveTime:"28m", initials:"ISC", isPro:false, pathway:"both", clubId:"ironbound"},
+  {name:"Beachside of Connecticut", state:"CT", league:"HD", division:"Northeast Division", lat:41.14, lng:-73.36, logo:"MLS Logos/beachside.png", website:"https://beachsidesoccer.org", driveMiles:72, driveTime:"1h 20m", initials:"BSC", isPro:false, pathway:"both", clubId:"beachside"},
+  {name:"Blau Weiss Gottschee", state:"NY", league:"HD", division:"Northeast Division", lat:40.745, lng:-73.90, logo:"MLS Logos/BW Gottschee.png", website:"https://bwgottschee.org", driveMiles:26, driveTime:"45m", initials:"BWG", isPro:false, pathway:"both", clubId:"bwg"},
+  {name:"Cedar Stars Academy Bergen", state:"NJ", league:"HD", division:"Northeast Division", lat:40.955, lng:-74.07, logo:"MLS Logos/CSA Bergen.png", website:"https://cedarstars.com", driveMiles:19, driveTime:"30m", initials:"CSA", isPro:false, pathway:"both", clubId:"csa_bergen"},
+  {name:"Cedar Stars Academy Monmouth", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:40.28, lng:-74.08, logo:"MLS Logos/CSA Monmouth.png", website:"https://cedarstars.com", driveMiles:52, driveTime:"1h 0m", initials:"CSAM", isPro:false, pathway:"both", clubId:"csa_monmouth"},
+  {name:"Connecticut United FC", state:"CT", league:"HD", division:"Northeast Division", lat:41.22, lng:-73.06, logo:"MLS Logos/ct united.png", website:"https://ctunited.com", driveMiles:85, driveTime:"1h 25m", initials:"CTU", isPro:false, pathway:"u13-u15", clubId:"ct_united"},
+  {name:"Downtown United Soccer Club", state:"NY", league:"HD", division:"Northeast Division", lat:40.762, lng:-73.98, logo:"MLS Logos/dusc.png", website:"https://dusc.net", driveMiles:30, driveTime:"50m", initials:"DUSC", isPro:false, pathway:"both", clubId:"dusc"},
+  {name:"FA Euro New York", state:"NY", league:"HD", division:"Northeast Division", lat:40.575, lng:-74.15, logo:"MLS Logos/fa euro.png", website:"https://faeuro.com", driveMiles:35, driveTime:"50m", initials:"FAE", isPro:false, pathway:"both", clubId:"fa_euro"},
+  {name:"FC Westchester", state:"NY", league:"HD", division:"Northeast Division", lat:41.055, lng:-73.82, logo:"MLS Logos/FC Westchester.png", website:"https://fcwestchester.com", driveMiles:24, driveTime:"38m", initials:"FCW", isPro:false, pathway:"both", clubId:"fc_westchester"},
+  {name:"Ironbound Soccer Club", state:"NJ", league:"HD", division:"Northeast Division", lat:40.73, lng:-74.175, logo:"MLS Logos/Ironbound SC.png", website:"https://ironboundsoccer.com", driveMiles:16, driveTime:"28m", initials:"ISC", isPro:false, pathway:"both", clubId:"ironbound_soccer_club"},
   {name:"Long Island SC", state:"NY", league:"HD", division:"Tri-State", lat:40.680, lng:-73.55, logo:"MLS Logos/LISC.png", website:"https://longisland-soccerclub.com", driveMiles:58, driveTime:"1h 5m", initials:"LISC", isPro:false, pathway:"both", clubId:"lisc"},
-  {name:"Metropolitan Oval", state:"NY", league:"HD", division:"Tri-State", lat:40.872, lng:-73.89, logo:"MLS Logos/Met Oval.png", website:"https://metropolitanoval.org", driveMiles:27, driveTime:"42m", initials:"MO", isPro:false, pathway:"both", clubId:"met_oval"},
-  {name:"New York SC", state:"NY", league:"HD", division:"Tri-State", lat:41.025, lng:-73.90, logo:"MLS Logos/NYSC.png", website:"https://newyorksoccerclub.org", driveMiles:23, driveTime:"38m", initials:"NYSC", isPro:false, pathway:"both", clubId:"nysc"},
-  {name:"TSF Academy", state:"NJ", league:"HD", division:"Tri-State", lat:40.67, lng:-74.65, logo:"MLS Logos/TSF.png", website:"https://tsfacademy.com", driveMiles:22, driveTime:"35m", initials:"TSF", isPro:false, pathway:"both", clubId:"tsf"},
-  {name:"FC Greater Boston Bolts", state:"MA", league:"HD", division:"New England", lat:42.20, lng:-71.00, logo:"MLS Logos/FC Greater Boston Bolts.png", website:"https://bostonbolts.com", driveMiles:234, driveTime:"3h 48m", initials:"BOLT", isPro:false, pathway:"both", clubId:"boston_bolts"},
-  {name:"Intercontinental FA", state:"MA", league:"HD", division:"New England", lat:42.475, lng:-71.10, logo:"MLS Logos/Intercontinental FA.jpg", website:"https://ifane.org", driveMiles:224, driveTime:"3h 38m", initials:"IFA", isPro:false, pathway:"both", clubId:"ifa"},
-  {name:"NEFC", state:"MA", league:"HD", division:"New England", lat:42.30, lng:-71.68, logo:"MLS Logos/NEFC.png", website:"https://nefc.us", driveMiles:202, driveTime:"3h 18m", initials:"NEFC", isPro:false, pathway:"both", clubId:"nefc"},
+  {name:"Metropolitan Oval", state:"NY", league:"HD", division:"Northeast Division", lat:40.872, lng:-73.89, logo:"MLS Logos/Met Oval.png", website:"https://metropolitanoval.org", driveMiles:27, driveTime:"42m", initials:"MO", isPro:false, pathway:"both", clubId:"met_oval"},
+  {name:"New York SC", state:"NY", league:"HD", division:"Northeast Division", lat:41.025, lng:-73.90, logo:"MLS Logos/NYSC.png", website:"https://newyorksoccerclub.org", driveMiles:23, driveTime:"38m", initials:"NYSC", isPro:false, pathway:"both", clubId:"nysc"},
+  {name:"TSF Academy", state:"NJ", league:"HD", division:"Northeast Division", lat:40.67, lng:-74.65, logo:"MLS Logos/TSF.png", website:"https://tsfacademy.com", driveMiles:22, driveTime:"35m", initials:"TSF", isPro:false, pathway:"both", clubId:"tsf"},
+  {name:"FC Greater Boston Bolts", state:"MA", league:"HD", division:"Northeast Division", lat:42.20, lng:-71.00, logo:"MLS Logos/FC Greater Boston Bolts.png", website:"https://bostonbolts.com", driveMiles:234, driveTime:"3h 48m", initials:"BOLT", isPro:false, pathway:"both", clubId:"bolts"},
+  {name:"Intercontinental Football Academy of New England", state:"MA", league:"HD", division:"Northeast Division", lat:42.2648, lng:-72.5201, logo:"MLS Logos/Intercontinental FA.jpg", website:"https://ifane.org", driveMiles:224, driveTime:"3h 38m", initials:"IFA", isPro:false, pathway:"both", clubId:"ifa"},
+  {name:"NEFC", state:"MA", league:"HD", division:"Northeast Division", lat:42.30, lng:-71.68, logo:"MLS Logos/NEFC.png", website:"https://nefc.us", driveMiles:202, driveTime:"3h 18m", initials:"NEFC", isPro:false, pathway:"both", clubId:"nefc"},
   {name:"Oakwood SC", state:"CT", league:"HD", division:"New England", lat:41.285, lng:-73.03, logo:"MLS Logos/Oakwood Soccer Club.jpg", website:"https://oakwoodsoccer.com", driveMiles:91, driveTime:"1h 38m", initials:"OSC", isPro:false, pathway:"both", clubId:"oakwood"},
-  {name:"Rochester NY FC", state:"NY", league:"HD", division:"Mid-Atlantic", lat:43.155, lng:-77.61, logo:"MLS Logos/Rochester NY FC Academy.jpg", website:"https://www.rnyfc-youth.com", driveMiles:327, driveTime:"5h 2m", initials:"ROC", isPro:false, pathway:"both", clubId:"rochester"},
-  {name:"Seacoast United", state:"NH", league:"HD", division:"New England", lat:43.07, lng:-70.76, logo:"MLS Logos/Seacoast United.jpg", website:"https://seacoastunited.com", driveMiles:314, driveTime:"4h 58m", initials:"SCU", isPro:false, pathway:"both", clubId:"seacoast"},
+  {name:"Rochester NY FC", state:"NY", league:"HD", division:"Northeast Division", lat:43.155, lng:-77.61, logo:"MLS Logos/Rochester NY FC Academy.jpg", website:"https://www.rnyfc-youth.com", driveMiles:327, driveTime:"5h 2m", initials:"ROC", isPro:false, pathway:"both", clubId:"rochester"},
+  {name:"Seacoast United", state:"NH", league:"HD", division:"Northeast Division", lat:43.07, lng:-70.76, logo:"MLS Logos/Seacoast United.jpg", website:"https://seacoastunited.com", driveMiles:314, driveTime:"4h 58m", initials:"SCU", isPro:false, pathway:"both", clubId:"seacoast"},
   {name:"Valeo FC", state:"MA", league:"HD", division:"New England", lat:42.51, lng:-71.20, logo:"MLS Logos/Valeo FC.png", website:"https://valeofc.com", driveMiles:222, driveTime:"3h 34m", initials:"VFC", isPro:false, pathway:"both", clubId:"valeo"},
-  {name:"Bayside FC", state:"MA", league:"HD", division:"New England", lat:41.745, lng:-71.31, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both", clubId:"bayside"},
-  {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Tri-State", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"rfa"},
-  {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Great Lakes", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
-  {name:"Sockers FC Chicago", state:"IL", league:"HD", division:"Great Lakes", lat:42.1125, lng:-88.034, logo:"MLS Logos/Sockers FC Chicago.png", website:"", driveMiles:800, driveTime:"12h 0m", initials:"SFC", isPro:false, pathway:"both", clubId:"sockers_fc_chicago"},
-  {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
-  {name:"Sporting Delaware", state:"DE", league:"HD", division:"Mid-Atlantic", lat:39.745, lng:-75.548, logo:"MLS Logos/Sporting Delaware.jpg", website:"https://sportingdelaware.com", driveMiles:120, driveTime:"2h 0m", initials:"SD", isPro:false, pathway:"both", clubId:"sporting_de"}
+  {name:"Bayside FC", state:"MA", league:"HD", division:"Northeast Division", lat:41.745, lng:-71.31, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both", clubId:"bayside"},
+  {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"rfa"},
+  {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Mid-America Division", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
+  {name:"Sockers FC Chicago", state:"IL", league:"HD", division:"Mid-America Division", lat:42.1125, lng:-88.034, logo:"MLS Logos/Sockers FC Chicago.png", website:"", driveMiles:800, driveTime:"12h 0m", initials:"SFC", isPro:false, pathway:"both", clubId:"sockers_fc_chicago"},
+  {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
+  {name:"Sporting Delaware", state:"DE", league:"HD", division:"Mid-Atlantic", lat:39.745, lng:-75.548, logo:"MLS Logos/Sporting Delaware.jpg", website:"https://sportingdelaware.com", driveMiles:120, driveTime:"2h 0m", initials:"SD", isPro:false, pathway:"both", clubId:"sporting_de"},
+  {name:"Inter Atlanta fc", state:"GA", league:"HD", division:"Southeast", lat:33.7590, lng:-84.3312, logo:"MLS Logos/Inter Atlanta fc.png", website:"", driveMiles:860, driveTime:"16h 31m", initials:"IAF", isPro:false, pathway:"both", clubId:"inter_atlanta"},
+  {name:"FC Delco", state:"PA", league:"HD", division:"Mid-Atlantic", lat:40.0792766, lng:-75.3015714, logo:"MLS Logos/FC Delco.png", website:"", driveMiles:83, driveTime:"2h 2m", initials:"DEL", isPro:false, pathway:"both", clubId:"fc_delco"},
+  {name:"Springfield SYC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7791227, lng:-77.1861196, logo:"MLS Logos/Springfield SYC.jpg", website:"", driveMiles:247, driveTime:"5h 15m", initials:"SS", isPro:false, pathway:"both", clubId:"springfield_syc"},
+  {name:"Real Salt Lake (AZ)", state:"AZ", league:"HD", division:"Southwest", lat:33.4942189, lng:-111.926018, logo:"MLS Logos/Real Salt Lake (AZ).png", website:"", driveMiles:2401, driveTime:"43h 36m", initials:"RSL", isPro:false, pathway:"both", clubId:"real_salt_lake_az"},
+  {name:"Sporting Athletic Club", state:"DE", league:"HD", division:"Mid-Atlantic", lat:39.7471805, lng:-75.5500972, logo:"MLS Logos/Sporting Athletic Club.jpg", website:"", driveMiles:120, driveTime:"2h 0m", initials:"SAC", isPro:false, pathway:"both", clubId:"sporting_athletic_club"},
+  {name:"Beadling SC", state:"PA", league:"HD", division:"Mid-Atlantic", lat:40.7022913, lng:-80.2860955, logo:"MLS Logos/Beadling SC.jpg", website:"", driveMiles:320, driveTime:"5h 10m", initials:"BSC", isPro:false, pathway:"both", clubId:"beadling_sc"},
+  {name:"Players Development Academy", state:"NJ", league:"HD", division:"Mid-Atlantic", lat:40.532801, lng:-74.575501, logo:"MLS Logos/Players Development Academy.png", website:"", driveMiles:22, driveTime:"43m", initials:"PDA", isPro:false, pathway:"both", clubId:"players_development_academy"},
+  {name:"The Football Academy", state:"NJ", league:"HD", division:"Tri-State", lat:40.7557497, lng:-74.3613575, logo:"MLS Logos/The Football Academy.jpg", website:"", driveMiles:5, driveTime:"9m", initials:"TFA", isPro:false, pathway:"both", clubId:"the_football_academy"}
 ];
+
+// Load clubs from localStorage and merge with base clubs
+try {
+  var savedClubs = localStorage.getItem('customClubs');
+  if (savedClubs) {
+    var customClubs = JSON.parse(savedClubs);
+
+    // Filter out custom clubs that duplicate hardcoded clubs (by name)
+    var hardcodedNames = clubs.map(function(c) { return c.name.toLowerCase(); });
+    var filteredCustomClubs = customClubs.filter(function(customClub) {
+      var isDuplicate = hardcodedNames.indexOf(customClub.name.toLowerCase()) !== -1;
+      if (isDuplicate) {
+        console.warn('Skipping duplicate custom club: ' + customClub.name + ' (id: ' + customClub.clubId + ')');
+      }
+      return !isDuplicate;
+    });
+
+    // Save cleaned list back to localStorage
+    if (filteredCustomClubs.length !== customClubs.length) {
+      localStorage.setItem('customClubs', JSON.stringify(filteredCustomClubs));
+      console.log('Removed ' + (customClubs.length - filteredCustomClubs.length) + ' duplicate custom club(s)');
+    }
+
+    clubs = clubs.concat(filteredCustomClubs);
+    console.log('Loaded ' + filteredCustomClubs.length + ' custom club(s) from localStorage');
+  }
+} catch (e) {
+  console.error('Error loading custom clubs:', e);
+}
+
+// ── CSV TEAM DATA (Age Group + Division Mapping) ──
+var csvTeamData = {
+  "AC River": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "AFC Lightning": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "ALBION SC Colorado": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "ALBION SC Las Vegas": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "ALBION SC Los Angeles": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "ALBION SC Merced": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "ALBION SC San Diego": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Achilles FC": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Alexandria SA": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Athletum FC Academy": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Atlanta United": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Atletico Santa Rosa": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Austin FC": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Ballistic United": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Baltimore Armour": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Barca Residency Academy": [{age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Bavarian United SC": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Bayside FC": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Beachside of Connecticut": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Beadling SC": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Bethesda SC": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Blau Weiss Gottschee": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "CF Montreal": [{age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "Capital City SC": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "Carolina Core FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}],
+  "Cedar Stars Academy Bergen": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Cedar Stars Academy Monmouth": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Chargers Soccer Club": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Charlotte FC": [{age: "U14", division: "Southeast Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Charlotte Independence": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Chattanooga FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}],
+  "Chicago FC United": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Chicago Fire FC": [{age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "Chula Vista FC": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Cincinnati United Premier Soccer Club": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "City SC San Diego": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "City SC Southwest": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Colorado Rapids": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "Columbus Crew": [{age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "Connecticut United FC": [{age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "D.C. United": [{age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "Dallas Hornets": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "De Anza Force": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Downtown United Soccer Club": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "FA Euro New York": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "FC Bay Area Surf": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "FC Cincinnati": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "FC DELCO": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "FC Dallas": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "FC Golden State": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "FC Greater Boston Bolts": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "FC Westchester": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Global Football Innovation Academy": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "Hoosier Premier": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Hoover-Vestavia Soccer": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Houston Dynamo FC": [{age: "U14", division: "Frontier Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Houston Rangers": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "Huntsville City FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}],
+  "IDEA Toros Futbol Academy": [{age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "IMG": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "IdeaSport SA": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Indy Eleven": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Inter Atlanta FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Inter Miami CF": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Intercontinental Football Academy of New England": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Ironbound Soccer Club": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Jacksonville Armada FC": [{age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Jacksonville FC": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}],
+  "KSA": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Keystone FC": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "LA Bulls": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "LA Galaxy": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U16", division: "West (Pro Player Pathway)"}, {age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Lamorinda Soccer Club": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Lanier Soccer Association": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Las Vegas Sports Academy": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Long Island Soccer Club": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Los Angeles Football Club": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U16", division: "West (Pro Player Pathway)"}, {age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Los Angeles SC": [{age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Los Angeles Soccer Club": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}],
+  "Los Angeles Surf": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Lou Fusz Athletic": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Metropolitan Oval": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Miami Futbol Academy Rush": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Michigan Futbol Academy": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Michigan Jaguars": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Michigan Wolves": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Midwest United FC": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Minnesota United FC": [{age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "Modesto Ajax United": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "NEFC": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Napa United": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Nashville SC": [{age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Nashville United Soccer Academy": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "New England Revolution": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "New York City FC": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "New York Red Bulls": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "New York SC": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Northern Virginia Alliance": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Oakwood Soccer Club": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Orlando City SC": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
+  "Orlando City Soccer School South": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Orlando City Youth SC": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "PA Classics": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Philadelphia Union": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "Phoenix Rising FC": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Players Development Academy": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Portland Timbers": [{age: "U16", division: "West (Pro Player Pathway)"}, {age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Queen City Mutiny FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "RSL Arizona": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "RSL Arizona Mesa": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}],
+  "Real Futbol Academy": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Real Salt Lake": [{age: "U16", division: "West (Pro Player Pathway)"}, {age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Rochester NY FC": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "SC Del Sol": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "SC Wave": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Sacramento Republic FC": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Sacramento United": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "San Diego FC": [{age: "U13", division: "Southwest Division"}],
+  "San Francisco Glens SC": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "San Francisco Seals": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "San Jose Earthquakes": [{age: "U14", division: "Northwest Division"}, {age: "U16", division: "West (Pro Player Pathway)"}, {age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Santa Barbara Soccer Club": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Seacoast United": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Seattle Sounders FC": [{age: "U16", division: "West (Pro Player Pathway)"}, {age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Shattuck-St. Mary's": [{age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Silicon Valley Soccer Academy": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "SoCal Reds FC": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Sockers FC Chicago": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Sol SC Florida": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "South Florida Football Academy": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Southern Soccer Academy": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Sporting Athletic Club": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "Sporting Kansas City": [{age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "Springfield SYC": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "St. Louis CITY SC": [{age: "U14", division: "Mid-America Division"}, {age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
+  "St. Louis Scott Gallagher": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Strikers FC": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "TSF Academy": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
+  "Tampa Bay United": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "The Football Academy": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}, {age: "U16", division: "Mid-Atlantic Division"}, {age: "U17", division: "Mid-Atlantic Division"}, {age: "U19", division: "Mid-Atlantic Division"}],
+  "The Town FC Academy": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
+  "Toronto FC": [{age: "U16", division: "Northeast (Pro Player Pathway)"}, {age: "U17", division: "Northeast (Pro Player Pathway)"}, {age: "U19", division: "Northeast (Pro Player Pathway)"}],
+  "Total Futbol Academy": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Triangle United Soccer Association": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "Tulsa Greenwood SC": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],
+  "Valeo Futbol Club": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}],
+  "Vancouver Whitecaps FC": [{age: "U17", division: "West (Pro Player Pathway)"}, {age: "U19", division: "West (Pro Player Pathway)"}],
+  "Vardar Soccer Club": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
+  "Ventura County Fusion": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
+  "Wake FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
+  "West Florida Flames": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "West Virginia Soccer": [{age: "U13", division: "Mid-Atlantic Division"}, {age: "U14", division: "Mid-Atlantic Division"}, {age: "U15", division: "Mid-Atlantic Division"}],
+  "Weston FC": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
+  "Woodside Soccer Club Crush": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}]
+};
+
+// Helper function to get club divisions by age group
+function getClubDivisionsByAge(clubName) {
+  var teamData = csvTeamData[clubName];
+  if (!teamData) return {};
+
+  var result = {};
+  teamData.forEach(function(entry) {
+    if (!result[entry.age]) {
+      result[entry.age] = [];
+    }
+    if (result[entry.age].indexOf(entry.division) === -1) {
+      result[entry.age].push(entry.division);
+    }
+  });
+  return result;
+}
 
 // ── FILTER STATE ──
 var filters = {
-  pathway: 'u13-u15',
-  division: 'all',
-  distance: 'all'
+  division: '',
+  age: '',
+  distance: ''
 };
 
 // ── MAP INIT ──
@@ -351,7 +745,21 @@ var map = L.map('map', {
   zoom: 7,
   zoomControl: false,
   zoomSnap: 0.25,
-  zoomDelta: 0.5
+  zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 120,
+  zoomAnimation: true,
+  zoomAnimationThreshold: 8,
+  fadeAnimation: true,
+  markerZoomAnimation: true,
+  preferCanvas: true,
+  inertia: true,
+  inertiaDeceleration: 3000,
+  inertiaMaxSpeed: 1500,
+  easeLinearity: 0.2,
+  worldCopyJump: false,
+  bounceAtZoomLimits: false,
+  wheelDebounceTime: 40,
+  tapTolerance: 15
 });
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -508,33 +916,79 @@ clubs.forEach(function(club, idx) {
   markers.push(m);
 });
 
-// ── UPDATE DIVISION FILTER VISIBILITY ──
-function updateDivisionFilter() {
-  var divisionFilter = document.getElementById('division-filter');
-  if (filters.pathway === 'u16-u19') {
-    divisionFilter.style.display = 'block';
-  } else {
-    divisionFilter.style.display = 'none';
-    filters.division = 'all';
-  }
+// ── HIERARCHICAL DIVISION FUNCTIONS ──
+function extractDivisionsByAge() {
+  var map = {};
+
+  // Iterate through all clubs and get their CSV data
+  clubs.forEach(function(club) {
+    var divsByAge = getClubDivisionsByAge(club.name);
+
+    Object.keys(divsByAge).forEach(function(age) {
+      if (!map[age]) map[age] = [];
+
+      divsByAge[age].forEach(function(div) {
+        if (map[age].indexOf(div) === -1) {
+          map[age].push(div);
+        }
+      });
+    });
+  });
+
+  return map;
 }
 
-// ── CHECK IF CLUB MATCHES PATHWAY FILTER ──
-function matchesPathway(club) {
-  if (filters.pathway === 'u13-u15') {
-    return club.pathway === 'u13-u15' || club.pathway === 'both';
-  } else if (filters.pathway === 'u16-u19') {
-    // Check division sub-filter
-    if (filters.division === 'pro') {
-      return club.isPro;
-    } else if (filters.division === 'northeast') {
-      return !club.isPro && (club.pathway === 'u16-u19' || club.pathway === 'both');
-    } else {
-      // 'all' - show both pro and non-pro
-      return club.pathway === 'u16-u19' || club.pathway === 'both';
+// ── FILTER MATCHING ──
+function matchesFilters(club) {
+  var clubName = club.name;
+
+  // Custom clubs (added via "Add Club" button) always show - they're not in CSV data
+  if (club.isCustom) {
+    return true;
+  }
+
+  // Check if club exists in csvTeamData (case-insensitive lookup)
+  var clubDivisions = csvTeamData[clubName];
+
+  // If exact match not found, try case-insensitive search
+  if (!clubDivisions) {
+    var clubNameLower = clubName.toLowerCase();
+    for (var key in csvTeamData) {
+      if (key.toLowerCase() === clubNameLower) {
+        clubDivisions = csvTeamData[key];
+        break;
+      }
     }
   }
-  return true;
+
+  // If still not found, club doesn't exist in CSV data
+  if (!clubDivisions) {
+    return false;
+  }
+
+  // If no filters selected, show all clubs
+  if (!filters.division && !filters.age) {
+    return true;
+  }
+
+  // Check if club matches selected division and/or age
+  var matches = false;
+
+  clubDivisions.forEach(function(entry) {
+    var divisionMatch = !filters.division || entry.division === filters.division;
+    var ageMatch = !filters.age || entry.age === filters.age;
+
+    if (divisionMatch && ageMatch) {
+      matches = true;
+    }
+  });
+
+  return matches;
+}
+
+// Alias for backward compatibility
+function matchesPathway(club) {
+  return matchesFilters(club);
 }
 
 // ── SIDEBAR LIST ──
@@ -547,10 +1001,10 @@ function buildList() {
   clubs.forEach(function(club, idx) {
     // Search filter
     if (searchVal && club.name.toLowerCase().indexOf(searchVal) === -1 && club.division.toLowerCase().indexOf(searchVal) === -1) return;
-    // Pathway filter
-    if (!matchesPathway(club)) return;
+    // Division/Age filter
+    if (!matchesFilters(club)) return;
     // Distance filter
-    if (filters.distance !== 'all' && club.driveMiles > filters.distance) return;
+    if (filters.distance && club.driveMiles > parseInt(filters.distance)) return;
 
     count++;
     var color = getClubColor(club);
@@ -597,9 +1051,9 @@ function updateMarkerVisibility() {
   var searchVal = (document.getElementById('search-input').value || '').toLowerCase();
   clubs.forEach(function(club, idx) {
     var matchesSearch = !searchVal || club.name.toLowerCase().indexOf(searchVal) !== -1 || club.division.toLowerCase().indexOf(searchVal) !== -1;
-    var pathwayMatch = matchesPathway(club);
-    var matchesDistance = filters.distance === 'all' || club.driveMiles <= filters.distance;
-    if (matchesSearch && pathwayMatch && matchesDistance) {
+    var filterMatch = matchesFilters(club);
+    var matchesDistance = !filters.distance || club.driveMiles <= parseInt(filters.distance);
+    if (matchesSearch && filterMatch && matchesDistance) {
       markers[idx].addTo(map);
     } else {
       map.removeLayer(markers[idx]);
@@ -607,34 +1061,152 @@ function updateMarkerVisibility() {
   });
 }
 
-function setFilter(type, value) {
-  filters[type] = value;
-  document.querySelectorAll('.filter-btn[data-filter="' + type + '"]').forEach(function(btn) {
-    var btnVal = btn.dataset.value;
-    if (btnVal === 'all') btnVal = 'all';
-    else if (!isNaN(btnVal)) btnVal = parseInt(btnVal);
-    btn.classList.toggle('active', btnVal === value);
-  });
-  if (type === 'pathway') {
-    filters.division = 'all';
-    updateDivisionFilter();
-    // Reset division buttons
-    document.querySelectorAll('.filter-btn[data-filter="division"]').forEach(function(btn) {
-      btn.classList.toggle('active', btn.dataset.value === 'all');
-    });
-  }
-  applyFilters();
-}
-
 function applyFilters() {
+  // Read filter values from dropdowns
+  filters.division = document.getElementById('division-filter').value;
+  filters.age = document.getElementById('age-filter').value;
+  filters.distance = document.getElementById('distance-filter').value;
+
+  // Update active filter chips
+  updateActiveFilters();
+
+  // Apply filters to list and map
   buildList();
   updateMarkerVisibility();
 }
 
+function updateActiveFilters() {
+  var chips = document.getElementById('active-chips');
+  var container = document.getElementById('active-filters');
+  chips.innerHTML = '';
+
+  var hasFilters = false;
+
+  if (filters.division) {
+    hasFilters = true;
+    chips.innerHTML += '<span class="filter-chip">' + filters.division + '<span class="filter-chip-close" onclick="clearFilter(\'division\')">&times;</span></span>';
+  }
+
+  if (filters.age) {
+    hasFilters = true;
+    chips.innerHTML += '<span class="filter-chip">' + filters.age + '<span class="filter-chip-close" onclick="clearFilter(\'age\')">&times;</span></span>';
+  }
+
+  if (filters.distance) {
+    hasFilters = true;
+    var distanceLabel = filters.distance === '50' ? '<50mi' : filters.distance === '100' ? '<100mi' : '<200mi';
+    chips.innerHTML += '<span class="filter-chip">' + distanceLabel + '<span class="filter-chip-close" onclick="clearFilter(\'distance\')">&times;</span></span>';
+  }
+
+  container.classList.toggle('visible', hasFilters);
+}
+
+function clearFilter(type) {
+  if (type === 'division') document.getElementById('division-filter').value = '';
+  if (type === 'age') document.getElementById('age-filter').value = '';
+  if (type === 'distance') document.getElementById('distance-filter').value = '';
+  applyFilters();
+}
+
+function clearAllFilters() {
+  document.getElementById('division-filter').value = '';
+  document.getElementById('age-filter').value = '';
+  document.getElementById('distance-filter').value = '';
+  applyFilters();
+}
+
+// ── POPULATE DIVISION DROPDOWN ──
+function populateDivisionDropdown() {
+  var divisionSet = new Set();
+
+  // Extract all unique divisions from csvTeamData
+  for (var teamName in csvTeamData) {
+    csvTeamData[teamName].forEach(function(entry) {
+      if (entry.division) {
+        divisionSet.add(entry.division);
+      }
+    });
+  }
+
+  var divisionSelect = document.getElementById('division-filter');
+  var divisions = Array.from(divisionSet).sort();
+
+  divisions.forEach(function(div) {
+    var option = document.createElement('option');
+    option.value = div;
+    option.textContent = div;
+    divisionSelect.appendChild(option);
+  });
+}
+
+// ── GET AVAILABLE AGES FOR DIVISION ──
+function getAvailableAgesForDivision(division) {
+  var ageSet = new Set();
+
+  if (!division) {
+    // No division selected, show all ages
+    return ['U13', 'U14', 'U15', 'U16', 'U17', 'U19'];
+  }
+
+  // Extract ages available in this division
+  for (var teamName in csvTeamData) {
+    csvTeamData[teamName].forEach(function(entry) {
+      if (entry.division === division) {
+        ageSet.add(entry.age);
+      }
+    });
+  }
+
+  var ages = Array.from(ageSet).sort(function(a, b) {
+    return parseInt(a.replace('U', '')) - parseInt(b.replace('U', ''));
+  });
+
+  return ages;
+}
+
+// ── UPDATE AGE DROPDOWN BASED ON DIVISION ──
+function updateAgeDropdown() {
+  var selectedDivision = document.getElementById('division-filter').value;
+  var ageSelect = document.getElementById('age-filter');
+  var currentAge = ageSelect.value;
+
+  // Get available ages for selected division
+  var availableAges = getAvailableAgesForDivision(selectedDivision);
+
+  // Clear and rebuild age dropdown
+  ageSelect.innerHTML = '<option value="">All Age Groups</option>';
+
+  availableAges.forEach(function(age) {
+    var option = document.createElement('option');
+    option.value = age;
+    option.textContent = age;
+    ageSelect.appendChild(option);
+  });
+
+  // Restore previous selection if still valid
+  if (currentAge && availableAges.indexOf(currentAge) !== -1) {
+    ageSelect.value = currentAge;
+  }
+}
+
 // ── INIT ──
-updateDivisionFilter();
+populateDivisionDropdown();
 buildList();
 applyFilters();
+
+// Populate club name autocomplete from CSV
+function populateClubNameAutocomplete() {
+  var datalist = document.getElementById('clubNameList');
+  if (!datalist) return;
+
+  var clubNames = Object.keys(csvTeamData).sort();
+  clubNames.forEach(function(clubName) {
+    var option = document.createElement('option');
+    option.value = clubName;
+    datalist.appendChild(option);
+  });
+}
+populateClubNameAutocomplete();
 
 // ── ADD CLUB MODAL ──
 function openAddClubModal() {
@@ -646,6 +1218,147 @@ function openAddClubModal() {
 
 function closeAddClubModal() {
   document.getElementById('addClubModal').classList.remove('active');
+}
+
+// Geocode address using OpenStreetMap Nominatim API
+async function geocodeAddress(address) {
+  try {
+    // Try full address first
+    var encodedAddress = encodeURIComponent(address);
+    var url = 'https://nominatim.openstreetmap.org/search?q=' + encodedAddress + '&format=json&limit=1&addressdetails=1';
+
+    var response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Soccer Scouting Map'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Geocoding service unavailable');
+    }
+
+    var data = await response.json();
+
+    // If full address not found, try fallback to city, state, zip
+    if (data.length === 0) {
+      // Extract city, state, zip from address (e.g., "100 Brenner Lane, Rochester, PA 15074")
+      var parts = address.split(',').map(function(p) { return p.trim(); });
+      if (parts.length >= 2) {
+        // Try last two parts (usually "Rochester" and "PA 15074")
+        var fallbackAddress = parts.slice(-2).join(', ');
+        encodedAddress = encodeURIComponent(fallbackAddress);
+        url = 'https://nominatim.openstreetmap.org/search?q=' + encodedAddress + '&format=json&limit=1&addressdetails=1';
+
+        response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Soccer Scouting Map'
+          }
+        });
+
+        data = await response.json();
+      }
+    }
+
+    if (data.length === 0) {
+      return {
+        success: false,
+        error: 'Address not found. Try using just "City, State Zip" format (e.g., "Rochester, PA 15074")'
+      };
+    }
+
+    var result = data[0];
+    var state = null;
+
+    // Extract state from address details
+    if (result.address) {
+      state = result.address.state_code || result.address.state || result.address['ISO3166-2-lvl4'];
+      if (state && state.includes('-')) {
+        state = state.split('-')[1]; // Extract "NJ" from "US-NJ"
+      }
+
+      // Convert full state name to abbreviation if needed
+      if (state && state.length > 2) {
+        state = US_STATE_NAMES[state] || state;
+      }
+    }
+
+    return {
+      success: true,
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+      state: state,
+      displayName: result.display_name
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to geocode address: ' + error.message
+    };
+  }
+}
+
+// Convert uploaded logo to base64 data URL
+function readLogoAsBase64(file) {
+  return new Promise(function(resolve, reject) {
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      reject(new Error('Logo file is too large. Maximum size is 2MB.'));
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      reject(new Error('File must be an image (PNG, JPG, or SVG).'));
+      return;
+    }
+
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+      resolve(e.target.result);
+    };
+
+    reader.onerror = function() {
+      reject(new Error('Failed to read logo file.'));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+// Generate initials from club name
+function generateInitials(clubName) {
+  var words = clubName.trim().split(/\s+/);
+  var initials = '';
+
+  // Take first letter of each word, up to 4 letters
+  for (var i = 0; i < Math.min(words.length, 4); i++) {
+    if (words[i].length > 0) {
+      initials += words[i][0].toUpperCase();
+    }
+  }
+
+  return initials || 'CLUB';
+}
+
+// Generate unique club ID from club name
+function generateClubId(clubName) {
+  // Convert to lowercase and replace spaces/special chars with underscores
+  var baseId = clubName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
+
+  // Check for duplicates
+  var id = baseId;
+  var counter = 1;
+
+  while (clubs.some(function(club) { return club.clubId === id; })) {
+    id = baseId + '_' + counter;
+    counter++;
+  }
+
+  return id;
 }
 
 async function submitAddClub(event) {
@@ -661,36 +1374,312 @@ async function submitAddClub(event) {
 
   // Disable form
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Adding...';
+  submitBtn.textContent = 'Processing...';
   form.classList.add('loading');
 
   try {
-    var formData = new FormData(form);
-    var response = await fetch('/api/add-club', {
-      method: 'POST',
-      body: formData
-    });
+    // Get form values
+    var clubName = form.name.value.trim();
+    var league = form.league.value;
+    var address = form.address.value.trim();
+    var logoFile = form.logo.files[0];
 
-    var result = await response.json();
-
-    if (result.success) {
-      successEl.textContent = result.message + '. Refreshing page...';
-      successEl.style.display = 'block';
-      setTimeout(function() {
-        window.location.reload();
-      }, 1500);
-    } else {
-      errorEl.textContent = result.error || 'Failed to add club';
-      errorEl.style.display = 'block';
+    if (!logoFile) {
+      throw new Error('Please select a logo file');
     }
+
+    // Check if club already exists (by name)
+    var existingClub = clubs.find(function(c) {
+      return c.name.toLowerCase() === clubName.toLowerCase();
+    });
+    if (existingClub) {
+      throw new Error('A club named "' + clubName + '" already exists (ID: ' + existingClub.clubId + '). Please use a different name or update the existing club.');
+    }
+
+    // Step 1: Check against CSV league database
+    submitBtn.textContent = 'Validating club...';
+    var csvMatch = csvTeamData[clubName];
+    var csvLeague = null;
+    var csvDivision = null;
+
+    // Try case-insensitive match if exact match fails
+    if (!csvMatch) {
+      var clubNameLower = clubName.toLowerCase();
+      for (var key in csvTeamData) {
+        if (key.toLowerCase() === clubNameLower) {
+          csvMatch = csvTeamData[key];
+          break;
+        }
+      }
+    }
+
+    if (csvMatch && csvMatch.length > 0) {
+      // Found in CSV - extract league and division
+      csvDivision = csvMatch[0].division;
+
+      // Determine league from division name
+      if (csvDivision.includes('ECNL')) {
+        csvLeague = 'ECNL';
+      } else {
+        csvLeague = 'HD'; // Default to MLS Next (HD)
+      }
+
+      console.log('✓ Found "' + clubName + '" in league database');
+      console.log('  League: ' + csvLeague);
+      console.log('  Division: ' + csvDivision);
+
+      // Override the form league selection with CSV data
+      league = csvLeague;
+    } else {
+      // Not found in CSV - warn user
+      console.warn('⚠ Club "' + clubName + '" not found in official league database');
+
+      var continueAnyway = confirm(
+        'WARNING: "' + clubName + '" is not found in the official MLS Next/ECNL league database.\n\n' +
+        'This may mean:\n' +
+        '• The club name doesn\'t match exactly (check spelling/capitalization)\n' +
+        '• The club is not in MLS Next or ECNL leagues\n' +
+        '• The club is new and not yet in the database\n\n' +
+        'Add this club anyway?'
+      );
+
+      if (!continueAnyway) {
+        throw new Error('Club not in league database - cancelled by user');
+      }
+    }
+
+    // Step 2: Convert logo to base64
+    submitBtn.textContent = 'Reading logo...';
+    var logoBase64 = await readLogoAsBase64(logoFile);
+
+    // Step 3: Geocode address
+    submitBtn.textContent = 'Geocoding address...';
+    var geocodeResult = await geocodeAddress(address);
+
+    if (!geocodeResult.success) {
+      throw new Error(geocodeResult.error);
+    }
+
+    if (!geocodeResult.state) {
+      throw new Error('Could not determine state from address. Please check the address format.');
+    }
+
+    // Step 4: Determine division (prefer CSV, fallback to state mapping)
+    var division;
+    if (csvDivision) {
+      // Use division from CSV database
+      division = csvDivision;
+      console.log('✓ Using division from league database: ' + division);
+    } else {
+      // Fallback to state-based division
+      division = STATE_TO_DIVISION[geocodeResult.state] || 'Other';
+      if (division === 'Other') {
+        console.warn('Unknown state: ' + geocodeResult.state + ', using "Other" division');
+      }
+    }
+
+    // Step 5: Generate club ID and initials
+    var clubId = generateClubId(clubName);
+    var initials = generateInitials(clubName);
+
+    // Step 5.5: Calculate drive distance from NYRB
+    var NYRB_LAT = 40.8167;
+    var NYRB_LNG = -74.4028;
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      var R = 3959; // Earth's radius in miles
+      var dLat = (lat2 - lat1) * Math.PI / 180;
+      var dLon = (lon2 - lon1) * Math.PI / 180;
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    var distanceMiles = haversineDistance(NYRB_LAT, NYRB_LNG, geocodeResult.lat, geocodeResult.lng);
+    var driveMiles = Math.round(distanceMiles);
+    var driveTimeMinutes = Math.round((distanceMiles / 30) * 60); // Estimate: 30 mph average
+    var driveTime;
+    if (driveTimeMinutes < 60) {
+      driveTime = driveTimeMinutes + 'm';
+    } else {
+      var hours = Math.floor(driveTimeMinutes / 60);
+      var mins = driveTimeMinutes % 60;
+      driveTime = hours + 'h ' + mins + 'm';
+    }
+
+    // Step 6: Create club object
+    var newClub = {
+      name: clubName,
+      state: geocodeResult.state,
+      league: league,
+      division: division,
+      lat: geocodeResult.lat,
+      lng: geocodeResult.lng,
+      logo: logoBase64,
+      clubId: clubId,
+      website: '',
+      driveMiles: driveMiles,
+      driveTime: driveTime,
+      initials: initials,
+      isPro: false,
+      pathway: 'both',
+      isCustom: true
+    };
+
+    // Step 7: Add to clubs array
+    clubs.push(newClub);
+
+    // Step 8: Save to localStorage (temporary - see warning in success message)
+    var existingCustomClubs = [];
+    try {
+      var saved = localStorage.getItem('customClubs');
+      if (saved) {
+        existingCustomClubs = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading existing custom clubs:', e);
+    }
+
+    existingCustomClubs.push(newClub);
+    localStorage.setItem('customClubs', JSON.stringify(existingCustomClubs));
+
+    // Step 8: Create marker on map immediately
+    submitBtn.textContent = 'Adding to map...';
+    var icon = makeClubIcon(newClub, 38);
+    var marker = L.marker([newClub.lat, newClub.lng], {icon: icon}).addTo(map);
+    marker.bindPopup(makePopupHtml(newClub), {maxWidth: 250});
+    var clubIndex = clubs.length - 1;
+    marker.on('click', function() { selectClub(clubIndex); });
+    markers.push(marker);
+
+    // Step 9: Update the sidebar list and zoom to marker
+    buildList();
+    map.setView([newClub.lat, newClub.lng], 11);
+
+    // Step 10: Show success message
+    var successMsg = 'SUCCESS! "' + clubName + '" has been added to the map!\n\n';
+    successMsg += 'Club ID: ' + clubId + '\n';
+
+    if (csvMatch) {
+      successMsg += 'CSV Database: ✓ Found (League: ' + league + ')\n';
+    } else {
+      successMsg += 'CSV Database: ⚠ Not found (Custom club)\n';
+    }
+
+    successMsg += 'Division: ' + division;
+    if (csvDivision) {
+      successMsg += ' (from league database)\n';
+    } else {
+      successMsg += ' (auto-assigned from ' + geocodeResult.state + ')\n';
+    }
+
+    successMsg += 'Coordinates: ' + geocodeResult.lat.toFixed(4) + ', ' + geocodeResult.lng.toFixed(4) + '\n';
+    successMsg += 'State: ' + geocodeResult.state + '\n';
+    successMsg += 'Drive from NYRB: ' + driveMiles + ' mi • ' + driveTime + '\n\n';
+
+    successMsg += '⚠ IMPORTANT: This club is saved in your browser only.\n';
+    successMsg += 'To make it permanent for everyone:\n\n';
+    successMsg += '1. Scrape data: python3 scraper3.py\n';
+    successMsg += '2. Import data: python3 import_to_scouting.py "' + clubId + '/U13 ' + clubName + '.json"\n';
+    successMsg += '3. Or deploy: python3 deploy_club.py ' + clubId + '\n\n';
+    successMsg += 'The club will appear on this browser until then.';
+
+    successEl.innerHTML = '<pre style="text-align:left;font-size:11px;overflow-x:auto;max-height:400px;white-space:pre-wrap;line-height:1.4;">' + successMsg + '</pre>';
+    successEl.style.display = 'block';
+
+    // Step 11: Reset form
+    form.reset();
+    submitBtn.textContent = 'Add Another Club';
+
   } catch (err) {
     errorEl.textContent = 'Error: ' + err.message;
     errorEl.style.display = 'block';
-  } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Add Club';
     form.classList.remove('loading');
+  } finally {
+    if (submitBtn.textContent !== 'Add Club') {
+      setTimeout(function() {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Club';
+        form.classList.remove('loading');
+      }, 2000);
+    }
   }
+}
+
+function extractStateFromAddress(address, displayName) {
+  // First try to extract from the input address
+  var addressMatch = address.match(/,?\s*([A-Z]{2})\s+\d{5}/);
+  if (addressMatch) {
+    return addressMatch[1];
+  }
+
+  // Extract state abbreviation from geocoding display name
+  var parts = displayName.split(',').map(function(p) { return p.trim(); });
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i];
+    // Common US state abbreviations
+    if (/^[A-Z]{2}$/.test(part)) {
+      return part;
+    }
+  }
+
+  // Try to extract from full state names
+  var stateMap = {
+    'New York': 'NY', 'New Jersey': 'NJ', 'Pennsylvania': 'PA',
+    'Connecticut': 'CT', 'Massachusetts': 'MA', 'Rhode Island': 'RI',
+    'New Hampshire': 'NH', 'Vermont': 'VT', 'Maine': 'ME',
+    'Delaware': 'DE', 'Maryland': 'MD', 'Virginia': 'VA',
+    'West Virginia': 'WV', 'North Carolina': 'NC', 'South Carolina': 'SC',
+    'Georgia': 'GA', 'Florida': 'FL', 'Ohio': 'OH', 'Michigan': 'MI',
+    'Illinois': 'IL', 'Indiana': 'IN', 'Wisconsin': 'WI',
+    'California': 'CA', 'Texas': 'TX', 'Arizona': 'AZ', 'Nevada': 'NV',
+    'Oregon': 'OR', 'Washington': 'WA', 'Colorado': 'CO', 'Utah': 'UT'
+  };
+
+  for (var i = 0; i < parts.length; i++) {
+    if (stateMap[parts[i]]) {
+      return stateMap[parts[i]];
+    }
+  }
+
+  // Last resort: check if address contains state abbreviation
+  var stateAbbrs = Object.values(stateMap);
+  for (var i = 0; i < stateAbbrs.length; i++) {
+    if (address.toUpperCase().includes(stateAbbrs[i])) {
+      return stateAbbrs[i];
+    }
+  }
+
+  return 'XX';
+}
+
+function determineDivisionFromState(state) {
+  var divisionMap = {
+    'NY': 'Northeast Division', 'NJ': 'Northeast Division', 'CT': 'Northeast Division',
+    'MA': 'Northeast Division', 'RI': 'Northeast Division', 'NH': 'Northeast Division',
+    'VT': 'Northeast Division', 'ME': 'Northeast Division',
+    'PA': 'Mid-Atlantic Division', 'DE': 'Mid-Atlantic Division',
+    'MD': 'Mid-Atlantic Division', 'VA': 'Mid-Atlantic Division',
+    'WV': 'Mid-Atlantic Division', 'DC': 'Mid-Atlantic Division',
+    'NC': 'Southeast Division', 'SC': 'Southeast Division',
+    'GA': 'Southeast Division', 'FL': 'Florida Division',
+    'OH': 'Mid-America Division', 'MI': 'Mid-America Division',
+    'IL': 'Mid-America Division', 'IN': 'Mid-America Division',
+    'WI': 'Mid-America Division'
+  };
+  return divisionMap[state] || 'Other';
+}
+
+function generateInitials(name) {
+  var words = name.split(/\s+/);
+  if (words.length === 1) {
+    return words[0].substring(0, 3).toUpperCase();
+  }
+  return words.map(function(w) { return w[0]; }).join('').toUpperCase().substring(0, 4);
 }
 
 // Close modal on overlay click
@@ -718,7 +1707,10 @@ document.addEventListener('keydown', function(e) {
       <div class="modal-body">
         <div class="form-group">
           <label>Club Name (as it appears in Kitman Labs)</label>
-          <input type="text" name="name" required placeholder="e.g., Sockers FC Chicago">
+          <input type="text" name="name" id="clubNameInput" list="clubNameList" required placeholder="e.g., Sockers FC Chicago" autocomplete="off">
+          <datalist id="clubNameList">
+            <!-- Populated from csvTeamData on page load -->
+          </datalist>
           <small>Use the exact name from Kitman Labs for scraper compatibility</small>
         </div>
 
@@ -744,7 +1736,7 @@ document.addEventListener('keydown', function(e) {
 
         <div class="form-group">
           <label>Club Address</label>
-          <input type="text" name="address" required placeholder="e.g., 545 S Consumers Ave, Palatine, IL 60074">
+          <input type="text" name="address" required placeholder="e.g., 1950 Butler Pike #266, Conshohocken, PA 19428">
           <small>Full address for geocoding - division will be auto-assigned from state</small>
         </div>
 
