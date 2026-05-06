@@ -1406,6 +1406,7 @@ var currentSortDirection = 'desc'; // Default descending
 
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
+  renderSavedSearches();
 }
 
 function closeSearchModal() {
@@ -1417,6 +1418,7 @@ function clearSearchFilters() {
   document.getElementById('filter-division').value = '';
   document.getElementById('filter-position').value = '';
   document.getElementById('filter-min-goals').value = '';
+  document.getElementById('filter-min-ratio').value = '';
   document.getElementById('filter-playing-up').checked = false;
 
   // Hide results
@@ -1466,6 +1468,7 @@ function performSearch() {
   var division = document.getElementById('filter-division').value;
   var position = document.getElementById('filter-position').value;
   var minGoals = parseInt(document.getElementById('filter-min-goals').value) || 0;
+  var minRatio = parseFloat(document.getElementById('filter-min-ratio').value) || 0;
   var playingUpOnly = document.getElementById('filter-playing-up').checked;
 
   var results = [];
@@ -1512,10 +1515,22 @@ function performSearch() {
         // Filter by min goals
         if (player.goals < minGoals) return;
 
+        // Calculate goals/game ratio
+        var ratio = player.games > 0 ? player.goals / player.games : 0;
+
+        // Filter by min ratio
+        if (ratio < minRatio) return;
+
         // Filter by playing up
         if (playingUpOnly) {
           if (!player.yob || !expectedYOB) return;
           if (player.yob >= expectedYOB) return; // Not playing up
+        }
+
+        // Check if playing up
+        var isPlayingUp = false;
+        if (player.yob && expectedYOB && player.yob < expectedYOB) {
+          isPlayingUp = true;
         }
 
         // Add to results
@@ -1529,7 +1544,9 @@ function performSearch() {
           position: player.position || '-',
           games: player.games,
           goals: player.goals,
-          link: player.link || ''
+          ratio: ratio,
+          link: player.link || '',
+          isPlayingUp: isPlayingUp
         });
       });
     });
@@ -1569,14 +1586,24 @@ function displaySearchResults(results) {
       '<a href="' + player.link + '" target="_blank">🎥</a>' :
       '<span style="color:#ccc;">—</span>';
 
+    // Build visual indicators
+    var indicators = '';
+    if (player.goals >= 10) {
+      indicators += '<span title="10+ Goals">🔥</span> ';
+    }
+    if (player.isPlayingUp) {
+      indicators += '<span title="Playing Up">⭐</span> ';
+    }
+
     row.innerHTML =
       '<td>' + player.jersey + '</td>' +
       '<td>' + player.club + '</td>' +
-      '<td><a href="team.html?club=' + player.clubId + '#' + player.squad + '-squad">' + player.name + '</a></td>' +
+      '<td>' + indicators + '<a href="team.html?club=' + player.clubId + '#' + player.squad + '-squad">' + player.name + '</a></td>' +
       '<td>' + player.yob + '</td>' +
       '<td>' + player.position + '</td>' +
       '<td>' + player.games + '</td>' +
       '<td><strong>' + player.goals + '</strong></td>' +
+      '<td>' + player.ratio.toFixed(2) + '</td>' +
       '<td>' + linkHtml + '</td>';
 
     tbody.appendChild(row);
@@ -1617,6 +1644,12 @@ function sortSearchResults(column) {
       bVal = parseInt(bVal) || 0;
     }
 
+    // Handle ratio (float)
+    if (column === 'ratio') {
+      aVal = parseFloat(aVal) || 0;
+      bVal = parseFloat(bVal) || 0;
+    }
+
     // Handle strings (case-insensitive)
     if (typeof aVal === 'string') {
       aVal = aVal.toLowerCase();
@@ -1649,7 +1682,8 @@ function updateSortIndicators() {
     'yob': 3,
     'position': 4,
     'games': 5,
-    'goals': 6
+    'goals': 6,
+    'ratio': 7
   };
 
   var columnIndex = columnMap[currentSortColumn];
@@ -1665,7 +1699,7 @@ function exportSearchResultsToCSV() {
   }
 
   // CSV headers
-  var csv = '#,Club,Name,YOB,Position,Games,Goals,Link\n';
+  var csv = '#,Club,Name,YOB,Position,Games,Goals,G/G,Link\n';
 
   // Add each row
   currentSearchResults.forEach(function(player) {
@@ -1677,6 +1711,7 @@ function exportSearchResultsToCSV() {
       player.position === '-' ? '' : player.position,
       player.games,
       player.goals,
+      player.ratio.toFixed(2),
       player.link || ''
     ];
     csv += row.join(',') + '\n';
@@ -1693,6 +1728,213 @@ function exportSearchResultsToCSV() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════════════════════════
+// URL SHARING
+// ══════════════════════════════════════════════════════════════
+
+function shareSearchURL() {
+  // Get current filter values
+  var params = new URLSearchParams();
+
+  var ageGroup = document.getElementById('filter-age-group').value;
+  var division = document.getElementById('filter-division').value;
+  var position = document.getElementById('filter-position').value;
+  var minGoals = document.getElementById('filter-min-goals').value;
+  var minRatio = document.getElementById('filter-min-ratio').value;
+  var playingUp = document.getElementById('filter-playing-up').checked;
+
+  // Add non-empty parameters
+  if (ageGroup) params.set('age', ageGroup);
+  if (division) params.set('div', division);
+  if (position) params.set('pos', position);
+  if (minGoals) params.set('goals', minGoals);
+  if (minRatio) params.set('ratio', minRatio);
+  if (playingUp) params.set('playup', '1');
+
+  // Check if any filters are set
+  if (params.toString() === '') {
+    alert('Please set some search filters before sharing');
+    return;
+  }
+
+  // Build shareable URL
+  var shareURL = window.location.origin + window.location.pathname + '?search=1&' + params.toString();
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(shareURL).then(function() {
+    alert('Search URL copied to clipboard!\n\nShare this link:\n' + shareURL);
+  }).catch(function(err) {
+    // Fallback: show in prompt
+    prompt('Copy this URL to share the search:', shareURL);
+  });
+}
+
+function loadSearchFromURL() {
+  var urlParams = new URLSearchParams(window.location.search);
+
+  // Check if this is a shared search
+  if (!urlParams.has('search')) {
+    return;
+  }
+
+  // Load filter values from URL
+  if (urlParams.has('age')) {
+    document.getElementById('filter-age-group').value = urlParams.get('age');
+  }
+  if (urlParams.has('div')) {
+    document.getElementById('filter-division').value = urlParams.get('div');
+  }
+  if (urlParams.has('pos')) {
+    document.getElementById('filter-position').value = urlParams.get('pos');
+  }
+  if (urlParams.has('goals')) {
+    document.getElementById('filter-min-goals').value = urlParams.get('goals');
+  }
+  if (urlParams.has('ratio')) {
+    document.getElementById('filter-min-ratio').value = urlParams.get('ratio');
+  }
+  if (urlParams.has('playup')) {
+    document.getElementById('filter-playing-up').checked = true;
+  }
+
+  // Auto-open search modal and perform search
+  setTimeout(function() {
+    openSearchModal();
+    performSearch();
+  }, 500);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SAVED SEARCHES
+// ══════════════════════════════════════════════════════════════
+
+function saveCurrentSearch() {
+  // Get current filter values
+  var searchData = {
+    ageGroup: document.getElementById('filter-age-group').value,
+    division: document.getElementById('filter-division').value,
+    position: document.getElementById('filter-position').value,
+    minGoals: document.getElementById('filter-min-goals').value,
+    minRatio: document.getElementById('filter-min-ratio').value,
+    playingUp: document.getElementById('filter-playing-up').checked
+  };
+
+  // Check if any filters are set
+  var hasFilters = searchData.ageGroup || searchData.division || searchData.position ||
+                   searchData.minGoals || searchData.minRatio || searchData.playingUp;
+
+  if (!hasFilters) {
+    alert('Please set some search filters before saving');
+    return;
+  }
+
+  // Prompt for search name
+  var searchName = prompt('Enter a name for this search:', '');
+  if (!searchName || searchName.trim() === '') {
+    return;
+  }
+
+  searchName = searchName.trim();
+
+  // Get existing saved searches
+  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+
+  // Check if name already exists
+  var existingIndex = savedSearches.findIndex(function(s) { return s.name === searchName; });
+  if (existingIndex !== -1) {
+    if (!confirm('A search with this name already exists. Overwrite?')) {
+      return;
+    }
+    savedSearches.splice(existingIndex, 1);
+  }
+
+  // Add new search
+  savedSearches.push({
+    name: searchName,
+    filters: searchData,
+    savedAt: new Date().toISOString()
+  });
+
+  // Save to localStorage
+  localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+
+  // Update UI
+  renderSavedSearches();
+
+  alert('Search "' + searchName + '" saved!');
+}
+
+function loadSavedSearch(searchName) {
+  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+  var search = savedSearches.find(function(s) { return s.name === searchName; });
+
+  if (!search) {
+    alert('Saved search not found');
+    return;
+  }
+
+  // Load filters
+  var filters = search.filters;
+  document.getElementById('filter-age-group').value = filters.ageGroup || '';
+  document.getElementById('filter-division').value = filters.division || '';
+  document.getElementById('filter-position').value = filters.position || '';
+  document.getElementById('filter-min-goals').value = filters.minGoals || '';
+  document.getElementById('filter-min-ratio').value = filters.minRatio || '';
+  document.getElementById('filter-playing-up').checked = filters.playingUp || false;
+
+  // Automatically perform the search
+  performSearch();
+}
+
+function deleteSavedSearch(searchName) {
+  if (!confirm('Delete saved search "' + searchName + '"?')) {
+    return;
+  }
+
+  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+  savedSearches = savedSearches.filter(function(s) { return s.name !== searchName; });
+  localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
+
+  renderSavedSearches();
+}
+
+function renderSavedSearches() {
+  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+  var container = document.getElementById('saved-searches-list');
+  var section = document.getElementById('saved-searches-section');
+
+  if (savedSearches.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  container.innerHTML = '';
+
+  savedSearches.forEach(function(search) {
+    var chip = document.createElement('div');
+    chip.style.cssText = 'display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#f0f0f0; border-radius:16px; font-size:12px; cursor:pointer; transition:background 0.15s;';
+    chip.onmouseover = function() { this.style.background = '#e0e0e0'; };
+    chip.onmouseout = function() { this.style.background = '#f0f0f0'; };
+
+    var nameSpan = document.createElement('span');
+    nameSpan.textContent = search.name;
+    nameSpan.onclick = function() { loadSavedSearch(search.name); };
+
+    var deleteBtn = document.createElement('span');
+    deleteBtn.innerHTML = '&times;';
+    deleteBtn.style.cssText = 'font-size:16px; font-weight:bold; color:#999; cursor:pointer; line-height:1;';
+    deleteBtn.onclick = function(e) {
+      e.stopPropagation();
+      deleteSavedSearch(search.name);
+    };
+
+    chip.appendChild(nameSpan);
+    chip.appendChild(deleteBtn);
+    container.appendChild(chip);
+  });
 }
 
 // Geocode address using OpenStreetMap Nominatim API
@@ -2170,6 +2412,9 @@ document.addEventListener('keydown', function(e) {
     closeAddClubModal();
   }
 });
+
+// Load search from URL parameters on page load
+loadSearchFromURL();
 </script>
 
 <!-- Add Club Modal -->
@@ -2293,6 +2538,11 @@ document.addEventListener('keydown', function(e) {
           </div>
 
           <div class="filter-group">
+            <label>Min G/G Ratio</label>
+            <input type="number" id="filter-min-ratio" placeholder="0.0" min="0" step="0.1" />
+          </div>
+
+          <div class="filter-group">
             <label>
               <input type="checkbox" id="filter-playing-up" />
               Playing Up Only
@@ -2303,6 +2553,15 @@ document.addEventListener('keydown', function(e) {
         <div class="filter-actions">
           <button class="modal-btn modal-btn-primary" onclick="performSearch()">Search</button>
           <button class="modal-btn modal-btn-secondary" onclick="clearSearchFilters()">Clear</button>
+          <button class="modal-btn modal-btn-secondary" onclick="saveCurrentSearch()">💾 Save Search</button>
+        </div>
+
+        <!-- SAVED SEARCHES -->
+        <div id="saved-searches-section" style="margin-top:16px; padding-top:16px; border-top:1px solid #e0e0e0; display:none;">
+          <label style="font-size:12px; font-weight:600; color:#666; display:block; margin-bottom:8px;">Saved Searches:</label>
+          <div id="saved-searches-list" style="display:flex; flex-wrap:wrap; gap:8px;">
+            <!-- Populated by JavaScript -->
+          </div>
         </div>
       </div>
 
@@ -2310,7 +2569,10 @@ document.addEventListener('keydown', function(e) {
       <div id="search-results-container" style="display:none; margin-top:20px;">
         <div id="search-results-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <h3 id="search-results-count" style="margin:0; color:#1a1a2e; font-size:16px;">0 players found</h3>
-          <button onclick="exportSearchResultsToCSV()" class="modal-btn modal-btn-secondary" style="padding:8px 16px; font-size:12px;">📥 Export CSV</button>
+          <div style="display:flex; gap:8px;">
+            <button onclick="shareSearchURL()" class="modal-btn modal-btn-secondary" style="padding:8px 16px; font-size:12px;">🔗 Share</button>
+            <button onclick="exportSearchResultsToCSV()" class="modal-btn modal-btn-secondary" style="padding:8px 16px; font-size:12px;">📥 Export CSV</button>
+          </div>
         </div>
 
         <div id="search-results-table-wrapper" style="max-height:400px; overflow-y:auto;">
@@ -2324,6 +2586,7 @@ document.addEventListener('keydown', function(e) {
                 <th class="sortable" onclick="sortSearchResults('position')">Pos <span class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortSearchResults('games')">Games <span class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortSearchResults('goals')">Goals <span class="sort-indicator"></span></th>
+                <th class="sortable" onclick="sortSearchResults('ratio')">G/G <span class="sort-indicator"></span></th>
                 <th>Link</th>
               </tr>
             </thead>
