@@ -4147,7 +4147,7 @@ var playersData = {
           ]
         }
   },
-  "valeo": {
+  "valeo_futbol_club": {
     "u13": {
           "season": "2025-2026",
           "dateRange": "Sep 1, 2025 - May 3, 2026",
