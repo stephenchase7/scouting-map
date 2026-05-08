@@ -297,10 +297,10 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .modal-header {
   background:linear-gradient(135deg,#8B0000 0%,#cc0000 50%,#8B0000 100%);
-  padding:16px 20px; border-radius:12px 12px 0 0;
+  padding:16px 20px; border-radius:12px 12px 0 0; flex-shrink:0;
 }
 .modal-header h2 { color:#fff; font-size:16px; font-weight:700; margin:0; }
-.modal-body { padding:20px; }
+.modal-body { padding:20px; overflow-y:auto; flex:1; }
 .form-group { margin-bottom:16px; }
 .form-group label { display:block; font-size:12px; font-weight:600; color:#333; margin-bottom:6px; }
 .form-group input, .form-group select {
@@ -327,11 +327,24 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .modal-close:hover { opacity:0.8; }
 .modal-container {
   background:#fff; border-radius:12px; width:500px; max-width:90vw; max-height:90vh;
-  overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.3); position:relative;
+  overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.3); position:relative;
+  display:flex; flex-direction:column;
 }
 .search-modal-container {
-  width:900px; max-width:95vw;
+  width:900px; max-width:95vw; min-width:500px; min-height:400px; height:auto;
+  position:relative;
 }
+.resize-handle {
+  position:absolute; z-index:10;
+}
+.resize-handle.n { top:0; left:0; right:0; height:5px; cursor:n-resize; }
+.resize-handle.s { bottom:0; left:0; right:0; height:5px; cursor:s-resize; }
+.resize-handle.e { top:0; bottom:0; right:0; width:5px; cursor:e-resize; }
+.resize-handle.w { top:0; bottom:0; left:0; width:5px; cursor:w-resize; }
+.resize-handle.ne { top:0; right:0; width:10px; height:10px; cursor:ne-resize; }
+.resize-handle.nw { top:0; left:0; width:10px; height:10px; cursor:nw-resize; }
+.resize-handle.se { bottom:0; right:0; width:10px; height:10px; cursor:se-resize; }
+.resize-handle.sw { bottom:0; left:0; width:10px; height:10px; cursor:sw-resize; }
 .search-filters {
   background:#f9f9f9; padding:16px; border-radius:8px;
 }
@@ -346,6 +359,40 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .filter-group input[type="checkbox"] {
   margin-right:6px;
+}
+.dropdown-checkbox-wrapper {
+  position:relative;
+}
+.dropdown-checkbox-btn {
+  width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:6px;
+  background:#fff; font-size:13px; text-align:left; cursor:pointer;
+  display:flex; justify-content:space-between; align-items:center;
+  transition:border-color 0.2s;
+}
+.dropdown-checkbox-btn:hover {
+  border-color:#1a73e8;
+}
+.dropdown-checkbox-btn .dropdown-label {
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.dropdown-checkbox-btn .dropdown-arrow {
+  font-size:10px; color:#666; margin-left:8px;
+}
+.dropdown-checkbox-menu {
+  position:absolute; top:100%; left:0; right:0; margin-top:4px;
+  background:#fff; border:1px solid #ddd; border-radius:6px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000;
+  max-height:200px; overflow-y:auto;
+}
+.dropdown-checkbox-menu label {
+  display:flex; align-items:center; padding:8px 12px; font-size:13px;
+  font-weight:400; cursor:pointer; transition:background 0.15s;
+}
+.dropdown-checkbox-menu label:hover {
+  background:#f0f0f0;
+}
+.dropdown-checkbox-menu input[type="checkbox"] {
+  margin-right:8px; cursor:pointer;
 }
 .filter-group select, .filter-group input[type="number"] {
   width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:6px;
@@ -587,7 +634,7 @@ var clubs = [
   {name:"Philadelphia Union", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:39.832, lng:-75.379, logo:"MLS Logos/Philadelphia Union.jpg", website:"https://www.philadelphiaunion.com", driveMiles:95, driveTime:"1h 40m", initials:"PHI", isPro:true, pathway:"both", clubId:"philly"},
   {name:"Toronto FC", state:"ON", league:"HD", division:"Northeast (Pro Player Pathway)", lat:43.633, lng:-79.418, logo:"MLS Logos/Toronto FC.png", website:"https://www.torontofc.ca", driveMiles:475, driveTime:"7h 30m", initials:"TFC", isPro:true, pathway:"u16-u19", clubId:"tfc"},
   {name:"CF Montreal", state:"QC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:45.563, lng:-73.553, logo:"MLS Logos/CF Montreal.png", website:"https://www.cfmontreal.com", driveMiles:380, driveTime:"6h 0m", initials:"MTL", isPro:true, pathway:"u16-u19", clubId:"mtl"},
-  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19", clubId:"dcu"},
+  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19", clubId:"dc-united"},
 
   // ══════════════════════════════════════════════════════════════
   // NORTHEAST DIVISION CLUBS (U13-U19)
@@ -613,7 +660,7 @@ var clubs = [
   {name:"Seacoast United", state:"NH", league:"HD", division:"Northeast Division", lat:43.07, lng:-70.76, logo:"MLS Logos/Seacoast United.jpg", website:"https://seacoastunited.com", driveMiles:314, driveTime:"4h 58m", initials:"SCU", isPro:false, pathway:"both", clubId:"seacoast"},
   {name:"Valeo FC", state:"MA", league:"HD", division:"New England", lat:42.51, lng:-71.20, logo:"MLS Logos/Valeo FC.png", website:"https://valeofc.com", driveMiles:222, driveTime:"3h 34m", initials:"VFC", isPro:false, pathway:"both", clubId:"valeo"},
   {name:"Bayside FC", state:"MA", league:"HD", division:"Northeast Division", lat:41.745, lng:-71.31, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both", clubId:"bayside"},
-  {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"rfa"},
+  {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"real_futbol_academy"},
   {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Mid-America Division", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
   {name:"Sockers FC Chicago", state:"IL", league:"HD", division:"Mid-America Division", lat:42.1125, lng:-88.034, logo:"MLS Logos/Sockers FC Chicago.png", website:"", driveMiles:800, driveTime:"12h 0m", initials:"SFC", isPro:false, pathway:"both", clubId:"sockers_fc_chicago"},
   {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
@@ -1411,15 +1458,137 @@ function openSearchModal() {
 
 function closeSearchModal() {
   document.getElementById('search-modal').style.display = 'none';
+  // Close all dropdowns
+  document.querySelectorAll('.dropdown-checkbox-menu').forEach(function(menu) {
+    menu.style.display = 'none';
+  });
 }
 
+function toggleDropdown(menuId) {
+  var menu = document.getElementById(menuId);
+  var isVisible = menu.style.display === 'block';
+
+  // Close all other dropdowns
+  document.querySelectorAll('.dropdown-checkbox-menu').forEach(function(m) {
+    m.style.display = 'none';
+  });
+
+  // Toggle this dropdown
+  menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function updateDropdownLabel(menuId) {
+  var menu = document.getElementById(menuId);
+  var button = menu.previousElementSibling;
+  var label = button.querySelector('.dropdown-label');
+  var checkboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+
+  if (checkboxes.length === 0) {
+    label.textContent = 'All';
+  } else if (checkboxes.length === 1) {
+    label.textContent = checkboxes[0].nextSibling.textContent.trim();
+  } else {
+    label.textContent = checkboxes.length + ' selected';
+  }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+  if (!event.target.closest('.dropdown-checkbox-wrapper')) {
+    document.querySelectorAll('.dropdown-checkbox-menu').forEach(function(menu) {
+      menu.style.display = 'none';
+    });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// MODAL RESIZE FUNCTIONALITY
+// ══════════════════════════════════════════════════════════════
+
+function initModalResize() {
+  var modal = document.getElementById('search-modal-container');
+  if (!modal) return;
+
+  var handles = modal.querySelectorAll('.resize-handle');
+  var startX, startY, startWidth, startHeight, startLeft, startTop;
+  var isResizing = false;
+  var currentHandle;
+
+  handles.forEach(function(handle) {
+    handle.addEventListener('mousedown', function(e) {
+      isResizing = true;
+      currentHandle = handle.classList[1]; // n, s, e, w, ne, nw, se, sw
+      startX = e.clientX;
+      startY = e.clientY;
+
+      var rect = modal.getBoundingClientRect();
+      startWidth = rect.width;
+      startHeight = rect.height;
+      startLeft = rect.left;
+      startTop = rect.top;
+
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isResizing) return;
+
+    var dx = e.clientX - startX;
+    var dy = e.clientY - startY;
+    var newWidth = startWidth;
+    var newHeight = startHeight;
+
+    // Calculate new dimensions based on handle
+    if (currentHandle.includes('e')) {
+      newWidth = startWidth + dx;
+    }
+    if (currentHandle.includes('w')) {
+      newWidth = startWidth - dx;
+    }
+    if (currentHandle.includes('s')) {
+      newHeight = startHeight + dy;
+    }
+    if (currentHandle.includes('n')) {
+      newHeight = startHeight - dy;
+    }
+
+    // Apply min/max constraints
+    newWidth = Math.max(500, Math.min(newWidth, window.innerWidth * 0.95));
+    newHeight = Math.max(400, Math.min(newHeight, window.innerHeight * 0.9));
+
+    modal.style.width = newWidth + 'px';
+    modal.style.height = newHeight + 'px';
+    modal.style.maxWidth = 'none';
+    modal.style.maxHeight = 'none';
+  });
+
+  document.addEventListener('mouseup', function() {
+    isResizing = false;
+  });
+}
+
+// Initialize resize on modal open
+var originalOpenSearchModal = openSearchModal;
+openSearchModal = function() {
+  originalOpenSearchModal();
+  setTimeout(initModalResize, 100);
+};
+
 function clearSearchFilters() {
-  document.getElementById('filter-age-group').value = '';
-  document.getElementById('filter-division').value = '';
-  document.getElementById('filter-position').value = '';
+  // Uncheck all checkboxes
+  document.querySelectorAll('#filter-age-group input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('#filter-division input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('#filter-position input[type="checkbox"]').forEach(cb => cb.checked = false);
   document.getElementById('filter-min-goals').value = '';
   document.getElementById('filter-min-ratio').value = '';
   document.getElementById('filter-playing-up').checked = false;
+
+  // Reset dropdown labels
+  updateDropdownLabel('filter-age-group');
+  updateDropdownLabel('filter-division');
+  updateDropdownLabel('filter-position');
 
   // Hide results
   document.getElementById('search-results-container').style.display = 'none';
@@ -1443,18 +1612,21 @@ function quickFilter(type) {
       break;
 
     case 'u13_scorers':
-      document.getElementById('filter-age-group').value = 'u13';
+      document.querySelector('#filter-age-group input[value="u13"]').checked = true;
       document.getElementById('filter-min-goals').value = '7';
+      updateDropdownLabel('filter-age-group');
       break;
 
     case 'u14_scorers':
-      document.getElementById('filter-age-group').value = 'u14';
+      document.querySelector('#filter-age-group input[value="u14"]').checked = true;
       document.getElementById('filter-min-goals').value = '7';
+      updateDropdownLabel('filter-age-group');
       break;
 
     case 'u15_scorers':
-      document.getElementById('filter-age-group').value = 'u15';
+      document.querySelector('#filter-age-group input[value="u15"]').checked = true;
       document.getElementById('filter-min-goals').value = '7';
+      updateDropdownLabel('filter-age-group');
       break;
   }
 
@@ -1463,10 +1635,10 @@ function quickFilter(type) {
 }
 
 function performSearch() {
-  // Get filter values
-  var ageGroup = document.getElementById('filter-age-group').value;
-  var division = document.getElementById('filter-division').value;
-  var position = document.getElementById('filter-position').value;
+  // Get filter values from checkboxes
+  var ageGroups = Array.from(document.querySelectorAll('#filter-age-group input:checked')).map(cb => cb.value);
+  var divisions = Array.from(document.querySelectorAll('#filter-division input:checked')).map(cb => cb.value);
+  var positions = Array.from(document.querySelectorAll('#filter-position input:checked')).map(cb => cb.value);
   var minGoals = parseInt(document.getElementById('filter-min-goals').value) || 0;
   var minRatio = parseFloat(document.getElementById('filter-min-ratio').value) || 0;
   var playingUpOnly = document.getElementById('filter-playing-up').checked;
@@ -1490,26 +1662,30 @@ function performSearch() {
 
     // Iterate through squads
     Object.keys(clubPlayers).forEach(function(squad) {
-      // Filter by age group
-      if (ageGroup && squad !== ageGroup) return;
+      // Filter by age group (if any selected)
+      if (ageGroups.length > 0 && !ageGroups.includes(squad)) return;
 
       var squadData = clubPlayers[squad];
       if (!squadData || !squadData.players) return;
 
-      // Filter by division
-      if (division && club.division !== division) return;
+      // Filter by division (if any selected)
+      if (divisions.length > 0 && !divisions.includes(club.division)) return;
 
       var expectedYOB = squadYearMap[squad];
 
       // Iterate through players
       squadData.players.forEach(function(player) {
-        // Filter by position
-        if (position) {
+        // Filter by position (if any selected)
+        if (positions.length > 0) {
           var playerPos = player.position || '';
-          if (position === 'GK' && playerPos !== 'GK') return;
-          if (position === 'DEF' && !playerPos.includes('DEF') && playerPos !== 'LB' && playerPos !== 'RB' && playerPos !== 'CB' && playerPos !== 'LWB' && playerPos !== 'RWB' && playerPos !== 'SW') return;
-          if (position === 'MID' && !playerPos.includes('MID') && playerPos !== 'DM' && playerPos !== 'CM' && playerPos !== 'AM' && playerPos !== 'LM' && playerPos !== 'RM') return;
-          if (position === 'FOR' && !playerPos.includes('FOR') && playerPos !== 'LW' && playerPos !== 'RW' && playerPos !== 'WF' && playerPos !== 'CF' && playerPos !== 'ST' && playerPos !== 'SS') return;
+          var matches = false;
+          positions.forEach(function(pos) {
+            if (pos === 'GK' && playerPos === 'GK') matches = true;
+            if (pos === 'DEF' && (playerPos.includes('DEF') || playerPos === 'LB' || playerPos === 'RB' || playerPos === 'CB' || playerPos === 'LWB' || playerPos === 'RWB' || playerPos === 'SW')) matches = true;
+            if (pos === 'MID' && (playerPos.includes('MID') || playerPos === 'DM' || playerPos === 'CM' || playerPos === 'AM' || playerPos === 'LM' || playerPos === 'RM')) matches = true;
+            if (pos === 'FOR' && (playerPos.includes('FOR') || playerPos === 'LW' || playerPos === 'RW' || playerPos === 'WF' || playerPos === 'CF' || playerPos === 'ST' || playerPos === 'SS')) matches = true;
+          });
+          if (!matches) return;
         }
 
         // Filter by min goals
@@ -1738,17 +1914,17 @@ function shareSearchURL() {
   // Get current filter values
   var params = new URLSearchParams();
 
-  var ageGroup = document.getElementById('filter-age-group').value;
-  var division = document.getElementById('filter-division').value;
-  var position = document.getElementById('filter-position').value;
+  var ageGroups = Array.from(document.querySelectorAll('#filter-age-group input:checked')).map(cb => cb.value).join(',');
+  var divisions = Array.from(document.querySelectorAll('#filter-division input:checked')).map(cb => cb.value).join(',');
+  var positions = Array.from(document.querySelectorAll('#filter-position input:checked')).map(cb => cb.value).join(',');
   var minGoals = document.getElementById('filter-min-goals').value;
   var minRatio = document.getElementById('filter-min-ratio').value;
   var playingUp = document.getElementById('filter-playing-up').checked;
 
   // Add non-empty parameters
-  if (ageGroup) params.set('age', ageGroup);
-  if (division) params.set('div', division);
-  if (position) params.set('pos', position);
+  if (ageGroups) params.set('age', ageGroups);
+  if (divisions) params.set('div', divisions);
+  if (positions) params.set('pos', positions);
   if (minGoals) params.set('goals', minGoals);
   if (minRatio) params.set('ratio', minRatio);
   if (playingUp) params.set('playup', '1');
@@ -1781,13 +1957,25 @@ function loadSearchFromURL() {
 
   // Load filter values from URL
   if (urlParams.has('age')) {
-    document.getElementById('filter-age-group').value = urlParams.get('age');
+    var ages = urlParams.get('age').split(',');
+    ages.forEach(function(age) {
+      var checkbox = document.querySelector('#filter-age-group input[value="' + age + '"]');
+      if (checkbox) checkbox.checked = true;
+    });
   }
   if (urlParams.has('div')) {
-    document.getElementById('filter-division').value = urlParams.get('div');
+    var divs = urlParams.get('div').split(',');
+    divs.forEach(function(div) {
+      var checkbox = document.querySelector('#filter-division input[value="' + div + '"]');
+      if (checkbox) checkbox.checked = true;
+    });
   }
   if (urlParams.has('pos')) {
-    document.getElementById('filter-position').value = urlParams.get('pos');
+    var poss = urlParams.get('pos').split(',');
+    poss.forEach(function(pos) {
+      var checkbox = document.querySelector('#filter-position input[value="' + pos + '"]');
+      if (checkbox) checkbox.checked = true;
+    });
   }
   if (urlParams.has('goals')) {
     document.getElementById('filter-min-goals').value = urlParams.get('goals');
@@ -1798,6 +1986,11 @@ function loadSearchFromURL() {
   if (urlParams.has('playup')) {
     document.getElementById('filter-playing-up').checked = true;
   }
+
+  // Update dropdown labels
+  updateDropdownLabel('filter-age-group');
+  updateDropdownLabel('filter-division');
+  updateDropdownLabel('filter-position');
 
   // Auto-open search modal and perform search
   setTimeout(function() {
@@ -1813,16 +2006,16 @@ function loadSearchFromURL() {
 function saveCurrentSearch() {
   // Get current filter values
   var searchData = {
-    ageGroup: document.getElementById('filter-age-group').value,
-    division: document.getElementById('filter-division').value,
-    position: document.getElementById('filter-position').value,
+    ageGroups: Array.from(document.querySelectorAll('#filter-age-group input:checked')).map(cb => cb.value),
+    divisions: Array.from(document.querySelectorAll('#filter-division input:checked')).map(cb => cb.value),
+    positions: Array.from(document.querySelectorAll('#filter-position input:checked')).map(cb => cb.value),
     minGoals: document.getElementById('filter-min-goals').value,
     minRatio: document.getElementById('filter-min-ratio').value,
     playingUp: document.getElementById('filter-playing-up').checked
   };
 
   // Check if any filters are set
-  var hasFilters = searchData.ageGroup || searchData.division || searchData.position ||
+  var hasFilters = searchData.ageGroups.length > 0 || searchData.divisions.length > 0 || searchData.positions.length > 0 ||
                    searchData.minGoals || searchData.minRatio || searchData.playingUp;
 
   if (!hasFilters) {
@@ -1875,14 +2068,53 @@ function loadSavedSearch(searchName) {
     return;
   }
 
-  // Load filters
+  // Load filters (handle both old single-value and new multi-value format)
   var filters = search.filters;
-  document.getElementById('filter-age-group').value = filters.ageGroup || '';
-  document.getElementById('filter-division').value = filters.division || '';
-  document.getElementById('filter-position').value = filters.position || '';
+
+  // Clear all checkboxes first
+  clearSearchFilters();
+
+  // Age groups - handle both old and new format
+  if (filters.ageGroups && Array.isArray(filters.ageGroups)) {
+    filters.ageGroups.forEach(function(age) {
+      var checkbox = document.querySelector('#filter-age-group input[value="' + age + '"]');
+      if (checkbox) checkbox.checked = true;
+    });
+  } else if (filters.ageGroup) {
+    var checkbox = document.querySelector('#filter-age-group input[value="' + filters.ageGroup + '"]');
+    if (checkbox) checkbox.checked = true;
+  }
+
+  // Divisions - handle both old and new format
+  if (filters.divisions && Array.isArray(filters.divisions)) {
+    filters.divisions.forEach(function(div) {
+      var checkbox = document.querySelector('#filter-division input[value="' + div + '"]');
+      if (checkbox) checkbox.checked = true;
+    });
+  } else if (filters.division) {
+    var checkbox = document.querySelector('#filter-division input[value="' + filters.division + '"]');
+    if (checkbox) checkbox.checked = true;
+  }
+
+  // Positions - handle both old and new format
+  if (filters.positions && Array.isArray(filters.positions)) {
+    filters.positions.forEach(function(pos) {
+      var checkbox = document.querySelector('#filter-position input[value="' + pos + '"]');
+      if (checkbox) checkbox.checked = true;
+    });
+  } else if (filters.position) {
+    var checkbox = document.querySelector('#filter-position input[value="' + filters.position + '"]');
+    if (checkbox) checkbox.checked = true;
+  }
+
   document.getElementById('filter-min-goals').value = filters.minGoals || '';
   document.getElementById('filter-min-ratio').value = filters.minRatio || '';
   document.getElementById('filter-playing-up').checked = filters.playingUp || false;
+
+  // Update dropdown labels
+  updateDropdownLabel('filter-age-group');
+  updateDropdownLabel('filter-division');
+  updateDropdownLabel('filter-position');
 
   // Automatically perform the search
   performSearch();
@@ -2473,7 +2705,15 @@ loadSearchFromURL();
 
 <!-- SEARCH MODAL -->
 <div id="search-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeSearchModal()">
-  <div class="modal-container search-modal-container" onclick="event.stopPropagation()">
+  <div class="modal-container search-modal-container" id="search-modal-container" onclick="event.stopPropagation()">
+    <div class="resize-handle n"></div>
+    <div class="resize-handle s"></div>
+    <div class="resize-handle e"></div>
+    <div class="resize-handle w"></div>
+    <div class="resize-handle ne"></div>
+    <div class="resize-handle nw"></div>
+    <div class="resize-handle se"></div>
+    <div class="resize-handle sw"></div>
     <div class="modal-header">
       <h2>🔍 Search Players</h2>
       <button class="modal-close" onclick="closeSearchModal()">×</button>
@@ -2494,40 +2734,55 @@ loadSearchFromURL();
         <div class="filter-row">
           <div class="filter-group">
             <label>Age Group</label>
-            <select id="filter-age-group">
-              <option value="">All</option>
-              <option value="u13">U13</option>
-              <option value="u14">U14</option>
-              <option value="u15">U15</option>
-              <option value="u16">U16</option>
-              <option value="u17">U17</option>
-              <option value="u19">U19</option>
-            </select>
+            <div class="dropdown-checkbox-wrapper">
+              <button type="button" class="dropdown-checkbox-btn" onclick="toggleDropdown('filter-age-group')">
+                <span class="dropdown-label">All</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-checkbox-menu" id="filter-age-group" style="display:none;">
+                <label><input type="checkbox" value="u13" onchange="updateDropdownLabel('filter-age-group')"> U13</label>
+                <label><input type="checkbox" value="u14" onchange="updateDropdownLabel('filter-age-group')"> U14</label>
+                <label><input type="checkbox" value="u15" onchange="updateDropdownLabel('filter-age-group')"> U15</label>
+                <label><input type="checkbox" value="u16" onchange="updateDropdownLabel('filter-age-group')"> U16</label>
+                <label><input type="checkbox" value="u17" onchange="updateDropdownLabel('filter-age-group')"> U17</label>
+                <label><input type="checkbox" value="u19" onchange="updateDropdownLabel('filter-age-group')"> U19</label>
+              </div>
+            </div>
           </div>
 
           <div class="filter-group">
             <label>Division</label>
-            <select id="filter-division">
-              <option value="">All</option>
-              <option value="Northeast Division">Northeast Division</option>
-              <option value="Mid-Atlantic Division">Mid-Atlantic Division</option>
-              <option value="New England">New England</option>
-              <option value="Tri-State">Tri-State</option>
-              <option value="Southeast">Southeast</option>
-              <option value="Mid-America Division">Mid-America Division</option>
-              <option value="Southwest">Southwest</option>
-            </select>
+            <div class="dropdown-checkbox-wrapper">
+              <button type="button" class="dropdown-checkbox-btn" onclick="toggleDropdown('filter-division')">
+                <span class="dropdown-label">All</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-checkbox-menu" id="filter-division" style="display:none;">
+                <label><input type="checkbox" value="Northeast Division" onchange="updateDropdownLabel('filter-division')"> Northeast</label>
+                <label><input type="checkbox" value="Mid-Atlantic Division" onchange="updateDropdownLabel('filter-division')"> Mid-Atlantic</label>
+                <label><input type="checkbox" value="New England" onchange="updateDropdownLabel('filter-division')"> New England</label>
+                <label><input type="checkbox" value="Tri-State" onchange="updateDropdownLabel('filter-division')"> Tri-State</label>
+                <label><input type="checkbox" value="Southeast" onchange="updateDropdownLabel('filter-division')"> Southeast</label>
+                <label><input type="checkbox" value="Mid-America Division" onchange="updateDropdownLabel('filter-division')"> Mid-America</label>
+                <label><input type="checkbox" value="Southwest" onchange="updateDropdownLabel('filter-division')"> Southwest</label>
+              </div>
+            </div>
           </div>
 
           <div class="filter-group">
             <label>Position</label>
-            <select id="filter-position">
-              <option value="">All</option>
-              <option value="GK">Goalkeeper</option>
-              <option value="DEF">Defender</option>
-              <option value="MID">Midfielder</option>
-              <option value="FOR">Forward</option>
-            </select>
+            <div class="dropdown-checkbox-wrapper">
+              <button type="button" class="dropdown-checkbox-btn" onclick="toggleDropdown('filter-position')">
+                <span class="dropdown-label">All</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-checkbox-menu" id="filter-position" style="display:none;">
+                <label><input type="checkbox" value="GK" onchange="updateDropdownLabel('filter-position')"> GK</label>
+                <label><input type="checkbox" value="DEF" onchange="updateDropdownLabel('filter-position')"> DEF</label>
+                <label><input type="checkbox" value="MID" onchange="updateDropdownLabel('filter-position')"> MID</label>
+                <label><input type="checkbox" value="FOR" onchange="updateDropdownLabel('filter-position')"> FOR</label>
+              </div>
+            </div>
           </div>
         </div>
 
