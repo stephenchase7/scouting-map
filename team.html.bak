@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Roster</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2e; min-height:100vh; }
+
+.header {
+  background:linear-gradient(135deg,#8B0000 0%,#cc0000 50%,#8B0000 100%);
+  padding:20px 30px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  color:#fff;
+}
+.header img {
+  width:70px; height:70px; border-radius:50%; background:#fff; object-fit:contain; padding:5px;
+}
+.header-initials {
+  width:70px; height:70px; border-radius:50%; background:rgba(255,255,255,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:700; color:#fff;
+}
+.header-info h1 { font-size:24px; font-weight:700; }
+.header-info p { font-size:13px; opacity:0.9; margin-top:4px; }
+.header-info a { color:#fff; text-decoration:none; }
+.header-info a:hover { text-decoration:underline; }
+
+.back-btn {
+  margin-left:auto;
+  background:rgba(255,255,255,0.2);
+  border:none;
+  padding:10px 20px;
+  border-radius:5px;
+  color:#fff;
+  font-size:13px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+}
+.back-btn:hover { background:rgba(255,255,255,0.3); }
+
+.club-info {
+  background:#fff;
+  padding:20px 30px;
+  border-bottom:1px solid #e0e0e0;
+  display:flex;
+  gap:40px;
+  flex-wrap:wrap;
+}
+.info-block h3 { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:6px; }
+.info-block p { font-size:14px; color:#1a1a2e; }
+.info-block a { color:#cc0000; text-decoration:none; }
+.info-block a:hover { text-decoration:underline; }
+
+.tabs {
+  background:#fff;
+  padding:0 30px;
+  border-bottom:1px solid #e0e0e0;
+  display:flex;
+  gap:0;
+}
+.tab {
+  padding:15px 25px;
+  font-size:14px;
+  font-weight:600;
+  color:#666;
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:all 0.15s;
+}
+.tab:hover { color:#1a1a2e; background:#f9f9f9; }
+.tab.active { color:#cc0000; border-bottom-color:#cc0000; }
+.tab.disabled { color:#ccc; cursor:not-allowed; }
+.tab.disabled:hover { background:transparent; color:#ccc; }
+
+.content { padding:20px 30px; }
+
+.roster-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:15px;
+}
+.roster-title {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.roster-header h2 { font-size:18px; font-weight:600; margin:0; }
+.player-count { font-size:13px; color:#666; }
+
+.no-data {
+  background:#fff;
+  padding:60px 30px;
+  text-align:center;
+  border-radius:8px;
+  border:1px solid #e0e0e0;
+}
+.no-data h3 { font-size:16px; color:#888; margin-bottom:8px; }
+.no-data p { font-size:13px; color:#aaa; }
+
+table {
+  width:100%;
+  background:#fff;
+  border-radius:8px;
+  border:1px solid #e0e0e0;
+  border-collapse:collapse;
+  overflow:hidden;
+}
+th {
+  background:#fafafa;
+  text-align:left;
+  padding:12px 15px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  color:#666;
+  border-bottom:1px solid #e0e0e0;
+}
+td {
+  padding:12px 15px;
+  font-size:13px;
+  border-bottom:1px solid #f0f0f0;
+}
+tr:last-child td { border-bottom:none; }
+tr:hover { background:#fafafa; }
+
+.player-name { font-weight:600; color:#1a1a2e; }
+.jersey {
+  display:inline-block;
+  width:28px; height:28px;
+  background:#cc0000;
+  color:#fff;
+  border-radius:50%;
+  text-align:center;
+  line-height:28px;
+  font-size:11px;
+  font-weight:700;
+}
+.position {
+  display:inline-block;
+  padding:3px 8px;
+  background:#f0f0f0;
+  border-radius:3px;
+  font-size:11px;
+  font-weight:600;
+  color:#666;
+}
+.goals { color:#cc0000; font-weight:700; }
+.cards-yellow { color:#f1c40f; }
+.cards-red { color:#e74c3c; }
+.link-btn {
+  padding:5px 10px;
+  background:#f5f5f5;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:11px;
+  color:#666;
+  text-decoration:none;
+  display:inline-block;
+}
+.link-btn:hover { background:#eee; color:#1a1a2e; }
+.link-btn.empty { color:#ccc; cursor:default; }
+
+.updated {
+  margin-top:20px;
+  font-size:12px;
+  color:#999;
+  text-align:right;
+}
+
+.stats-bar {
+  background:#fff;
+  padding:15px 20px;
+  border-radius:8px;
+  border:1px solid #e0e0e0;
+  margin-bottom:15px;
+  display:flex;
+  gap:30px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.stat-item {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.stat-item .label {
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  color:#888;
+}
+.stat-item .value {
+  font-size:18px;
+  font-weight:700;
+  color:#1a1a2e;
+}
+.stat-item .value.goals {
+  color:#cc0000;
+}
+.stat-item .sub {
+  font-size:11px;
+  color:#888;
+  font-weight:400;
+}
+
+.error-page {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  text-align:center;
+  padding:40px;
+}
+.error-page h1 { font-size:24px; color:#cc0000; margin-bottom:10px; }
+.error-page p { color:#666; margin-bottom:20px; }
+.error-page a { color:#cc0000; }
+
+/* Filter row styles */
+.filter-row th {
+  background:#f0f0f0;
+  padding:8px 10px;
+}
+.filter-input {
+  width:100%;
+  padding:6px 8px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:11px;
+  box-sizing:border-box;
+}
+.filter-input:focus {
+  outline:none;
+  border-color:#cc0000;
+}
+.filter-select {
+  width:100%;
+  padding:5px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:11px;
+  background:#fff;
+}
+
+/* Date range picker */
+.date-filter {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+  padding:10px 15px;
+  background:#f9f9f9;
+  border-radius:6px;
+  border:1px solid #e0e0e0;
+  position:relative;
+  z-index:10;
+}
+.date-filter label {
+  font-size:11px;
+  color:#666;
+  text-transform:uppercase;
+}
+.date-filter input[type="date"] {
+  padding:6px 10px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:12px;
+}
+.date-filter button {
+  padding:6px 12px;
+  border:none;
+  border-radius:4px;
+  font-size:11px;
+  cursor:pointer;
+  pointer-events:auto;
+  position:relative;
+  z-index:11;
+}
+.date-filter .apply-btn {
+  background:#cc0000;
+  color:#fff;
+}
+.date-filter .apply-btn:hover { background:#aa0000; }
+.date-filter .clear-btn {
+  background:#f0f0f0;
+  color:#666;
+}
+.date-filter .clear-btn:hover { background:#e0e0e0; }
+
+/* Editable cells */
+td.editable {
+  cursor:pointer;
+  position:relative;
+}
+td.editable:hover {
+  background:#fff8f8;
+}
+td.editable:hover::after {
+  content:'✎';
+  position:absolute;
+  right:5px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:10px;
+  color:#cc0000;
+  opacity:0.6;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  z-index:1000;
+  align-items:center;
+  justify-content:center;
+}
+.modal-overlay.active {
+  display:flex;
+}
+.modal {
+  background:#fff;
+  padding:30px;
+  border-radius:10px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.2);
+  max-width:400px;
+  width:90%;
+}
+.modal h3 {
+  margin:0 0 20px 0;
+  font-size:18px;
+  color:#1a1a2e;
+}
+.modal input {
+  width:100%;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  font-size:14px;
+  margin-bottom:15px;
+  box-sizing:border-box;
+}
+.modal input:focus {
+  outline:none;
+  border-color:#cc0000;
+}
+.modal-buttons {
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+.modal-btn {
+  padding:10px 20px;
+  border:none;
+  border-radius:6px;
+  font-size:13px;
+  cursor:pointer;
+  font-weight:600;
+}
+.modal-btn.primary {
+  background:#cc0000;
+  color:#fff;
+}
+.modal-btn.primary:hover { background:#aa0000; }
+.modal-btn.secondary {
+  background:#f0f0f0;
+  color:#666;
+}
+.modal-btn.secondary:hover { background:#e0e0e0; }
+.modal .error {
+  color:#cc0000;
+  font-size:12px;
+  margin-top:-10px;
+  margin-bottom:10px;
+}
+.modal .field-label {
+  font-size:12px;
+  color:#888;
+  margin-bottom:5px;
+}
+.modal select {
+  width:100%;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:6px;
+  font-size:14px;
+  margin-bottom:15px;
+  background:#fff;
+}
+
+/* Auth toggle button */
+.auth-status {
+  font-size:11px;
+  padding:6px 14px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition:all 0.15s;
+}
+.auth-status.locked {
+  background:#f0f0f0;
+  color:#888;
+}
+.auth-status.locked:hover {
+  background:#e0e0e0;
+  color:#666;
+}
+.auth-status.unlocked {
+  background:#d4edda;
+  color:#155724;
+}
+.auth-status.unlocked:hover {
+  background:#c3e6cb;
+}
+
+/* Editable club info */
+.club-info-section {
+  background:#fff;
+  padding:20px 30px;
+  border-bottom:1px solid #e0e0e0;
+}
+.directors-table {
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:15px;
+}
+.directors-table th {
+  text-align:left;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:#888;
+  padding:0 15px 8px 0;
+  font-weight:600;
+}
+.directors-table td {
+  padding:8px 15px 8px 0;
+  font-size:14px;
+  color:#1a1a2e;
+  border-bottom:1px solid #f0f0f0;
+}
+.directors-table tr:last-child td {
+  border-bottom:none;
+}
+.directors-table .editable-cell {
+  cursor:pointer;
+  padding:6px 10px;
+  border-radius:4px;
+  display:inline-block;
+  min-width:80px;
+}
+.directors-table .editable-cell:hover {
+  background:#fff8f8;
+}
+.directors-table .editable-cell.empty {
+  color:#aaa;
+  font-style:italic;
+}
+.remove-director-btn {
+  background:none;
+  border:none;
+  color:#ccc;
+  font-size:16px;
+  cursor:pointer;
+  padding:5px 10px;
+  border-radius:4px;
+}
+.remove-director-btn:hover {
+  background:#fee;
+  color:#cc0000;
+}
+.add-director-btn {
+  background:#f0f0f0;
+  border:none;
+  padding:8px 15px;
+  border-radius:4px;
+  font-size:12px;
+  color:#666;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.add-director-btn:hover {
+  background:#e0e0e0;
+  color:#1a1a2e;
+}
+.club-type-row {
+  display:flex;
+  gap:40px;
+  margin-top:15px;
+  padding-top:15px;
+  border-top:1px solid #f0f0f0;
+}
+.club-type-row .info-block {
+  min-width:100px;
+}
+.type-select {
+  padding:6px 10px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:14px;
+  background:#fff;
+  cursor:pointer;
+}
+.type-select:focus {
+  outline:none;
+  border-color:#cc0000;
+}
+
+/* Import Missing Data Button & Modal */
+.import-btn {
+  background:rgba(255,255,255,0.2);
+  border:none;
+  padding:10px 20px;
+  border-radius:5px;
+  color:#fff;
+  font-size:13px;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.import-btn:hover { background:rgba(255,255,255,0.3); }
+
+.import-modal-overlay {
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+}
+.import-modal-overlay.active { display:flex; }
+
+.import-modal {
+  background:#fff;
+  border-radius:12px;
+  width:600px;
+  max-width:90vw;
+  max-height:80vh;
+  overflow-y:auto;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+
+.import-modal-header {
+  background:linear-gradient(135deg, #8B0000 0%, #cc0000 50%, #8B0000 100%);
+  padding:20px;
+  border-radius:12px 12px 0 0;
+  color:#fff;
+}
+.import-modal-header h2 { font-size:18px; margin:0; }
+
+.import-modal-body { padding:20px; }
+
+.missing-group, .existing-group {
+  padding:12px;
+  background:#f9f9f9;
+  border-radius:6px;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.missing-group.has-file {
+  background:#fff5f5;
+  border:1px solid #ffdddd;
+}
+.existing-group {
+  background:#f0f9f0;
+  border:1px solid #d0f0d0;
+}
+
+.age-badge {
+  font-weight:700;
+  font-size:14px;
+  color:#cc0000;
+  min-width:40px;
+}
+
+.file-status {
+  flex:1;
+  font-size:12px;
+  color:#666;
+  font-family:'Monaco', 'Courier New', monospace;
+}
+
+.copy-btn {
+  background:#cc0000;
+  color:#fff;
+  border:none;
+  padding:8px 16px;
+  border-radius:4px;
+  font-size:12px;
+  cursor:pointer;
+  font-weight:600;
+}
+.copy-btn:hover { background:#a00000; }
+
+.command-box {
+  background:#1a1a2e;
+  color:#0f0;
+  padding:16px;
+  border-radius:6px;
+  font-family:'Monaco', 'Courier New', monospace;
+  font-size:12px;
+  margin:16px 0;
+  position:relative;
+  overflow-x:auto;
+}
+.command-box pre {
+  margin:0;
+  white-space:pre-wrap;
+  word-break:break-all;
+}
+</style>
+</head>
+<body>
+
+<!-- Password Modal -->
+<div id="password-modal" class="modal-overlay">
+  <div class="modal">
+    <h3>Authentication Required</h3>
+    <p class="field-label">Enter password to edit data:</p>
+    <input type="password" id="password-input" placeholder="Password">
+    <div id="password-error" class="error" style="display:none;">Incorrect password</div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" onclick="closePasswordModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="verifyPassword()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="modal-overlay">
+  <div class="modal">
+    <h3>Edit <span id="edit-field-name"></span></h3>
+    <p class="field-label" id="edit-field-label">Player: <strong id="edit-player-name"></strong></p>
+    <div id="edit-input-container">
+      <!-- Input or select will be inserted here -->
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="page-content">
+  <div class="error-page"><p>Loading...</p></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// EMBEDDED DATA (update this when clubs.json or player files change)
+// ══════════════════════════════════════════════════════════════
+
+var clubsData = {
+  "nyrb": {
+    "id": "nyrb",
+    "name": "New York Red Bulls",
+    "logo": "MLS Logos/NY Red Bulls.png",
+    "website": "https://www.newyorkredbulls.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "nycfc": {
+    "id": "nycfc",
+    "name": "New York City FC",
+    "logo": "MLS Logos/NYCFC.png",
+    "website": "https://www.nycfc.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "rfa": {
+    "id": "rfa",
+    "name": "Real Futbol Academy",
+    "logo": "MLS Logos/RFA.jpg",
+    "website": "https://realfutbolacademy.com",
+    "isPro": false,
+    "director": { "name": "Jon Kopytko", "email": "jkopytko@realjfc.com", "phone": "609-941-5362" }
+  },
+  "orlando": {
+    "id": "orlando",
+    "name": "Orlando City SC",
+    "logo": "",
+    "website": "https://www.orlandocitysc.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "ne_rev": {
+    "id": "ne_rev",
+    "name": "New England Revolution",
+    "logo": "MLS Logos/NE Revolution.png",
+    "website": "https://www.revolutionsoccer.net",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "phi": {
+    "id": "phi",
+    "name": "Philadelphia Union",
+    "logo": "MLS Logos/Philadelphia Union.jpg",
+    "website": "https://www.philadelphiaunion.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "tfc": {
+    "id": "tfc",
+    "name": "Toronto FC",
+    "logo": "MLS Logos/Toronto FC.png",
+    "website": "https://www.torontofc.ca",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "mtl": {
+    "id": "mtl",
+    "name": "CF Montreal",
+    "logo": "MLS Logos/CF Montreal.png",
+    "website": "https://www.cfmontreal.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "dcu": {
+    "id": "dcu",
+    "name": "D.C. United",
+    "logo": "MLS Logos/DC United.png",
+    "website": "https://www.dcunited.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "beachside": {
+    "id": "beachside",
+    "name": "Beachside SC",
+    "logo": "MLS Logos/beachside.png",
+    "website": "https://beachsidesoccer.org",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "bwg": {
+    "id": "bwg",
+    "name": "Blau Weiss Gottschee",
+    "logo": "MLS Logos/BW Gottschee.png",
+    "website": "https://bwgottschee.org",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "ctu": {
+    "id": "ctu",
+    "name": "Connecticut United FC",
+    "logo": "MLS Logos/ct united.png",
+    "website": "https://ctunited.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "downtown_united_soccer_club": {
+    "id": "downtown_united_soccer_club",
+    "name": "Downtown United SC",
+    "logo": "MLS Logos/dusc.png",
+    "website": "https://dusc.net",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "fcw": {
+    "id": "fcw",
+    "name": "FC Westchester",
+    "logo": "MLS Logos/FC Westchester.png",
+    "website": "https://fcwestchester.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "ironbound_soccer_club": {
+    "id": "ironbound_soccer_club",
+    "name": "Ironbound SC",
+    "logo": "MLS Logos/Ironbound SC.png",
+    "website": "https://ironboundsoccer.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "long_island_soccer_club": {
+    "id": "long_island_soccer_club",
+    "name": "Long Island SC",
+    "logo": "MLS Logos/LISC.png",
+    "website": "https://longisland-soccerclub.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "nysc": {
+    "id": "nysc",
+    "name": "New York SC",
+    "logo": "MLS Logos/NYSC.png",
+    "website": "https://newyorksoccerclub.org",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "tsf": {
+    "id": "tsf",
+    "name": "TSF Academy",
+    "logo": "MLS Logos/TSF.png",
+    "website": "https://tsfacademy.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "bolts": {
+    "id": "bolts",
+    "name": "FC Greater Boston Bolts",
+    "logo": "MLS Logos/FC Greater Boston Bolts.png",
+    "website": "https://bostonbolts.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "ifa": {
+    "id": "ifa",
+    "name": "Intercontinental FA",
+    "logo": "MLS Logos/Intercontinental FA.jpg",
+    "website": "https://ifane.org",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "nefc": {
+    "id": "nefc",
+    "name": "NEFC",
+    "logo": "MLS Logos/NEFC.png",
+    "website": "https://nefc.us",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "oakwood": {
+    "id": "oakwood",
+    "name": "Oakwood SC",
+    "logo": "MLS Logos/Oakwood Soccer Club.jpg",
+    "website": "https://oakwoodsoccer.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "roc": {
+    "id": "roc",
+    "name": "Rochester NY FC",
+    "logo": "MLS Logos/Rochester NY FC Academy.jpg",
+    "website": "https://www.rnyfc-youth.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "scu": {
+    "id": "scu",
+    "name": "Seacoast United",
+    "logo": "MLS Logos/Seacoast United.jpg",
+    "website": "https://seacoastunited.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "valeo": {
+    "id": "valeo",
+    "name": "Valeo FC",
+    "logo": "MLS Logos/Valeo FC.png",
+    "website": "https://valeofc.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "bayside": {
+    "id": "bayside",
+    "name": "Bayside FC",
+    "logo": "MLS Logos/Bayside FC.jpg",
+    "website": "https://baysidefc.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "csa_bergen": {
+    "id": "csa_bergen",
+    "name": "Cedar Stars Academy Bergen",
+    "logo": "MLS Logos/CSA Bergen.png",
+    "website": "https://cedarstars.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "csa_monmouth": {
+    "id": "csa_monmouth",
+    "name": "Cedar Stars Academy Monmouth",
+    "logo": "MLS Logos/CSA Monmouth.png",
+    "website": "https://cedarstars.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "ct_united": {
+    "id": "ct_united",
+    "name": "Connecticut United FC",
+    "logo": "MLS Logos/ct united.png",
+    "website": "https://ctunited.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "dusc": {
+    "id": "dusc",
+    "name": "Downtown United SC",
+    "logo": "MLS Logos/dusc.png",
+    "website": "https://dusc.net",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "fa_euro": {
+    "id": "fa_euro",
+    "name": "FA Euro New York",
+    "logo": "MLS Logos/fa euro.png",
+    "website": "https://faeuro.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "fc_westchester": {
+    "id": "fc_westchester",
+    "name": "FC Westchester",
+    "logo": "MLS Logos/FC Westchester.png",
+    "website": "https://fcwestchester.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "lisc": {
+    "id": "lisc",
+    "name": "Long Island SC",
+    "logo": "MLS Logos/LISC.png",
+    "website": "https://longisland-soccerclub.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "met_oval": {
+    "id": "met_oval",
+    "name": "Metropolitan Oval",
+    "logo": "MLS Logos/Met Oval.png",
+    "website": "https://metropolitanoval.org",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "rochester": {
+    "id": "rochester",
+    "name": "Rochester NY FC",
+    "logo": "MLS Logos/Rochester NY FC Academy.jpg",
+    "website": "https://www.rnyfc-youth.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "seacoast": {
+    "id": "seacoast",
+    "name": "Seacoast United",
+    "logo": "MLS Logos/Seacoast United.jpg",
+    "website": "https://seacoastunited.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "philly": {
+    "id": "philly",
+    "name": "Philadelphia Union",
+    "logo": "MLS Logos/Philadelphia Union.jpg",
+    "website": "https://www.philadelphiaunion.com",
+    "isPro": true,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "michigan": {
+    "id": "michigan",
+    "name": "Michigan Futbol Academy",
+    "logo": "MLS Logos/Michigan Futbol Academy.jpg",
+    "website": "https://www.michiganfutbolacademy.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "sockers_fc_chicago": {
+    "id": "sockers_fc_chicago",
+    "name": "Sockers FC Chicago",
+    "logo": "MLS Logos/Sockers FC Chicago.png",
+    "website": "",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "baltimore_armour": {
+    "id": "baltimore_armour",
+    "name": "Baltimore Armour",
+    "logo": "MLS Logos/Baltimore Armour.png",
+    "website": "https://www.baltimorearmour.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "sporting_de": {
+    "id": "sporting_de",
+    "name": "Sporting Delaware",
+    "logo": "MLS Logos/Sporting Delaware.jpg",
+    "website": "https://sportingdelaware.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "inter_atlanta": {
+    "id": "inter_atlanta",
+    "name": "Inter Atlanta fc",
+    "logo": "MLS Logos/Inter Atlanta fc.png",
+    "website": "",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "fc_delco": {
+    "id": "fc_delco",
+    "name": "FC Delco",
+    "logo": "MLS Logos/FC Delco.png",
+    "website": "",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "springfield_syc": {
+    "id": "springfield_syc",
+    "name": "Springfield SYC",
+    "logo": "MLS Logos/Springfield SYC.jpg",
+    "website": "",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
+  "real_salt_lake_az": {
+    "id": "real_salt_lake_az",
+    "name": "Real Salt Lake (AZ)",
+    "logo": "MLS Logos/Real Salt Lake (AZ).png",
+    "website": "",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  }
+};
+
+var playersData = {
+  "bayside_fc": {
+    "u13": {
+          "season": "2025-2026",
+          "dateRange": "Sep 1, 2025 - May 3, 2026",
+          "lastUpdated": "2026-05-03",
+          "matchesPlayed": 19,
+          "totalTeamGoals": 30,
+          "goalsRecorded": 29,
+          "notes": "Note: 1 goal from 2025-09-06 vs FC Greater Boston Bolts (11-1) have no goal scorers recorded in Kitman Labs.",
+          "players": [
+            {"name": "Sebastian Carvalhal", "yob": 2013, "jersey": 9, "position": "FOR", "games": 19, "starts": 0, "goals": 10, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2025-09-13", "opponent": "New York City FC", "goals": 1}, {"date": "2025-09-20", "opponent": "Blau Weiss Gottschee", "goals": 1}, {"date": "2025-10-18", "opponent": "Intercontinental Football Academy of New England", "goals": 1}, {"date": "2026-03-07", "opponent": "Seacoast United", "goals": 1}, {"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}, {"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}, {"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}, {"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}, {"date": "2026-03-22", "opponent": "Metropolitan Oval", "goals": 1}, {"date": "2026-04-11", "opponent": "New England Revolution", "goals": 1}]},
+            {"name": "Cruz Cardoso", "yob": 2013, "jersey": 21, "position": "FOR", "games": 19, "starts": 0, "goals": 8, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2025-09-14", "opponent": "Oakwood Soccer Club", "goals": 1}, {"date": "2025-09-14", "opponent": "Oakwood Soccer Club", "goals": 1}, {"date": "2025-10-05", "opponent": "Downtown United Soccer Club", "goals": 1}, {"date": "2026-03-07", "opponent": "Seacoast United", "goals": 1}, {"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}, {"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}, {"date": "2026-03-22", "opponent": "Metropolitan Oval", "goals": 1}, {"date": "2026-04-11", "opponent": "New England Revolution", "goals": 1}]},
+            {"name": "Artur Grzybacz", "yob": 2014, "jersey": 39, "position": "FOR", "games": 19, "starts": 0, "goals": 4, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2025-10-18", "opponent": "Intercontinental Football Academy of New England", "goals": 1}, {"date": "2026-03-07", "opponent": "Seacoast United", "goals": 1}, {"date": "2026-04-19", "opponent": "New York SC", "goals": 1}, {"date": "2026-04-19", "opponent": "New York SC", "goals": 1}]},
+            {"name": "Braeden Shaw", "yob": 2013, "jersey": 11, "position": "FOR", "games": 18, "starts": 0, "goals": 3, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2026-03-07", "opponent": "Seacoast United", "goals": 1}, {"date": "2026-04-11", "opponent": "New England Revolution", "goals": 1}, {"date": "2026-04-19", "opponent": "New York SC", "goals": 1}]},
+            {"name": "Aurelio Sousa", "yob": 2013, "jersey": 7, "position": "FOR", "games": 14, "starts": 0, "goals": 1, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}]},
+            {"name": "Connor Swanson", "yob": 2012, "jersey": 29, "position": "DEF", "games": 11, "starts": 0, "goals": 1, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2026-03-29", "opponent": "FA Euro New York", "goals": 1}]},
+            {"name": "Landen Fidalgo", "yob": 2013, "jersey": 40, "position": "MID", "games": 19, "starts": 0, "goals": 1, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2026-03-14", "opponent": "Valeo Futbol Club", "goals": 1}]},
+            {"name": "Shaya Langroudi", "yob": 2012, "jersey": 16, "position": "MID", "games": 19, "starts": 0, "goals": 1, "yellowCards": 0, "redCards": 0, "link": "", "goalsByMatch": [{"date": "2025-09-13", "opponent": "New York City FC", "goals": 1}]},
+            {"name": "Alexander Komocar", "yob": 2012, "jersey": 58, "position": "MID", "games": 19, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Avik Pandit", "yob": 2013, "jersey": 32, "position": "MID", "games": 16, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Carter Schott", "yob": 2013, "jersey": 5, "position": "DEF", "games": 19, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Giles Taylor", "yob": 2013, "jersey": 4, "position": "DEF", "games": 12, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Jared Laforest", "yob": 2013, "jersey": 12, "position": "DEF", "games": 18, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Julian Barbosa", "yob": 2013, "jersey": 6, "position": "MID", "games": 19, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Julian Bejarano-Moreno", "yob": 2013, "jersey": 25, "position": "GK", "games": 19, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Mason Carreiro", "yob": 2013, "jersey": 8, "position": "FOR", "games": 19, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Nicholas Espana", "yob": 2013, "jersey": 14, "position": "MID", "games": 18, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Niko Andrade", "yob": 2013, "jersey": 10, "position": "FOR", "games": 15, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Sebastien Benevides", "yob": 2013, "jersey": 2, "position": "DEF", "games": 8, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""},
+            {"name": "Torin Smith", "yob": 2013, "jersey": 13, "position": "MID", "games": 8, "starts": 0, "goals": 0, "yellowCards": 0, "redCards": 0, "link": ""}
+          ]
+        }
+  }
+};
+
+
+// ══════════════════════════════════════════════════════════════
+// APP LOGIC
+// ══════════════════════════════════════════════════════════════
+
+var urlParams = new URLSearchParams(window.location.search);
+var clubId = urlParams.get('club');
+var currentClub = null;
+var currentTeam = 'u13';
+
+// Import Missing Data - Constants
+var ALL_AGE_GROUPS = ['u13', 'u14', 'u15', 'u16', 'u17', 'u19'];
+var CLUB_ID_TO_SCRAPER_NAME = {
+  'nyrb': 'new_york_red_bulls',
+  'nycfc': 'new_york_city_fc',
+  'ne_rev': 'new_england_revolution',
+  'philly': 'philadelphia_union',
+  'tfc': 'toronto_fc',
+  'mtl': 'cf_montreal',
+  'dcu': 'dc_united',
+  'rfa': 'real_futbol_academy',
+  'met_oval': 'metropolitan_oval',
+  'beachside': 'beachside_of_connecticut',
+  'bwg': 'blau_weiss_gottschee',
+  'csa_bergen': 'cedar_stars_academy_bergen',
+  'csa_monmouth': 'cedar_stars_academy_monmouth',
+  'ctu': 'connecticut_united',
+  'dusc': 'downtown_united_sc',
+  'fa_euro': 'fa_euro_new_york',
+  'fcw': 'fc_westchester',
+  'ironbound_soccer_club': 'ironbound_sc',
+  'lisc': 'long_island_sc',
+  'nysc': 'new_york_sc',
+  'tsf': 'tsf_academy',
+  'bolts': 'fc_greater_boston_bolts',
+  'ifa': 'intercontinental_fa',
+  'nefc': 'nefc',
+  'oakwood': 'oakwood_sc',
+  'roc': 'rochester_ny_fc',
+  'scu': 'seacoast_united',
+  'valeo': 'valeo_fc',
+  'bayside': 'bayside_fc',
+  'sporting_de': 'sporting_delaware',
+  'real_salt_lake_az': 'real_salt_lake',
+  'baltimore_armour': 'baltimore_armour',
+  'fc_delco': 'fc_delco',
+  'inter_atlanta': 'inter_atlanta_fc',
+  'springfield_syc': 'springfield_syc'
+};
+
+function init() {
+  if (!clubId) {
+    showError('No club specified', 'Please select a club from the map.');
+    return;
+  }
+
+  currentClub = clubsData[clubId];
+
+  if (!currentClub) {
+    showError('Club not found', 'The club "' + clubId + '" was not found in the database.');
+    return;
+  }
+
+  // Load any persisted club data from localStorage
+  loadPersistedClubData();
+
+  document.title = 'Team Roster – ' + currentClub.name;
+  renderPage();
+
+  // Show first available squad (or u13 as fallback)
+  var availableSquads = getAvailableSquads();
+  var firstSquad = availableSquads.length > 0 ? availableSquads[0] : 'u13';
+  showTeam(firstSquad);
+}
+
+function showError(title, message) {
+  document.getElementById('page-content').innerHTML =
+    '<div class="error-page">' +
+    '<h1>' + title + '</h1>' +
+    '<p>' + message + '</p>' +
+    '<a href="index.html">← Back to Map</a>' +
+    '</div>';
+}
+
+function getAvailableSquads() {
+  // Get all squads for this club that have data
+  var clubPlayers = playersData[clubId] || {};
+  var availableSquads = Object.keys(clubPlayers).filter(function(squad) {
+    var data = clubPlayers[squad];
+    return data && data.players && data.players.length > 0;
+  });
+
+  // Sort by age group order (U13, U14, U15, U16, U17, U19)
+  var squadOrder = ['u13', 'u14', 'u15', 'u16', 'u17', 'u19'];
+  availableSquads.sort(function(a, b) {
+    return squadOrder.indexOf(a.toLowerCase()) - squadOrder.indexOf(b.toLowerCase());
+  });
+
+  return availableSquads;
+}
+
+function generateTabsHtml() {
+  var availableSquads = getAvailableSquads();
+
+  if (availableSquads.length === 0) {
+    return '<div class="tabs"><div class="tab active">No Teams</div></div>';
+  }
+
+  var tabsHtml = '<div class="tabs">';
+  availableSquads.forEach(function(squad, i) {
+    var activeClass = i === 0 ? ' active' : '';
+    tabsHtml += '<div class="tab' + activeClass + '" onclick="showTeam(\'' + squad + '\')">' +
+                squad.toUpperCase() + '</div>';
+  });
+  tabsHtml += '</div>';
+
+  return tabsHtml;
+}
+
+function getDirectors() {
+  // Get directors array with backwards compatibility
+  // If old 'director' object exists, convert to array
+  if (currentClub.directors) {
+    return currentClub.directors;
+  } else if (currentClub.director && currentClub.director.name) {
+    // Convert single director to array
+    return [currentClub.director];
+  } else if (currentClub.director) {
+    // Empty director object
+    return [];
+  }
+  return [];
+}
+
+function renderClubInfo() {
+  var directors = getDirectors();
+  var clubType = currentClub.isPro ? 'MLS Pro Club' : 'Academy';
+
+  var html = '<div class="club-info-section" id="club-info-section">';
+
+  // Directors table
+  html += '<table class="directors-table">';
+  html += '<tr><th>Director</th><th>Email</th><th>Phone</th>';
+  if (isAuthenticated) {
+    html += '<th></th>';
+  }
+  html += '</tr>';
+
+  if (directors.length === 0) {
+    // No directors - show empty row when authenticated, or placeholder when not
+    if (isAuthenticated) {
+      html += '<tr>';
+      html += '<td><span class="editable-cell empty" onclick="editDirectorField(0, \'name\')">Click to add</span></td>';
+      html += '<td><span class="editable-cell empty" onclick="editDirectorField(0, \'email\')">—</span></td>';
+      html += '<td><span class="editable-cell empty" onclick="editDirectorField(0, \'phone\')">—</span></td>';
+      html += '<td></td>';
+      html += '</tr>';
+    } else {
+      html += '<tr><td>—</td><td>—</td><td>—</td></tr>';
+    }
+  } else {
+    directors.forEach(function(dir, idx) {
+      html += '<tr>';
+      if (isAuthenticated) {
+        html += '<td><span class="editable-cell' + (dir.name ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'name\')">' + (dir.name || 'Click to add') + '</span></td>';
+        html += '<td><span class="editable-cell' + (dir.email ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'email\')">' + (dir.email || '—') + '</span></td>';
+        html += '<td><span class="editable-cell' + (dir.phone ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'phone\')">' + (dir.phone || '—') + '</span></td>';
+        html += '<td><button class="remove-director-btn" onclick="removeDirector(' + idx + ')" title="Remove director">×</button></td>';
+      } else {
+        html += '<td>' + (dir.name || '—') + '</td>';
+        html += '<td>' + (dir.email || '—') + '</td>';
+        html += '<td>' + (dir.phone || '—') + '</td>';
+      }
+      html += '</tr>';
+    });
+  }
+
+  html += '</table>';
+
+  // Add director button (only when authenticated)
+  if (isAuthenticated) {
+    html += '<button class="add-director-btn" onclick="addDirector()">+ Add Director</button>';
+  }
+
+  // Club type row
+  html += '<div class="club-type-row">';
+  html += '<div class="info-block"><h3>Type</h3>';
+  if (isAuthenticated) {
+    html += '<select class="type-select" onchange="updateClubType(this.value)">';
+    html += '<option value="false"' + (!currentClub.isPro ? ' selected' : '') + '>Academy</option>';
+    html += '<option value="true"' + (currentClub.isPro ? ' selected' : '') + '>MLS Pro Club</option>';
+    html += '</select>';
+  } else {
+    html += '<p>' + clubType + '</p>';
+  }
+  html += '</div></div>';
+
+  html += '</div>';
+
+  return html;
+}
+
+function renderPage() {
+  var logoHtml = currentClub.logo
+    ? '<img src="' + currentClub.logo + '" alt="' + currentClub.name + '" onerror="this.style.display=\'none\'">'
+    : '<div class="header-initials">' + clubId.toUpperCase() + '</div>';
+
+  var websiteHtml = currentClub.website
+    ? '<a href="' + currentClub.website + '" target="_blank">' + currentClub.website.replace(/^https?:\/\/(www\.)?/, '') + '</a>'
+    : '—';
+
+  var html =
+    '<div class="header">' +
+      logoHtml +
+      '<div class="header-info">' +
+        '<h1>' + currentClub.name + '</h1>' +
+        '<p>' + websiteHtml + '</p>' +
+      '</div>' +
+      '<button class="import-btn" onclick="showImportModal()">⬇ Import Missing Data</button>' +
+      '<a href="index.html" class="back-btn">← Back to Map</a>' +
+    '</div>' +
+
+    renderClubInfo() +
+
+    generateTabsHtml() +
+
+    '<div class="content">' +
+      '<div id="roster-container"></div>' +
+    '</div>';
+
+  document.getElementById('page-content').innerHTML = html;
+}
+
+function showTeam(ageGroup) {
+  currentTeam = ageGroup;
+
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.remove('active');
+    if (t.textContent.toLowerCase() === ageGroup) {
+      t.classList.add('active');
+    }
+  });
+
+  renderRoster();
+}
+
+function renderRoster() {
+  var clubPlayers = playersData[clubId];
+  var data = clubPlayers ? clubPlayers[currentTeam] : null;
+  var container = document.getElementById('roster-container');
+
+  if (!data || data.players.length === 0) {
+    container.innerHTML = '<div class="no-data"><h3>No Data Yet</h3><p>Player data for this team has not been scraped yet.</p></div>';
+    return;
+  }
+
+  // Get all players with their original indices for editing
+  var allPlayers = data.players.map(function(p, i) {
+    return {player: p, originalIndex: i};
+  });
+
+  // Apply filters
+  var filteredPlayers = filterPlayers(allPlayers.map(function(item) { return item.player; }), data);
+
+  // Map back to include original indices
+  var playersWithIndex = allPlayers.filter(function(item) {
+    return filteredPlayers.indexOf(item.player) !== -1;
+  });
+
+  // Sort by goals (using filtered goals if date filter active)
+  playersWithIndex.sort(function(a, b) {
+    var aGoals = calculateFilteredGoals(a.player);
+    var bGoals = calculateFilteredGoals(b.player);
+    return bGoals - aGoals;
+  });
+
+  // Calculate totals
+  var displayedGoalsTotal = playersWithIndex.reduce(function(sum, item) {
+    return sum + calculateFilteredGoals(item.player);
+  }, 0);
+
+  var html = '<div class="roster-header">' +
+    '<div class="roster-title">' +
+    '<h2>' + currentTeam.toUpperCase() + ' Roster – ' + data.season + '</h2>' +
+    '<span class="player-count">' + playersWithIndex.length + ' of ' + data.players.length + ' players</span>' +
+    '</div>' +
+    '<button id="auth-status" class="auth-status ' + (isAuthenticated ? 'unlocked' : 'locked') + '" onclick="toggleAuth()">' +
+    (isAuthenticated ? 'Unlocked' : 'Locked') + '</button>' +
+    '</div>';
+
+  // Stats bar with date range and team goals
+  html += '<div class="stats-bar">';
+
+  // Date range
+  if (data.dateRange) {
+    html += '<div class="stat-item">' +
+      '<span class="label">Data Range</span>' +
+      '<span class="value">' + data.dateRange + '</span>' +
+      '</div>';
+  }
+
+  // Matches played
+  if (data.matchesPlayed) {
+    html += '<div class="stat-item">' +
+      '<span class="label">Matches</span>' +
+      '<span class="value">' + data.matchesPlayed + '</span>' +
+      '</div>';
+  }
+
+  // Total team goals
+  if (data.totalTeamGoals) {
+    var goalsSubtext = '';
+    if (data.goalsRecorded && data.goalsRecorded < data.totalTeamGoals) {
+      goalsSubtext = ' <span class="sub">(' + data.goalsRecorded + ' recorded)</span>';
+    }
+    html += '<div class="stat-item">' +
+      '<span class="label">Team Goals</span>' +
+      '<span class="value goals">' + data.totalTeamGoals + goalsSubtext + '</span>' +
+      '</div>';
+  }
+
+  // Goals per game average
+  if (data.totalTeamGoals && data.matchesPlayed) {
+    var gpg = (data.totalTeamGoals / data.matchesPlayed).toFixed(1);
+    html += '<div class="stat-item">' +
+      '<span class="label">Goals/Game</span>' +
+      '<span class="value">' + gpg + '</span>' +
+      '</div>';
+  }
+
+  // Date filter (for future per-match data)
+  html += '<div class="date-filter">' +
+    '<label>Filter:</label>' +
+    '<input type="date" id="date-start" value="' + (dateFilterStart || '') + '">' +
+    '<span>to</span>' +
+    '<input type="date" id="date-end" value="' + (dateFilterEnd || '') + '">' +
+    '<button type="button" class="apply-btn" onclick="setDateFilter()">Apply</button>' +
+    '<button type="button" class="clear-btn" onclick="clearDateFilter()">Clear</button>' +
+    '</div>';
+
+  html += '</div>';
+
+  // Build unique positions for filter dropdown
+  var positions = [];
+  data.players.forEach(function(p) {
+    if (p.position && positions.indexOf(p.position) === -1) {
+      positions.push(p.position);
+    }
+  });
+  positions.sort();
+
+  // Build unique YOBs for filter dropdown
+  var yobs = [];
+  data.players.forEach(function(p) {
+    if (p.yob && yobs.indexOf(p.yob) === -1) {
+      yobs.push(p.yob);
+    }
+  });
+  yobs.sort();
+
+  html += '<table>' +
+    '<thead>' +
+    '<tr>' +
+    '<th>#</th>' +
+    '<th>Player</th>' +
+    '<th>YOB</th>' +
+    '<th>Pos</th>' +
+    '<th>Games</th>' +
+    '<th>Goals</th>' +
+    '<th>Cards</th>' +
+    '<th>Link</th>' +
+    '</tr>' +
+    '<tr class="filter-row">' +
+    '<th></th>' +
+    '<th><input type="text" class="filter-input" placeholder="Filter..." oninput="setFilter(\'name\', this.value)" value="' + (activeFilters.name || '') + '"></th>' +
+    '<th><select class="filter-select" onchange="setFilter(\'yob\', this.value)">' +
+    '<option value="">All</option>' +
+    yobs.map(function(y) { return '<option value="' + y + '"' + (activeFilters.yob == y ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
+    '</select></th>' +
+    '<th><select class="filter-select" onchange="setFilter(\'position\', this.value)">' +
+    '<option value="">All</option>' +
+    positions.map(function(pos) { return '<option value="' + pos + '"' + (activeFilters.position === pos.toLowerCase() ? ' selected' : '') + '>' + pos + '</option>'; }).join('') +
+    '</select></th>' +
+    '<th></th>' +
+    '<th></th>' +
+    '<th></th>' +
+    '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
+    '</tr>' +
+    '</thead><tbody>';
+
+  playersWithIndex.forEach(function(item) {
+    var p = item.player;
+    var idx = item.originalIndex;
+    var displayGoals = calculateFilteredGoals(p);
+
+    var posHtml = p.position ? '<span class="position">' + p.position + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
+    var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
+    var cardsHtml = '';
+    if (p.yellowCards > 0) cardsHtml += '<span class="cards-yellow">■</span> ';
+    if (p.redCards > 0) cardsHtml += '<span class="cards-red">■</span>';
+    if (!cardsHtml) cardsHtml = '—';
+    var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
+
+    html += '<tr>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'name\')"><span class="player-name">' + p.name + '</span></td>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
+      '<td>' + cardsHtml + '</td>' +
+      '<td class="editable" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+
+  if (data.notes) {
+    var noteText = data.notes.startsWith('Note:') ? data.notes : 'Note: ' + data.notes;
+    html += '<div class="updated" style="color:#cc0000;margin-top:15px;">' + noteText + '</div>';
+  }
+
+  html += '<div class="updated">Last updated: ' + (data.lastUpdated || 'Unknown') + '</div>';
+
+  container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTHENTICATION & EDITING
+// ══════════════════════════════════════════════════════════════
+
+var EDIT_PASSWORD = 'NYRBScout@26';
+var isAuthenticated = false;
+var pendingEdit = null; // {playerIndex, field}
+var activeFilters = {};
+var dateFilterStart = null;
+var dateFilterEnd = null;
+
+// Password Modal
+function showPasswordModal(playerIndex, field) {
+  pendingEdit = {playerIndex: playerIndex, field: field};
+  document.getElementById('password-input').value = '';
+  document.getElementById('password-error').style.display = 'none';
+  document.getElementById('password-modal').classList.add('active');
+  document.getElementById('password-input').focus();
+}
+
+function closePasswordModal() {
+  document.getElementById('password-modal').classList.remove('active');
+  pendingEdit = null;
+}
+
+function verifyPassword() {
+  var input = document.getElementById('password-input').value;
+  if (input === EDIT_PASSWORD) {
+    isAuthenticated = true;
+    closePasswordModal();
+    if (pendingEdit) {
+      showEditModal(pendingEdit.playerIndex, pendingEdit.field);
+    }
+    updateAuthStatus();
+  } else {
+    document.getElementById('password-error').style.display = 'block';
+  }
+}
+
+function updateAuthStatus() {
+  var statusEl = document.getElementById('auth-status');
+  if (statusEl) {
+    if (isAuthenticated) {
+      statusEl.className = 'auth-status unlocked';
+      statusEl.textContent = 'Unlocked';
+    } else {
+      statusEl.className = 'auth-status locked';
+      statusEl.textContent = 'Locked';
+    }
+  }
+  // Refresh club info section to show/hide edit controls
+  refreshClubInfo();
+}
+
+function toggleAuth() {
+  if (isAuthenticated) {
+    // Lock it
+    isAuthenticated = false;
+    updateAuthStatus();
+  } else {
+    // Show password modal to unlock
+    pendingEdit = null;
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-error').style.display = 'none';
+    document.getElementById('password-modal').classList.add('active');
+    document.getElementById('password-input').focus();
+  }
+}
+
+// Edit Modal
+function showEditModal(playerIndex, field) {
+  var clubPlayers = playersData[clubId];
+  var data = clubPlayers ? clubPlayers[currentTeam] : null;
+  if (!data) return;
+
+  var player = data.players[playerIndex];
+  if (!player) return;
+
+  document.getElementById('edit-field-label').innerHTML = 'Player: <strong id="edit-player-name">' + player.name + '</strong>';
+  document.getElementById('edit-field-name').textContent = field.charAt(0).toUpperCase() + field.slice(1);
+
+  var container = document.getElementById('edit-input-container');
+  var currentValue = player[field] || '';
+
+  // Create appropriate input based on field
+  if (field === 'position') {
+    var positions = ['GK', 'CB', 'RB', 'LB', 'RWB', 'LWB', 'DM', 'CM', 'AM', 'RM', 'LM', 'RW', 'LW', 'CF', 'ST', 'FW', 'Oth', ''];
+    container.innerHTML = '<select id="edit-value">' +
+      positions.map(function(pos) {
+        var selected = pos === currentValue ? ' selected' : '';
+        var label = pos || '(None)';
+        return '<option value="' + pos + '"' + selected + '>' + label + '</option>';
+      }).join('') + '</select>';
+  } else if (field === 'yob' || field === 'goals' || field === 'games' || field === 'yellowCards' || field === 'redCards' || field === 'jersey') {
+    container.innerHTML = '<input type="number" id="edit-value" value="' + currentValue + '">';
+  } else {
+    container.innerHTML = '<input type="text" id="edit-value" value="' + currentValue + '">';
+  }
+
+  pendingEdit = {playerIndex: playerIndex, field: field};
+  document.getElementById('edit-modal').classList.add('active');
+  document.getElementById('edit-value').focus();
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('active');
+  pendingEdit = null;
+}
+
+function saveEdit() {
+  if (!pendingEdit) return;
+
+  var input = document.getElementById('edit-value');
+  var newValue = input.value;
+
+  // Handle director field edits
+  if (pendingEdit.type === 'director') {
+    ensureDirectorsArray();
+    if (currentClub.directors[pendingEdit.directorIndex]) {
+      currentClub.directors[pendingEdit.directorIndex][pendingEdit.field] = newValue;
+      saveClubData();
+      closeEditModal();
+      refreshClubInfo();
+      return;
+    }
+  }
+
+  // Handle player field edits
+  var clubPlayers = playersData[clubId];
+  var data = clubPlayers ? clubPlayers[currentTeam] : null;
+  if (!data) return;
+
+  // Convert to appropriate type
+  if (['yob', 'goals', 'games', 'yellowCards', 'redCards', 'jersey'].indexOf(pendingEdit.field) !== -1) {
+    newValue = parseInt(newValue) || 0;
+  }
+
+  // Update the data
+  data.players[pendingEdit.playerIndex][pendingEdit.field] = newValue;
+  data.lastUpdated = new Date().toISOString().split('T')[0];
+
+  closeEditModal();
+  renderRoster();
+}
+
+// Cell click handler
+function handleCellClick(playerIndex, field) {
+  if (isAuthenticated) {
+    showEditModal(playerIndex, field);
+  } else {
+    showPasswordModal(playerIndex, field);
+  }
+}
+
+// ========== Director Management Functions ==========
+
+function ensureDirectorsArray() {
+  // Convert old director object to directors array if needed
+  if (!currentClub.directors) {
+    if (currentClub.director && currentClub.director.name) {
+      currentClub.directors = [currentClub.director];
+    } else {
+      currentClub.directors = [];
+    }
+  }
+}
+
+function addDirector() {
+  ensureDirectorsArray();
+  currentClub.directors.push({ name: '', email: '', phone: '' });
+  saveClubData();
+  refreshClubInfo();
+}
+
+function removeDirector(index) {
+  ensureDirectorsArray();
+  if (index >= 0 && index < currentClub.directors.length) {
+    currentClub.directors.splice(index, 1);
+    saveClubData();
+    refreshClubInfo();
+  }
+}
+
+function editDirectorField(directorIndex, field) {
+  if (!isAuthenticated) {
+    showPasswordModal();
+    return;
+  }
+
+  ensureDirectorsArray();
+
+  // If editing an index that doesn't exist yet, create it
+  while (currentClub.directors.length <= directorIndex) {
+    currentClub.directors.push({ name: '', email: '', phone: '' });
+  }
+
+  var director = currentClub.directors[directorIndex];
+  var currentValue = director[field] || '';
+
+  var fieldLabels = {
+    'name': 'Director Name',
+    'email': 'Email',
+    'phone': 'Phone'
+  };
+
+  // Set modal labels
+  document.getElementById('edit-field-name').textContent = fieldLabels[field] || field;
+  document.getElementById('edit-field-label').innerHTML = 'Director #' + (directorIndex + 1);
+
+  // Create input in container
+  var container = document.getElementById('edit-input-container');
+  var inputType = field === 'email' ? 'email' : 'text';
+  var placeholder = field === 'phone' ? '555-555-5555' : (field === 'email' ? 'email@example.com' : '');
+  container.innerHTML = '<input type="' + inputType + '" id="edit-value" value="' + (currentValue || '') + '" placeholder="' + placeholder + '">';
+
+  // Store pending edit info
+  pendingEdit = {
+    type: 'director',
+    directorIndex: directorIndex,
+    field: field
+  };
+
+  document.getElementById('edit-modal').classList.add('active');
+  document.getElementById('edit-value').focus();
+  document.getElementById('edit-value').select();
+}
+
+function updateClubType(value) {
+  currentClub.isPro = (value === 'true');
+  saveClubData();
+}
+
+function saveClubData() {
+  // Save club data to localStorage
+  var storageKey = 'clubData_' + clubId;
+  var dataToSave = {
+    directors: currentClub.directors || [],
+    isPro: currentClub.isPro
+  };
+  localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+}
+
+function loadPersistedClubData() {
+  // Load club data from localStorage and merge with embedded data
+  var storageKey = 'clubData_' + clubId;
+  var saved = localStorage.getItem(storageKey);
+  if (saved) {
+    try {
+      var data = JSON.parse(saved);
+      if (data.directors) {
+        currentClub.directors = data.directors;
+      }
+      if (typeof data.isPro !== 'undefined') {
+        currentClub.isPro = data.isPro;
+      }
+    } catch (e) {
+      console.error('Error loading persisted club data:', e);
+    }
+  }
+}
+
+function refreshClubInfo() {
+  var section = document.getElementById('club-info-section');
+  if (section) {
+    // Create temporary container to get new HTML
+    var temp = document.createElement('div');
+    temp.innerHTML = renderClubInfo();
+    section.parentNode.replaceChild(temp.firstChild, section);
+  }
+}
+
+// Filtering
+function applyFilters() {
+  renderRoster();
+}
+
+function clearFilters() {
+  activeFilters = {};
+  dateFilterStart = null;
+  dateFilterEnd = null;
+  var inputs = document.querySelectorAll('.filter-input, .filter-select');
+  inputs.forEach(function(input) { input.value = ''; });
+  var dateInputs = document.querySelectorAll('.date-filter input[type="date"]');
+  dateInputs.forEach(function(input) { input.value = ''; });
+  renderRoster();
+}
+
+function setFilter(field, value) {
+  if (value) {
+    activeFilters[field] = value.toLowerCase();
+  } else {
+    delete activeFilters[field];
+  }
+  renderRoster();
+}
+
+function setDateFilter() {
+  var startInput = document.getElementById('date-start');
+  var endInput = document.getElementById('date-end');
+  dateFilterStart = startInput ? startInput.value : null;
+  dateFilterEnd = endInput ? endInput.value : null;
+  renderRoster();
+}
+
+function clearDateFilter() {
+  dateFilterStart = null;
+  dateFilterEnd = null;
+  var startInput = document.getElementById('date-start');
+  var endInput = document.getElementById('date-end');
+  if (startInput) startInput.value = '';
+  if (endInput) endInput.value = '';
+  renderRoster();
+}
+
+function filterPlayers(players, data) {
+  return players.filter(function(p) {
+    // Apply text/select filters
+    for (var field in activeFilters) {
+      var filterVal = activeFilters[field];
+      var playerVal = String(p[field] || '').toLowerCase();
+      if (playerVal.indexOf(filterVal) === -1) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+function calculateFilteredGoals(player) {
+  // If no date filter or no goalsByMatch data, return total goals
+  if (!dateFilterStart && !dateFilterEnd) {
+    return player.goals;
+  }
+  if (!player.goalsByMatch || player.goalsByMatch.length === 0) {
+    return player.goals; // Fallback to total if no per-match data
+  }
+
+  var total = 0;
+  player.goalsByMatch.forEach(function(match) {
+    var matchDate = match.date;
+    if (dateFilterStart && matchDate < dateFilterStart) return;
+    if (dateFilterEnd && matchDate > dateFilterEnd) return;
+    total += match.goals;
+  });
+  return total;
+}
+
+// Export data
+// Password input enter key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (document.getElementById('password-modal').classList.contains('active')) {
+      verifyPassword();
+    } else if (document.getElementById('edit-modal').classList.contains('active')) {
+      saveEdit();
+    }
+  }
+  if (e.key === 'Escape') {
+    closePasswordModal();
+    closeEditModal();
+  }
+});
+
+// Import Missing Data Functions
+function showImportModal() {
+  var modal = document.getElementById('import-modal');
+  var clubNameEl = document.getElementById('modal-club-name');
+  var contentEl = document.getElementById('modal-content');
+
+  // Get current club info
+  var club = currentClub;
+  clubNameEl.textContent = club.name;
+
+  // Find missing age groups
+  var existingGroups = [];
+  var missingGroups = [];
+
+  ALL_AGE_GROUPS.forEach(function(ageGroup) {
+    if (playersData[clubId] && playersData[clubId][ageGroup] && playersData[clubId][ageGroup].players && playersData[clubId][ageGroup].players.length > 0) {
+      existingGroups.push({
+        age: ageGroup,
+        data: playersData[clubId][ageGroup]
+      });
+    } else {
+      missingGroups.push(ageGroup);
+    }
+  });
+
+  // Build UI
+  var html = '';
+
+  // Missing groups section
+  if (missingGroups.length > 0) {
+    html += '<h3 style="font-size:14px;margin-bottom:12px;color:#666;">Missing Age Groups (' + missingGroups.length + '):</h3>';
+    missingGroups.forEach(function(age) {
+      var scraperName = CLUB_ID_TO_SCRAPER_NAME[clubId] || clubId;
+      var fileName = 'scraped_data_' + scraperName + '_' + age.toUpperCase() + '.json';
+      html += '<div class="missing-group has-file">';
+      html += '  <div class="age-badge">' + age.toUpperCase() + '</div>';
+      html += '  <div class="file-status">Expected file: ' + fileName + '</div>';
+      html += '</div>';
+    });
+  } else {
+    html += '<p style="color:#666;font-size:13px;margin-bottom:20px;">✓ All age groups have data</p>';
+  }
+
+  // Existing groups section
+  if (existingGroups.length > 0) {
+    html += '<h3 style="font-size:14px;margin:20px 0 12px;color:#666;">Current Age Groups (' + existingGroups.length + '):</h3>';
+    existingGroups.forEach(function(group) {
+      var data = group.data;
+      html += '<div class="existing-group">';
+      html += '  <div class="age-badge" style="color:#28a745;">✓</div>';
+      html += '  <div class="age-badge">' + group.age.toUpperCase() + '</div>';
+      html += '  <div class="file-status">';
+      html += (data.players.length || 0) + ' players, last updated ' + (data.lastUpdated || 'unknown');
+      html += '  </div>';
+      html += '</div>';
+    });
+  }
+
+  // Commands section
+  if (missingGroups.length > 0) {
+    html += '<hr style="margin:20px 0;border:none;border-top:1px solid #e0e0e0;" />';
+    html += '<h3 style="font-size:14px;margin-bottom:12px;color:#666;">Commands to Run:</h3>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Copy and paste these commands into your terminal:</p>';
+
+    missingGroups.forEach(function(age) {
+      var scraperName = CLUB_ID_TO_SCRAPER_NAME[clubId] || clubId;
+      var fileName = 'scraped_data_' + scraperName + '_' + age.toUpperCase() + '.json';
+      var command = 'cd "/Users/stephenchase/Documents/Kitman Database" && python3 import_to_scouting.py ' + fileName;
+
+      html += '<div class="command-box">';
+      html += '<pre>' + command + '</pre>';
+      html += '<button class="copy-btn" onclick="copyCommand(\'' + command.replace(/'/g, "\\'") + '\', event)">Copy</button>';
+      html += '</div>';
+    });
+
+    html += '<p style="font-size:11px;color:#888;margin-top:12px;"><strong>Note:</strong> Make sure you\'ve scraped the data first using scraper3.py</p>';
+  }
+
+  contentEl.innerHTML = html;
+  modal.classList.add('active');
+}
+
+function closeImportModal(event) {
+  if (!event || event.target.classList.contains('import-modal-overlay')) {
+    document.getElementById('import-modal').classList.remove('active');
+  }
+}
+
+function copyCommand(command, event) {
+  navigator.clipboard.writeText(command).then(function() {
+    // Show feedback
+    event.target.textContent = 'Copied!';
+    setTimeout(function() {
+      event.target.textContent = 'Copy';
+    }, 2000);
+  }).catch(function(err) {
+    alert('Failed to copy: ' + err);
+  });
+}
+
+// Start
+init();
+</script>
+
+<!-- Import Missing Data Modal -->
+<div id="import-modal" class="import-modal-overlay" onclick="closeImportModal(event)">
+  <div class="import-modal" onclick="event.stopPropagation()">
+    <div class="import-modal-header">
+      <h2>Import Missing Data - <span id="modal-club-name"></span></h2>
+    </div>
+    <div class="import-modal-body">
+      <div id="modal-content">
+        <!-- Populated by JavaScript -->
+      </div>
+      <button onclick="closeImportModal()" style="margin-top:20px;padding:10px 20px;border:none;background:#e0e0e0;border-radius:6px;cursor:pointer;">Close</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

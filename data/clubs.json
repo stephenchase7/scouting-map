@@ -1,0 +1,851 @@
+{
+  "nyrb": {
+    "id": "nyrb",
+    "name": "New York Red Bulls",
+    "logo": "MLS Logos/NY Red Bulls.png",
+    "website": "https://www.newyorkredbulls.com",
+    "location": {
+      "city": "Harrison",
+      "state": "NJ"
+    },
+    "conference": "Tri-State",
+    "isPro": true,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "nycfc": {
+    "id": "nycfc",
+    "name": "New York City FC",
+    "logo": "MLS Logos/NYCFC.png",
+    "website": "https://www.nycfc.com",
+    "location": {
+      "city": "New York",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": true,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "rfa": {
+    "id": "rfa",
+    "name": "Real Futbol Academy",
+    "logo": "MLS Logos/RFA.jpg",
+    "website": "https://realfutbolacademy.com",
+    "location": {
+      "city": "Floral Park",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "tsf": {
+    "id": "tsf",
+    "name": "TSF Academy",
+    "logo": "MLS Logos/TSF.png",
+    "website": "https://tsfacademy.com",
+    "location": {
+      "city": "Newark",
+      "state": "NJ"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "met_oval": {
+    "id": "met_oval",
+    "name": "Metropolitan Oval",
+    "logo": "MLS Logos/Met Oval.png",
+    "website": "https://www.metropolitanoval.com",
+    "location": {
+      "city": "Queens",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "csa_bergen": {
+    "id": "csa_bergen",
+    "name": "Cedar Stars Academy Bergen",
+    "logo": "MLS Logos/CSA Bergen.png",
+    "website": "https://www.cedarstars.com",
+    "location": {
+      "city": "North Bergen",
+      "state": "NJ"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "csa_monmouth": {
+    "id": "csa_monmouth",
+    "name": "Cedar Stars Academy Monmouth",
+    "logo": "MLS Logos/CSA Monmouth.png",
+    "website": "https://www.cedarstars.com",
+    "location": {
+      "city": "Monmouth",
+      "state": "NJ"
+    },
+    "conference": "Mid-Atlantic",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-07"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-07"
+      }
+    }
+  },
+  "bwg": {
+    "id": "bwg",
+    "name": "Blau Weiss Gottschee",
+    "logo": "MLS Logos/BW Gottschee.png",
+    "website": "https://www.gottschee.com",
+    "location": {
+      "city": "Ridgewood",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "fa_euro": {
+    "id": "fa_euro",
+    "name": "FA Euro New York",
+    "logo": "MLS Logos/fa euro.png",
+    "website": "https://www.faeuro.com",
+    "location": {
+      "city": "New York",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "fc_westchester": {
+    "id": "fc_westchester",
+    "name": "FC Westchester",
+    "logo": "MLS Logos/FC Westchester.png",
+    "website": "https://www.fcwestchester.com",
+    "location": {
+      "city": "Elmsford",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-06"
+      }
+    }
+  },
+  "dusc": {
+    "id": "dusc",
+    "name": "Downtown United Soccer Club",
+    "logo": "MLS Logos/dusc.png",
+    "website": "https://www.duscny.com",
+    "location": {
+      "city": "New York",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "lisc": {
+    "id": "lisc",
+    "name": "Long Island Soccer Club",
+    "logo": "MLS Logos/LISC.png",
+    "website": "https://www.lisoccerclub.com",
+    "location": {
+      "city": "Long Island",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "ironbound": {
+    "id": "ironbound",
+    "name": "Ironbound Soccer Club",
+    "logo": "MLS Logos/Ironbound SC.png",
+    "website": "https://www.ironboundsc.com",
+    "location": {
+      "city": "Newark",
+      "state": "NJ"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "nysc": {
+    "id": "nysc",
+    "name": "New York SC",
+    "logo": "MLS Logos/NYSC.png",
+    "website": "https://www.newyorksc.com",
+    "location": {
+      "city": "New York",
+      "state": "NY"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "beachside": {
+    "id": "beachside",
+    "name": "Beachside of Connecticut",
+    "logo": "MLS Logos/beachside.png",
+    "website": "https://www.beachsidesoccer.org",
+    "location": {
+      "city": "Norwalk",
+      "state": "CT"
+    },
+    "conference": "Tri-State",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-06"
+      }
+    }
+  },
+  "bayside": {
+    "id": "bayside",
+    "name": "Bayside FC",
+    "logo": "MLS Logos/Bayside FC.jpg",
+    "website": "https://www.baysidefc.com",
+    "location": {
+      "city": "Bayside",
+      "state": "NY"
+    },
+    "conference": "New England",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "boston_bolts": {
+    "id": "boston_bolts",
+    "name": "FC Greater Boston Bolts",
+    "logo": "MLS Logos/FC Greater Boston Bolts.png",
+    "website": "https://www.bostonsoccerbolts.com",
+    "location": {
+      "city": "Boston",
+      "state": "MA"
+    },
+    "conference": "New England",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "nefc": {
+    "id": "nefc",
+    "name": "NEFC",
+    "logo": "MLS Logos/NEFC.png",
+    "website": "https://www.nefc.us",
+    "location": {
+      "city": "Northborough",
+      "state": "MA"
+    },
+    "conference": "New England",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "ne_rev": {
+    "id": "ne_rev",
+    "name": "New England Revolution",
+    "logo": "MLS Logos/NE Revolution.png",
+    "website": "https://www.revolutionsoccer.net",
+    "location": {
+      "city": "Foxborough",
+      "state": "MA"
+    },
+    "conference": "New England",
+    "isPro": true,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "seacoast": {
+    "id": "seacoast",
+    "name": "Seacoast United",
+    "logo": "MLS Logos/Seacoast United.jpg",
+    "website": "https://www.seacoastunited.com",
+    "location": {
+      "city": "Amesbury",
+      "state": "MA"
+    },
+    "conference": "New England",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "ifa": {
+    "id": "ifa",
+    "name": "Intercontinental Football Academy",
+    "logo": "MLS Logos/Intercontinental FA.jpg",
+    "website": "https://www.ifanewengland.com",
+    "location": {
+      "city": "Westford",
+      "state": "MA"
+    },
+    "conference": "New England",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "ct_united": {
+    "id": "ct_united",
+    "name": "Connecticut United FC",
+    "logo": "MLS Logos/ct united.png",
+    "website": "https://www.connecticutunitedfc.com",
+    "location": {
+      "city": "Farmington",
+      "state": "CT"
+    },
+    "conference": "New England",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "philly": {
+    "id": "philly",
+    "name": "Philadelphia Union",
+    "logo": "MLS Logos/Philadelphia Union.jpg",
+    "website": "https://www.philadelphiaunion.com",
+    "location": {
+      "city": "Chester",
+      "state": "PA"
+    },
+    "conference": "Mid-Atlantic",
+    "isPro": true,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "rochester": {
+    "id": "rochester",
+    "name": "Rochester NY FC",
+    "logo": "MLS Logos/Rochester NY FC Academy.jpg",
+    "website": "https://www.rochesternyfc.com",
+    "location": {
+      "city": "Rochester",
+      "state": "NY"
+    },
+    "conference": "Mid-Atlantic",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u13": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      },
+      "u15": {
+        "hasData": true,
+        "lastUpdated": "2026-04-06"
+      }
+    }
+  },
+  "michigan": {
+    "id": "michigan",
+    "name": "Michigan Futbol Academy",
+    "logo": "MLS Logos/Michigan Futbol Academy.jpg",
+    "website": "https://www.michiganfutbolacademy.com",
+    "location": {
+      "city": "Grand Rapids",
+      "state": "MI"
+    },
+    "conference": "Great Lakes",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-05"
+      }
+    }
+  },
+  "baltimore_armour": {
+    "id": "baltimore_armour",
+    "name": "Baltimore Armour",
+    "logo": "MLS Logos/Baltimore Armour.png",
+    "website": "https://www.baltimorearmour.com",
+    "location": {
+      "city": "Ellicott City",
+      "state": "MD"
+    },
+    "conference": "Mid-Atlantic",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {
+      "u14": {
+        "hasData": true,
+        "lastUpdated": "2026-04-14"
+      }
+    }
+  },
+  "sockers_fc_chicago": {
+    "id": "sockers_fc_chicago",
+    "name": "Sockers FC Chicago",
+    "logo": "MLS Logos/Sockers FC Chicago.png",
+    "website": "",
+    "location": {
+      "city": "Palatine",
+      "state": "IL",
+      "address": "545 S Consumers Ave, Palatine, IL 60074"
+    },
+    "conference": "Great Lakes",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {}
+  },
+  "inter_atlanta": {
+    "id": "inter_atlanta_fc",
+    "name": "Inter Atlanta FC",
+    "logo": "MLS Logos/Inter Atlanta FC.png",
+    "website": "",
+    "location": {
+      "city": "Atlanta",
+      "state": "GA",
+      "address": "161 Arizona Ave NE Atlanta, GA 30307"
+    },
+    "conference": "Southeast",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {}
+  },
+  "fc_delco": {
+    "id": "fc_delco",
+    "name": "FC Delco",
+    "logo": "MLS Logos/FC Delco.png",
+    "website": "",
+    "location": {
+      "city": "Conshohocken",
+      "state": "PA",
+      "address": "1950 Butler Pike #266, Conshohocken, PA 19428"
+    },
+    "conference": "Mid-Atlantic",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {}
+  },
+  "springfield_syc": {
+    "id": "springfield_syc",
+    "name": "Springfield SYC",
+    "logo": "MLS Logos/Springfield SYC.jpg",
+    "website": "",
+    "location": {
+      "city": "Springfield",
+      "state": "VA",
+      "address": "8704 Morrissette Dr, Springfield, VA 22152"
+    },
+    "conference": "Mid-Atlantic",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {}
+  },
+  "real_salt_lake_az": {
+    "id": "real_salt_lake_az",
+    "name": "Real Salt Lake (AZ)",
+    "logo": "MLS Logos/Real Salt Lake (AZ).png",
+    "website": "",
+    "location": {
+      "city": "Scottsdale",
+      "state": "AZ",
+      "address": "9376 E Bahia Dr Unit 103D, Scottsdale, AZ 85260"
+    },
+    "conference": "Southwest",
+    "isPro": false,
+    "director": {
+      "name": "",
+      "email": "",
+      "phone": ""
+    },
+    "teams": {}
+  }
+}
