@@ -1560,7 +1560,21 @@ function renderRoster() {
 
   html += '<div class="updated">Last updated: ' + (data.lastUpdated || 'Unknown') + '</div>';
 
+  // Save focus state before rendering
+  var activeElement = document.activeElement;
+  var shouldRestoreFocus = activeElement && activeElement.classList && activeElement.classList.contains('filter-input');
+  var cursorPosition = shouldRestoreFocus ? activeElement.selectionStart : 0;
+
   container.innerHTML = html;
+
+  // Restore focus after rendering
+  if (shouldRestoreFocus) {
+    var newInput = container.querySelector('.filter-input');
+    if (newInput) {
+      newInput.focus();
+      newInput.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2012,7 +2026,7 @@ function showImportModal() {
     missingGroups.forEach(function(age) {
       var scraperName = CLUB_ID_TO_SCRAPER_NAME[clubId] || clubId;
       var fileName = 'scraped_data_' + scraperName + '_' + age.toUpperCase() + '.json';
-      var command = 'cd "/Users/stephenchase/Documents/Kitman Database" && python3 import_to_scouting.py ' + fileName;
+      var command = 'cd "/Users/stephenchase/Desktop/Kitman Database" && python3 import_to_scouting.py ' + fileName;
 
       html += '<div class="command-box">';
       html += '<pre>' + command + '</pre>';
