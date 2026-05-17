@@ -560,6 +560,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ── COLOR CONFIG ──
 var DIVISION_COLORS = {
@@ -733,6 +734,93 @@ try {
 } catch (e) {
   console.error('Error loading custom clubs:', e);
 }
+
+// ── SUPABASE INTEGRATION ──
+const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemdrM3Bpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNjMyMTgsImV4cCI6MjA2MjczOTIxOH0.PeHVZ7TZ-1_l0Jbo8t89m99v-1cOlaMlpRvzlDiKXY8';
+
+let supabaseClient = null;
+let supabaseDataLoaded = false;
+
+// Initialize Supabase client
+try {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.warn('[Supabase] Failed to initialize client:', e);
+}
+
+// Load clubs from Supabase and merge with existing clubs
+async function loadSupabaseClubs() {
+  if (!supabaseClient) {
+    console.log('[Supabase] Client not available, using embedded data only');
+    return;
+  }
+
+  try {
+    console.log('[Supabase] Loading clubs from database...');
+
+    // Load all clubs from Supabase
+    const { data: supabaseClubs, error } = await supabaseClient
+      .from('clubs')
+      .select('*');
+
+    if (error) {
+      console.warn('[Supabase] Failed to load clubs:', error);
+      return;
+    }
+
+    if (supabaseClubs && supabaseClubs.length > 0) {
+      console.log(`[Supabase] Loaded ${supabaseClubs.length} clubs`);
+
+      // Merge Supabase clubs with existing clubs
+      supabaseClubs.forEach(function(sbClub) {
+        // Find existing club by club_id
+        var existingIdx = clubs.findIndex(function(c) { return c.clubId === sbClub.club_id; });
+
+        // Prepare club object in the format expected by the map
+        var clubObj = {
+          name: sbClub.name || '',
+          state: sbClub.state || '',
+          league: sbClub.league || 'HD',
+          division: sbClub.division || '',
+          lat: sbClub.latitude || 0,
+          lng: sbClub.longitude || 0,
+          logo: sbClub.logo_path || '',
+          website: sbClub.website || '',
+          driveMiles: sbClub.drive_miles || 0,
+          driveTime: sbClub.drive_time || '0m',
+          initials: sbClub.initials || '',
+          isPro: sbClub.is_pro || false,
+          pathway: sbClub.pathway || 'both',
+          clubId: sbClub.club_id,
+          fromSupabase: true
+        };
+
+        if (existingIdx !== -1) {
+          // Update existing club (Supabase wins)
+          clubs[existingIdx] = clubObj;
+        } else {
+          // Add new club from Supabase
+          clubs.push(clubObj);
+        }
+      });
+
+      console.log('[Supabase] Successfully merged clubs. Total clubs:', clubs.length);
+      supabaseDataLoaded = true;
+    }
+  } catch (error) {
+    console.warn('[Supabase] Error loading clubs:', error);
+  }
+}
+
+// Call Supabase loading function (async, non-blocking)
+loadSupabaseClubs().then(function() {
+  // After Supabase data loads, refresh the map if needed
+  if (supabaseDataLoaded && typeof refreshMap === 'function') {
+    console.log('[Supabase] Refreshing map with new club data...');
+    refreshMap();
+  }
+});
 
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {

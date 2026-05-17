@@ -1132,7 +1132,106 @@ var clubsData = {
 };
 </script>
 <script src="playersData.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ══════════════════════════════════════════════════════════════
+// SUPABASE INTEGRATION
+// ══════════════════════════════════════════════════════════════
+
+const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemdrM3Bpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNjMyMTgsImV4cCI6MjA2MjczOTIxOH0.PeHVZ7TZ-1_l0Jbo8t89m99v-1cOlaMlpRvzlDiKXY8';
+
+let supabaseClient = null;
+let supabaseDataLoaded = false;
+
+// Initialize Supabase client
+try {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.warn('[Supabase] Failed to initialize client:', e);
+}
+
+// Load data from Supabase and merge with embedded data
+async function loadSupabaseData() {
+  if (!supabaseClient) {
+    console.log('[Supabase] Client not available, using embedded data only');
+    return;
+  }
+
+  try {
+    console.log('[Supabase] Loading club and squad data...');
+
+    // Load all clubs from Supabase
+    const { data: clubs, error: clubsError } = await supabaseClient
+      .from('clubs')
+      .select('*');
+
+    if (clubsError) {
+      console.warn('[Supabase] Failed to load clubs:', clubsError);
+    } else if (clubs && clubs.length > 0) {
+      console.log(`[Supabase] Loaded ${clubs.length} clubs`);
+
+      // Merge clubs into clubsData (Supabase wins on conflicts)
+      clubs.forEach(club => {
+        if (!clubsData[club.club_id]) {
+          clubsData[club.club_id] = {};
+        }
+
+        // Merge club metadata
+        clubsData[club.club_id] = {
+          id: club.club_id,
+          name: club.name || clubsData[club.club_id].name || '',
+          logo: club.logo_path || clubsData[club.club_id].logo || '',
+          website: club.website || clubsData[club.club_id].website || '',
+          isPro: club.is_pro !== null ? club.is_pro : clubsData[club.club_id].isPro || false,
+          director: clubsData[club.club_id].director || { name: '', email: '', phone: '' },
+          // Store additional metadata for reference
+          state: club.state,
+          division: club.division,
+          latitude: club.latitude,
+          longitude: club.longitude
+        };
+      });
+    }
+
+    // Load all squad data from Supabase
+    const { data: squads, error: squadsError } = await supabaseClient
+      .from('squad_data')
+      .select('*');
+
+    if (squadsError) {
+      console.warn('[Supabase] Failed to load squad data:', squadsError);
+    } else if (squads && squads.length > 0) {
+      console.log(`[Supabase] Loaded ${squads.length} squads`);
+
+      // Merge squads into playersData (Supabase wins on conflicts)
+      squads.forEach(squad => {
+        if (!playersData[squad.club_id]) {
+          playersData[squad.club_id] = {};
+        }
+
+        // Merge squad data
+        playersData[squad.club_id][squad.squad] = {
+          season: squad.season || '',
+          lastUpdated: squad.last_scraped || squad.updated_at || '',
+          lastScraped: squad.last_scraped || '',
+          totalTeamGoals: squad.total_team_goals || 0,
+          goalsRecorded: squad.goals_recorded || 0,
+          matchesPlayed: squad.matches_played || 0,
+          notes: squad.notes || '',
+          scrapingMetadata: squad.scraping_metadata || {},
+          players: squad.players || []
+        };
+      });
+
+      console.log('[Supabase] Successfully merged data from Supabase');
+      supabaseDataLoaded = true;
+    }
+  } catch (error) {
+    console.warn('[Supabase] Error loading data:', error);
+  }
+}
+
 // ══════════════════════════════════════════════════════════════
 // APP LOGIC
 // ══════════════════════════════════════════════════════════════
@@ -1190,11 +1289,14 @@ var CLUB_ID_TO_SCRAPER_NAME = {
   'springfield_syc': 'springfield_syc'
 };
 
-function init() {
+async function init() {
   if (!clubId) {
     showError('No club specified', 'Please select a club from the map.');
     return;
   }
+
+  // Load Supabase data first (will merge with embedded data)
+  await loadSupabaseData();
 
   currentClub = clubsData[clubId];
 
