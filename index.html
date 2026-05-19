@@ -797,7 +797,21 @@ async function loadSupabaseClubs() {
         };
 
         if (existingIdx !== -1) {
-          // Update existing club (Supabase wins)
+          // Smart merge: Don't overwrite valid hardcoded coordinates with invalid Supabase data
+          var existingClub = clubs[existingIdx];
+          var supabaseHasValidCoords = clubObj.lat !== 0 && clubObj.lng !== 0;
+          var hardcodedHasValidCoords = existingClub.lat !== 0 && existingClub.lng !== 0;
+
+          if (!supabaseHasValidCoords && hardcodedHasValidCoords) {
+            // Keep hardcoded coordinates if Supabase has invalid ones
+            console.log('[Supabase] Keeping hardcoded coordinates for', clubObj.name, '- Supabase has invalid (0,0)');
+            clubObj.lat = existingClub.lat;
+            clubObj.lng = existingClub.lng;
+            clubObj.driveMiles = existingClub.driveMiles;
+            clubObj.driveTime = existingClub.driveTime;
+          }
+
+          // Update existing club (Supabase wins, except for invalid coordinates)
           clubs[existingIdx] = clubObj;
         } else {
           // Add new club from Supabase
@@ -1316,6 +1330,11 @@ function buildList() {
   var count = 0;
 
   clubs.forEach(function(club, idx) {
+    // Skip clubs with invalid coordinates (don't show in sidebar)
+    if (!isValidCoordinate(club)) {
+      return;
+    }
+
     // Search filter
     if (searchVal && club.name.toLowerCase().indexOf(searchVal) === -1 && club.division.toLowerCase().indexOf(searchVal) === -1) return;
     // Division/Age filter
