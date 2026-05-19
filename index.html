@@ -1219,6 +1219,13 @@ function makeCardHtml(club) {
 
 // ── RENDER CLUBS ──
 clubs.forEach(function(club, idx) {
+  // Skip clubs with invalid coordinates
+  if (!isValidCoordinate(club)) {
+    console.warn('Skipping club with invalid coordinates:', club.name, 'lat:', club.lat, 'lng:', club.lng);
+    markers.push(null); // Keep array indices aligned with clubs array
+    return;
+  }
+
   var icon = makeClubIcon(club, 38);
   var m = L.marker([club.lat, club.lng], {icon: icon}).addTo(map);
   m.bindPopup(makePopupHtml(club), {maxWidth:250});
@@ -1317,6 +1324,10 @@ function buildList() {
     if (filters.distance && club.driveMiles > parseInt(filters.distance)) return;
 
     count++;
+
+    // Ensure distance data is calculated
+    club = ensureDistanceData(club);
+
     var color = getClubColor(club);
     var div = document.createElement('div');
     div.className = 'club-item' + (selectedIdx === idx ? ' active' : '');
@@ -1329,10 +1340,14 @@ function buildList() {
       logoHtml = '<div class="club-initials-sm" style="background:' + color + ';font-size:' + getFontSize(club.initials) + ';">' + club.initials + '</div>';
     }
     var badge = club.isPro ? 'PRO' : 'HD';
+
+    // Format distance display (hide if 0 mi)
+    var distanceText = (club.driveMiles > 0) ? ' &bull; ' + club.driveMiles + ' mi &bull; ' + club.driveTime : '';
+
     div.innerHTML = logoHtml +
       '<div class="club-info">' +
       '<div class="club-name">' + club.name + '</div>' +
-      '<div class="club-meta">' + club.state + ' &bull; ' + club.division + '</div>' +
+      '<div class="club-meta">' + club.state + ' &bull; ' + club.division + distanceText + '</div>' +
       '</div>' +
       '<div class="tier-badge">' + badge + '</div>';
     div.onclick = function() { selectClub(parseInt(this.dataset.idx)); };
@@ -1342,14 +1357,37 @@ function buildList() {
   document.getElementById('count-num').textContent = count;
 }
 
+// Validate club coordinates
+function isValidCoordinate(club) {
+  return club.lat !== undefined && club.lat !== null &&
+         club.lng !== undefined && club.lng !== null &&
+         typeof club.lat === 'number' &&
+         typeof club.lng === 'number' &&
+         club.lat !== 0 && club.lng !== 0 &&
+         !isNaN(club.lat) && !isNaN(club.lng) &&
+         club.lat >= -90 && club.lat <= 90 &&
+         club.lng >= -180 && club.lng <= 180;
+}
+
 function selectClub(idx) {
   selectedIdx = idx;
   var club = clubs[idx];
   var card = document.getElementById('selected-card');
   card.classList.remove('empty');
   card.innerHTML = makeCardHtml(club);
-  map.setView([club.lat, club.lng], 9, {animate:true});
-  markers[idx].openPopup();
+
+  // Validate coordinates before zooming
+  if (isValidCoordinate(club)) {
+    map.setView([club.lat, club.lng], 9, {animate:true});
+    // Check if marker exists before trying to open popup
+    if (markers[idx]) {
+      markers[idx].openPopup();
+    }
+  } else {
+    console.warn('Invalid coordinates for club:', club.name, 'lat:', club.lat, 'lng:', club.lng);
+    alert('This club has invalid map coordinates and cannot be displayed on the map.\n\nClub: ' + club.name + '\nCoordinates: ' + club.lat + ', ' + club.lng);
+  }
+
   buildList();
   setTimeout(function() {
     var active = document.querySelector('.club-item.active');
@@ -1360,6 +1398,9 @@ function selectClub(idx) {
 function updateMarkerVisibility() {
   var searchVal = (document.getElementById('search-input').value || '').toLowerCase();
   clubs.forEach(function(club, idx) {
+    // Skip null markers (clubs with invalid coordinates)
+    if (!markers[idx]) return;
+
     var matchesSearch = !searchVal || club.name.toLowerCase().indexOf(searchVal) !== -1 || club.division.toLowerCase().indexOf(searchVal) !== -1;
     var filterMatch = matchesFilters(club);
     var matchesDistance = !filters.distance || club.driveMiles <= parseInt(filters.distance);
@@ -2304,6 +2345,17 @@ async function geocodeAddress(address) {
     }
 
     var result = data[0];
+    var lat = parseFloat(result.lat);
+    var lng = parseFloat(result.lon);
+
+    // Validate coordinates are not null island (0,0) or invalid
+    if (!lat || !lng || (lat === 0 && lng === 0) || isNaN(lat) || isNaN(lng)) {
+      return {
+        success: false,
+        error: 'Geocoding returned invalid coordinates (0, 0). Please provide a more specific address.'
+      };
+    }
+
     var state = null;
 
     // Extract state from address details
@@ -2321,8 +2373,8 @@ async function geocodeAddress(address) {
 
     return {
       success: true,
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
+      lat: lat,
+      lng: lng,
       state: state,
       displayName: result.display_name
     };
