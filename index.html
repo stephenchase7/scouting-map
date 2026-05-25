@@ -811,7 +811,12 @@ async function loadSupabaseClubs() {
             clubObj.driveTime = existingClub.driveTime;
           }
 
-          // Update existing club (Supabase wins, except for invalid coordinates)
+          // Keep hardcoded logo if Supabase doesn't have one
+          if (!clubObj.logo && existingClub.logo) {
+            clubObj.logo = existingClub.logo;
+          }
+
+          // Update existing club (Supabase wins, except for invalid coordinates/logos)
           clubs[existingIdx] = clubObj;
         } else {
           // Add new club from Supabase
