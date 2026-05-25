@@ -816,7 +816,27 @@ async function loadSupabaseClubs() {
             clubObj.logo = existingClub.logo;
           }
 
-          // Update existing club (Supabase wins, except for invalid coordinates/logos)
+          // Keep hardcoded division if Supabase doesn't have one (CRITICAL for filtering)
+          if (!clubObj.division && existingClub.division) {
+            clubObj.division = existingClub.division;
+          }
+
+          // Keep hardcoded state if Supabase doesn't have one
+          if (!clubObj.state && existingClub.state) {
+            clubObj.state = existingClub.state;
+          }
+
+          // Keep hardcoded initials if Supabase doesn't have one
+          if (!clubObj.initials && existingClub.initials) {
+            clubObj.initials = existingClub.initials;
+          }
+
+          // Keep hardcoded name if Supabase has generic/short name
+          if (existingClub.name && existingClub.name.length > clubObj.name.length) {
+            clubObj.name = existingClub.name;
+          }
+
+          // Update existing club (Supabase wins, except for empty/invalid fields)
           clubs[existingIdx] = clubObj;
         } else {
           // Add new club from Supabase
