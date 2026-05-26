@@ -630,6 +630,25 @@ td.editable:hover::after {
   white-space:pre-wrap;
   word-break:break-all;
 }
+.watchlist-add-btn {
+  background:linear-gradient(135deg, #f5a623 0%, #d4850d 100%);
+  color:#fff;
+  border:none;
+  padding:4px 10px;
+  border-radius:4px;
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.watchlist-add-btn:hover {
+  background:linear-gradient(135deg, #d4850d 0%, #b87000 100%);
+  box-shadow:0 2px 6px rgba(245, 166, 35, 0.3);
+}
+.watchlist-add-btn.added {
+  background:#e8f5e9;
+  color:#2e7d32;
+}
 </style>
 </head>
 <body>
@@ -1614,6 +1633,7 @@ function renderRoster() {
     '<th>Games</th>' +
     '<th>Goals</th>' +
     '<th>Link</th>' +
+    '<th style="width:60px;">Watch</th>' +
     '</tr>' +
     '<tr class="filter-row">' +
     '<th></th>' +
@@ -1630,6 +1650,7 @@ function renderRoster() {
     '<th></th>' +
     '<th></th>' +
     '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
+    '<th></th>' +
     '</tr>' +
     '</thead><tbody>';
 
@@ -1642,6 +1663,8 @@ function renderRoster() {
     var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
     var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
 
+    var watchlistBtn = '<button class="watchlist-add-btn" onclick="event.stopPropagation(); addPlayerToWatchlist(' + idx + ')" title="Add to watchlist">+ Watch</button>';
+
     html += '<tr>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'name\')"><span class="player-name">' + p.name + '</span></td>' +
@@ -1650,6 +1673,7 @@ function renderRoster() {
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
+      '<td>' + watchlistBtn + '</td>' +
       '</tr>';
   });
 
@@ -2159,6 +2183,58 @@ function copyCommand(command, event) {
   }).catch(function(err) {
     alert('Failed to copy: ' + err);
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// WATCHLIST INTEGRATION
+// ══════════════════════════════════════════════════════════════
+
+async function addPlayerToWatchlist(playerIndex) {
+  if (!supabaseClient) {
+    alert('Unable to connect to database. Please refresh the page.');
+    return;
+  }
+
+  var clubPlayers = playersData[clubId];
+  if (!clubPlayers || !clubPlayers[currentTeam]) {
+    alert('Player data not found');
+    return;
+  }
+
+  var player = clubPlayers[currentTeam].players[playerIndex];
+  if (!player) {
+    alert('Player not found');
+    return;
+  }
+
+  // Get club name from the header or URL
+  var clubName = document.querySelector('.header-info h1') ?
+    document.querySelector('.header-info h1').textContent : clubId;
+
+  var entry = {
+    player_name: player.name,
+    birth_year: player.yob || null,
+    club: clubName,
+    position: player.position || null,
+    source_club_id: clubId,
+    source_squad: currentTeam
+  };
+
+  try {
+    var result = await supabaseClient.from('player_watchlist').insert([entry]);
+    if (result.error) throw result.error;
+
+    // Update button to show success
+    var btns = document.querySelectorAll('.watchlist-add-btn');
+    if (btns[playerIndex]) {
+      btns[playerIndex].textContent = '✓ Added';
+      btns[playerIndex].classList.add('added');
+      btns[playerIndex].disabled = true;
+    }
+  } catch (e) {
+    console.error('[Watchlist] Add error:', e);
+    alert('Error adding to watchlist: ' + e.message);
+  }
 }
 
 // Start
