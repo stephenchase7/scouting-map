@@ -217,6 +217,40 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .doc-container .toc a:hover { text-decoration:underline; }
 
+/* Subtitle */
+.doc-container .subtitle {
+  font-size:14px; color:#666; font-style:italic; margin:-10px 0 20px;
+}
+
+/* Definition Lists */
+.doc-container dl { margin:16px 0; }
+.doc-container dt {
+  font-weight:600; color:#1a1a2e; margin-top:12px;
+}
+.doc-container dd {
+  margin:4px 0 12px 20px; font-size:13px; line-height:1.6;
+}
+
+/* Blockquotes */
+.doc-container blockquote {
+  background:#f9f9f9; border-left:4px solid #cc0000;
+  padding:12px 16px; margin:16px 0; font-size:13px;
+}
+
+/* Strong/Bold emphasis */
+.doc-container strong { color:#1a1a2e; }
+
+/* Nested TOC styling */
+.doc-container .toc ul ul {
+  margin:6px 0 6px 20px;
+}
+.doc-container .toc ul ul li {
+  font-size:11px;
+}
+.doc-container .toc ul ul a {
+  color:#666;
+}
+
 /* Calendar Month Table Styles */
 .calendar-months-grid {
   display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin:20px 0;
