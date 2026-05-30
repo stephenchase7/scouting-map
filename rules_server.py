@@ -17,26 +17,56 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 PORT = 8080
 RULES_DATA_DIR = os.path.join(os.path.dirname(__file__), 'rules_data')
+SCOUTING_MAP_DIR = os.path.dirname(__file__)
 
 # Load documents once at startup
 documents_cache = None
 
+# HTML document mappings
+HTML_DOCUMENTS = [
+    ('player_development_guidelines.html', 'Player Development Guidelines'),
+    ('player_movement_guidelines.html', 'Player Movement Guidelines'),
+    ('homegrown_rules_regulations.html', 'HD (Homegrown Division) Rules'),
+    ('academy_rules_regulations.html', 'AD (Academy Division) Rules'),
+]
+
 def load_documents():
-    """Load all documents from rules_data/rules_web.json"""
+    """Load all documents from HTML files for better semantic search"""
     global documents_cache
     if documents_cache is not None:
         return documents_cache
 
-    rules_path = os.path.join(RULES_DATA_DIR, 'rules_web.json')
-    if not os.path.exists(rules_path):
-        print(f"Warning: {rules_path} not found")
-        return None
+    documents_cache = []
 
-    with open(rules_path, 'r') as f:
-        data = json.load(f)
+    # Load HTML documents
+    for filename, doc_name in HTML_DOCUMENTS:
+        filepath = os.path.join(SCOUTING_MAP_DIR, filename)
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+                # Strip HTML tags for text extraction
+                import re
+                text = re.sub(r'<[^>]+>', ' ', html_content)
+                text = re.sub(r'\s+', ' ', text).strip()
+                documents_cache.append({
+                    'name': doc_name,
+                    'text': text,
+                    'html': html_content
+                })
+                print(f"  Loaded: {doc_name} ({len(text)} chars)")
+        else:
+            print(f"  Warning: {filename} not found")
 
-    documents_cache = data.get('combined', {}).get('documents', [])
-    print(f"Loaded {len(documents_cache)} documents")
+    # Fallback to JSON if no HTML files found
+    if not documents_cache:
+        rules_path = os.path.join(RULES_DATA_DIR, 'rules_web.json')
+        if os.path.exists(rules_path):
+            with open(rules_path, 'r') as f:
+                data = json.load(f)
+            documents_cache = data.get('combined', {}).get('documents', [])
+            print(f"Loaded {len(documents_cache)} documents from JSON fallback")
+
+    print(f"Total: {len(documents_cache)} documents loaded")
     return documents_cache
 
 def ask_claude(question: str) -> dict:
@@ -63,12 +93,23 @@ def ask_claude(question: str) -> dict:
 
     prompt = f"""You are an expert on MLS NEXT rules and regulations. Answer the user's question based on the official documentation provided below.
 
+The documents available are:
+1. Player Development Guidelines (36 pages) - Training guidelines, age-appropriate development
+2. Player Movement Guidelines (3 pages) - Player transfer windows, movement periods, roster freeze
+3. HD (Homegrown Division) Rules (37 pages) - Rules for Homegrown Division clubs
+4. AD (Academy Division) Rules (28 pages) - Rules for Academy Division clubs
+
 IMPORTANT INSTRUCTIONS:
-1. Provide a clear, helpful summary answering the question
-2. Always cite specific page numbers and document names where the information is found
-3. Format page references as: [Page X - Document Name]
-4. If information spans multiple pages or documents, cite all relevant locations
-5. If the answer is not in the documents, say so clearly
+1. Search ALL FOUR documents thoroughly to find relevant information
+2. Provide a clear, helpful answer summarizing key points
+3. Always cite specific page numbers AND document names where the information is found
+4. Format page references EXACTLY as: [Page X - Document Name] where Document Name is one of:
+   - Player Development Guidelines
+   - Player Movement Guidelines
+   - HD (Homegrown Division) Rules
+   - AD (Academy Division) Rules
+5. If information appears in multiple documents, cite ALL relevant locations
+6. If the answer is not in any document, say so clearly
 
 USER QUESTION: {question}
 
