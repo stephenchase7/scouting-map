@@ -1318,31 +1318,54 @@ function makeCardHtml(club) {
 }
 
 // ── RENDER CLUBS (MapLibre) ──
-clubs.forEach(function(club, idx) {
-  // Skip clubs with invalid coordinates
-  if (!isValidCoordinate(club)) {
-    console.warn('Skipping club with invalid coordinates:', club.name, 'lat:', club.lat, 'lng:', club.lng);
-    markers.push(null); // Keep array indices aligned with clubs array
-    return;
-  }
+function createMarkers() {
+  // Remove existing markers
+  markers.forEach(function(m) {
+    if (m) m.remove();
+  });
+  markers = [];
 
-  var el = makeClubMarkerElement(club, 38);
+  // Create new markers for all clubs
+  clubs.forEach(function(club, idx) {
+    // Skip clubs with invalid coordinates
+    if (!isValidCoordinate(club)) {
+      console.warn('Skipping club with invalid coordinates:', club.name, 'lat:', club.lat, 'lng:', club.lng);
+      markers.push(null); // Keep array indices aligned with clubs array
+      return;
+    }
 
-  // Create popup
-  var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
-    .setHTML(makePopupHtml(club));
+    var el = makeClubMarkerElement(club, 38);
 
-  // Create marker with centered anchor
-  var m = new maplibregl.Marker({ element: el, anchor: 'center' })
-    .setLngLat([club.lng, club.lat])  // MapLibre uses [lng, lat]
-    .setPopup(popup)
-    .addTo(map);
+    // Create popup
+    var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
+      .setHTML(makePopupHtml(club));
 
-  // Click handler
-  el.addEventListener('click', function() { selectClub(idx); });
+    // Create marker with centered anchor
+    var m = new maplibregl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([club.lng, club.lat])  // MapLibre uses [lng, lat]
+      .setPopup(popup)
+      .addTo(map);
 
-  markers.push(m);
-});
+    // Click handler - use closure to capture correct index
+    (function(clubIdx) {
+      el.addEventListener('click', function() { selectClub(clubIdx); });
+    })(idx);
+
+    markers.push(m);
+  });
+
+  console.log('[Map] Created', markers.filter(m => m !== null).length, 'markers for', clubs.length, 'clubs');
+}
+
+// Function to refresh map after Supabase data loads
+function refreshMap() {
+  console.log('[Map] Refreshing markers with updated club data...');
+  createMarkers();
+  buildList();
+}
+
+// Initial marker creation
+createMarkers();
 
 // ── HIERARCHICAL DIVISION FUNCTIONS ──
 function extractDivisionsByAge() {
