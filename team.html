@@ -167,6 +167,57 @@ tr:hover { background:#fafafa; }
 .link-btn:hover { background:#eee; color:#1a1a2e; }
 .link-btn.empty { color:#ccc; cursor:default; }
 
+.add-watchlist-btn {
+  width:28px;
+  height:28px;
+  background:#cc0000;
+  border:none;
+  border-radius:50%;
+  font-size:16px;
+  font-weight:bold;
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.15s;
+}
+.add-watchlist-btn:hover { background:#8B0000; transform:scale(1.1); }
+
+.scout-select-btn {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  padding:12px 15px;
+  margin-bottom:8px;
+  background:#f5f5f5;
+  border:1px solid #ddd;
+  border-radius:6px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.scout-select-btn:hover { background:#e8e8e8; border-color:#cc0000; }
+.scout-select-btn .scout-name { font-weight:500; color:#1a1a2e; }
+.scout-select-btn .scout-add { font-size:12px; color:#cc0000; font-weight:600; }
+.scout-select-btn:hover .scout-add { color:#8B0000; }
+
+.watchlist-toast {
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%) translateY(100px);
+  background:#1a1a2e;
+  color:#fff;
+  padding:12px 24px;
+  border-radius:8px;
+  font-size:14px;
+  z-index:2000;
+  opacity:0;
+  transition:all 0.3s ease;
+}
+.watchlist-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
 .updated {
   margin-top:20px;
   font-size:12px;
@@ -704,6 +755,25 @@ td.editable:hover::after {
     <div class="modal-buttons">
       <button class="modal-btn secondary" onclick="closeEditModal()">Cancel</button>
       <button class="modal-btn primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Watchlist Modal -->
+<div id="watchlist-modal" class="modal-overlay">
+  <div class="modal">
+    <h3>Add to Watchlist</h3>
+    <p class="field-label">Player: <strong id="watchlist-player-name"></strong></p>
+    <p class="field-label" style="margin-top:10px;">Select a scout:</p>
+    <div id="watchlist-scout-list" style="margin:15px 0;max-height:200px;overflow-y:auto;">
+      <!-- Scout list will be populated here -->
+    </div>
+    <div id="watchlist-no-scouts" style="display:none;color:#666;text-align:center;padding:20px;">
+      No scouts added yet.<br>
+      <a href="scouts.html" style="color:#cc0000;">Go to Scout Database</a> to add scouts.
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" onclick="closeWatchlistModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1660,6 +1730,7 @@ function renderRoster() {
     '<th>Games</th>' +
     '<th>Goals</th>' +
     '<th>Link</th>' +
+    '<th style="width:40px;"></th>' +
     '</tr>' +
     '<tr class="filter-row">' +
     '<th></th>' +
@@ -1677,6 +1748,7 @@ function renderRoster() {
     '<th></th>' +
     '<th></th>' +
     '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
+    '<th></th>' +
     '</tr>' +
     '</thead><tbody>';
 
@@ -1699,6 +1771,7 @@ function renderRoster() {
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
+      '<td><button class="add-watchlist-btn" onclick="openWatchlistModal(this)" title="Add to Watchlist">+</button></td>' +
       '</tr>';
   });
 
@@ -2297,6 +2370,101 @@ function clearComparison() {
   selectedForCompare = [];
   updateCompareBar();
   updateCheckboxes();
+}
+
+// ══════════════════════════════════════════════════════════════
+// WATCHLIST FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+var pendingWatchlistPlayer = null;
+
+function openWatchlistModal(btn) {
+  var tr = btn.closest('tr');
+  var playerData = JSON.parse(tr.dataset.player.replace(/&quot;/g, '"'));
+
+  // Add club info from current page
+  playerData.club = currentClub ? currentClub.name : '';
+  playerData.squad = currentTeam || '';
+
+  pendingWatchlistPlayer = playerData;
+
+  document.getElementById('watchlist-player-name').textContent = playerData.name;
+
+  // Load scouts from localStorage
+  var scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+  var listContainer = document.getElementById('watchlist-scout-list');
+  var noScoutsDiv = document.getElementById('watchlist-no-scouts');
+
+  if (scouts.length === 0) {
+    listContainer.style.display = 'none';
+    noScoutsDiv.style.display = 'block';
+  } else {
+    listContainer.style.display = 'block';
+    noScoutsDiv.style.display = 'none';
+
+    listContainer.innerHTML = scouts.map(function(scout) {
+      return '<button class="scout-select-btn" onclick="addToScoutWatchlist(\'' + scout.id + '\', \'' + scout.name.replace(/'/g, "\\'") + '\')">' +
+        '<span class="scout-name">' + scout.name + '</span>' +
+        '<span class="scout-add">Add</span>' +
+      '</button>';
+    }).join('');
+  }
+
+  document.getElementById('watchlist-modal').classList.add('active');
+}
+
+function closeWatchlistModal() {
+  document.getElementById('watchlist-modal').classList.remove('active');
+  pendingWatchlistPlayer = null;
+}
+
+function addToScoutWatchlist(scoutId, scoutName) {
+  if (!pendingWatchlistPlayer) return;
+
+  var players = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
+
+  // Check if player already exists for this scout
+  var exists = players.some(function(p) {
+    return p.scoutId === scoutId && p.name === pendingWatchlistPlayer.name && p.club === pendingWatchlistPlayer.club;
+  });
+
+  if (exists) {
+    alert(pendingWatchlistPlayer.name + ' is already in ' + scoutName + "'s watchlist.");
+    return;
+  }
+
+  // Add new player
+  var newPlayer = {
+    id: Date.now().toString(),
+    scoutId: scoutId,
+    name: pendingWatchlistPlayer.name,
+    club: pendingWatchlistPlayer.club,
+    position: pendingWatchlistPlayer.position || '',
+    yob: pendingWatchlistPlayer.yob || '',
+    notes: '',
+    dateAdded: new Date().toISOString().split('T')[0]
+  };
+
+  players.push(newPlayer);
+  localStorage.setItem('scoutPlayers', JSON.stringify(players));
+
+  closeWatchlistModal();
+
+  // Show success message
+  showWatchlistSuccess(pendingWatchlistPlayer.name, scoutName);
+}
+
+function showWatchlistSuccess(playerName, scoutName) {
+  var toast = document.createElement('div');
+  toast.className = 'watchlist-toast';
+  toast.innerHTML = '<strong>' + playerName + '</strong> added to ' + scoutName + "'s watchlist";
+  document.body.appendChild(toast);
+
+  setTimeout(function() { toast.classList.add('show'); }, 10);
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 3000);
 }
 </script>
 
