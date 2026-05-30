@@ -113,12 +113,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   position: relative;
 }
 
-/* Fix MapLibre marker positioning */
-.maplibregl-marker {
-  will-change: transform;
-  position: absolute !important;
-}
-
 #search-box {
   padding:8px 14px; border-bottom:1px solid #e0e0e0; flex-shrink:0; background:#fff;
 }
@@ -794,131 +788,16 @@ const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
 
 let supabaseClient = null;
-let supabaseDataLoaded = false;
 
-// Initialize Supabase client
+// Initialize Supabase client (used for Add Club feature only)
+// NOTE: Club metadata is hardcoded in the clubs array above.
+// Supabase is used for player data (team.html) and saving new clubs.
+// This eliminates merge bugs and ensures reliable marker positioning.
 try {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) {
   console.warn('[Supabase] Failed to initialize client:', e);
 }
-
-// Load clubs from Supabase and merge with existing clubs
-async function loadSupabaseClubs() {
-  if (!supabaseClient) {
-    console.log('[Supabase] Client not available, using embedded data only');
-    return;
-  }
-
-  try {
-    console.log('[Supabase] Loading clubs from database...');
-
-    // Load all clubs from Supabase
-    const { data: supabaseClubs, error } = await supabaseClient
-      .from('clubs')
-      .select('*');
-
-    if (error) {
-      console.warn('[Supabase] Failed to load clubs:', error);
-      return;
-    }
-
-    if (supabaseClubs && supabaseClubs.length > 0) {
-      console.log(`[Supabase] Loaded ${supabaseClubs.length} clubs`);
-
-      // Merge Supabase clubs with existing clubs
-      supabaseClubs.forEach(function(sbClub) {
-        // Find existing club by club_id
-        var existingIdx = clubs.findIndex(function(c) { return c.clubId === sbClub.club_id; });
-
-        // Prepare club object in the format expected by the map
-        var clubObj = {
-          name: sbClub.name || '',
-          state: sbClub.state || '',
-          league: sbClub.league || 'HD',
-          division: sbClub.division || '',
-          lat: sbClub.lat || sbClub.latitude || 0,
-          lng: sbClub.lng || sbClub.longitude || 0,
-          logo: sbClub.logo_path || sbClub.logo || '',
-          website: sbClub.website || '',
-          driveMiles: sbClub.drive_miles || sbClub.driveMiles || 0,
-          driveTime: sbClub.drive_time || sbClub.driveTime || '0m',
-          initials: sbClub.initials || '',
-          isPro: sbClub.is_pro || sbClub.isPro || false,
-          pathway: sbClub.pathway || 'both',
-          clubId: sbClub.club_id || sbClub.id,
-          fromSupabase: true
-        };
-
-        // Use authoritative name from CLUB_NAME_MAP if available (for csvTeamData matching)
-        if (CLUB_NAME_MAP[sbClub.club_id]) {
-          clubObj.name = CLUB_NAME_MAP[sbClub.club_id];
-        }
-
-        if (existingIdx !== -1) {
-          // Smart merge: Don't overwrite valid hardcoded coordinates with invalid Supabase data
-          var existingClub = clubs[existingIdx];
-          var supabaseHasValidCoords = clubObj.lat !== 0 && clubObj.lng !== 0;
-          var hardcodedHasValidCoords = existingClub.lat !== 0 && existingClub.lng !== 0;
-
-          if (!supabaseHasValidCoords && hardcodedHasValidCoords) {
-            // Keep hardcoded coordinates if Supabase has invalid ones
-            console.log('[Supabase] Keeping hardcoded coordinates for', clubObj.name, '- Supabase has invalid (0,0)');
-            clubObj.lat = existingClub.lat;
-            clubObj.lng = existingClub.lng;
-            clubObj.driveMiles = existingClub.driveMiles;
-            clubObj.driveTime = existingClub.driveTime;
-          }
-
-          // Keep hardcoded logo if Supabase doesn't have one
-          if (!clubObj.logo && existingClub.logo) {
-            clubObj.logo = existingClub.logo;
-          }
-
-          // Keep hardcoded division if Supabase doesn't have one (CRITICAL for filtering)
-          if (!clubObj.division && existingClub.division) {
-            clubObj.division = existingClub.division;
-          }
-
-          // Keep hardcoded state if Supabase doesn't have one
-          if (!clubObj.state && existingClub.state) {
-            clubObj.state = existingClub.state;
-          }
-
-          // Keep hardcoded initials if Supabase doesn't have one
-          if (!clubObj.initials && existingClub.initials) {
-            clubObj.initials = existingClub.initials;
-          }
-
-          // Keep hardcoded name if Supabase has generic/short name
-          if (existingClub.name && existingClub.name.length > clubObj.name.length) {
-            clubObj.name = existingClub.name;
-          }
-
-          // Update existing club (Supabase wins, except for empty/invalid fields)
-          clubs[existingIdx] = clubObj;
-        } else {
-          // Add new club from Supabase
-          clubs.push(clubObj);
-        }
-      });
-
-      console.log('[Supabase] Successfully merged clubs. Total clubs:', clubs.length);
-      supabaseDataLoaded = true;
-    }
-  } catch (error) {
-    console.warn('[Supabase] Error loading clubs:', error);
-  }
-}
-
-// Call Supabase loading function (async, non-blocking)
-loadSupabaseClubs().then(function() {
-  // After Supabase data loads, refresh the map if needed
-  if (supabaseDataLoaded && typeof refreshMap === 'function') {
-    console.log('[Supabase] Refreshing map with new club data...');
-    refreshMap();
-  }
-});
 
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {
@@ -1202,7 +1081,7 @@ function makeClubMarkerElement(club, size) {
 
   var el = document.createElement('div');
   el.className = 'club-marker';
-  el.style.cssText = 'width:' + displaySize + 'px;height:' + displaySize + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s;';
+  el.style.cssText = 'width:' + displaySize + 'px;height:' + displaySize + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:box-shadow 0.15s, border-color 0.15s;';
 
   if (club.logo) {
     el.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">' +
@@ -1214,8 +1093,14 @@ function makeClubMarkerElement(club, size) {
     el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
   }
 
-  el.addEventListener('mouseenter', function() { el.style.transform = 'scale(1.15)'; });
-  el.addEventListener('mouseleave', function() { el.style.transform = 'scale(1)'; });
+  el.addEventListener('mouseenter', function() {
+    el.style.boxShadow = '0 4px 12px rgba(200,16,46,0.5)';
+    el.style.borderColor = '#c8102e';
+  });
+  el.addEventListener('mouseleave', function() {
+    el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+    el.style.borderColor = color;
+  });
 
   return el;
 }
@@ -1355,13 +1240,6 @@ function createMarkers() {
   });
 
   console.log('[Map] Created', markers.filter(m => m !== null).length, 'markers for', clubs.length, 'clubs');
-}
-
-// Function to refresh map after Supabase data loads
-function refreshMap() {
-  console.log('[Map] Refreshing markers with updated club data...');
-  createMarkers();
-  buildList();
 }
 
 // Initial marker creation
@@ -1522,8 +1400,7 @@ function selectClub(idx) {
 
   // Validate coordinates before zooming
   if (isValidCoordinate(club)) {
-    // Just fly to the location - don't manipulate markers/popups
-    // (marker indices may not match club indices after Supabase merge)
+    // Fly to the club location
     map.flyTo({ center: [club.lng, club.lat], zoom: 10 });
   } else {
     console.warn('Invalid coordinates for club:', club.name, 'lat:', club.lat, 'lng:', club.lng);

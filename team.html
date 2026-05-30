@@ -1704,7 +1704,7 @@ function renderGlobalCompareGrid() {
     html += '<button class="compare-remove-btn" onclick="removeFromGlobalCompare(\'' + player.id + '\')">&times;</button>';
     html += '</div>';
 
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">Position</span><span class="compare-value-modal">' + (player.position || '-') + '</span></div>';
+    html += '<div class="compare-row-modal"><span class="compare-label-modal">Position</span><span class="compare-value-modal">' + (player.primaryPosition || player.position || '-') + '</span></div>';
     html += '<div class="compare-row-modal"><span class="compare-label-modal">YOB</span><span class="compare-value-modal">' + (player.yob || '-') + '</span></div>';
     html += '<div class="compare-row-modal"><span class="compare-label-modal">Squad</span><span class="compare-value-modal">' + (player.squad || '-') + '</span></div>';
     html += '<div class="compare-row-modal"><span class="compare-label-modal">Games</span><span class="compare-value-modal">' + (player.games || 0) + '</span></div>';
@@ -2082,7 +2082,9 @@ function renderRoster() {
     var idx = item.originalIndex;
     var displayGoals = calculateFilteredGoals(p);
 
-    var posHtml = p.position ? '<span class="position">' + p.position + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
+    var displayPos = p.primaryPosition || p.position || p.originalPosition || '';
+    var secondaryPos = p.secondaryPosition || '';
+    var posHtml = displayPos ? '<span class="position">' + displayPos + (secondaryPos ? ' <span style="color:#888;">(' + secondaryPos + ')</span>' : '') + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
     var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
     var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
 
