@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scouting Map – NY Red Bulls</title>
-<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2e; display:flex; height:100vh; overflow:hidden; }
@@ -57,15 +57,33 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 #map {
   width:100%;
   height:100%;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
 }
 
-/* MapLibre popup styles */
-.maplibregl-popup-content {
-  background:#ffffff; border:1px solid #e0e0e0; border-radius:8px; color:#1a1a2e;
-  box-shadow:0 4px 16px rgba(0,0,0,0.15); padding:12px; min-width:220px;
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-.maplibregl-popup-tip { border-top-color:#ffffff; }
-.maplibregl-popup-close-button { font-size:18px; padding:4px 8px; }
+
+.leaflet-popup-content-wrapper {
+  background:#ffffff; border:1px solid #e0e0e0; border-radius:8px; color:#1a1a2e;
+  box-shadow:0 4px 16px rgba(0,0,0,0.15);
+}
+.leaflet-popup-tip { background:#ffffff; }
+.leaflet-popup-content { margin:12px; width:220px!important; }
 
 .popup-inner { }
 .popup-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
@@ -102,8 +120,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   box-shadow:0 2px 8px rgba(0,0,0,0.2);
   background:#fff;
   overflow:hidden;
-  /* Ensure marker doesn't affect parent positioning */
-  position: relative;
 }
 
 #search-box {
@@ -781,16 +797,131 @@ const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
 
 let supabaseClient = null;
+let supabaseDataLoaded = false;
 
-// Initialize Supabase client (used for Add Club feature only)
-// NOTE: Club metadata is hardcoded in the clubs array above.
-// Supabase is used for player data (team.html) and saving new clubs.
-// This eliminates merge bugs and ensures reliable marker positioning.
+// Initialize Supabase client
 try {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) {
   console.warn('[Supabase] Failed to initialize client:', e);
 }
+
+// Load clubs from Supabase and merge with existing clubs
+async function loadSupabaseClubs() {
+  if (!supabaseClient) {
+    console.log('[Supabase] Client not available, using embedded data only');
+    return;
+  }
+
+  try {
+    console.log('[Supabase] Loading clubs from database...');
+
+    // Load all clubs from Supabase
+    const { data: supabaseClubs, error } = await supabaseClient
+      .from('clubs')
+      .select('*');
+
+    if (error) {
+      console.warn('[Supabase] Failed to load clubs:', error);
+      return;
+    }
+
+    if (supabaseClubs && supabaseClubs.length > 0) {
+      console.log(`[Supabase] Loaded ${supabaseClubs.length} clubs`);
+
+      // Merge Supabase clubs with existing clubs
+      supabaseClubs.forEach(function(sbClub) {
+        // Find existing club by club_id
+        var existingIdx = clubs.findIndex(function(c) { return c.clubId === sbClub.club_id; });
+
+        // Prepare club object in the format expected by the map
+        var clubObj = {
+          name: sbClub.name || '',
+          state: sbClub.state || '',
+          league: sbClub.league || 'HD',
+          division: sbClub.division || '',
+          lat: sbClub.latitude || 0,
+          lng: sbClub.longitude || 0,
+          logo: sbClub.logo_path || '',
+          website: sbClub.website || '',
+          driveMiles: sbClub.drive_miles || 0,
+          driveTime: sbClub.drive_time || '0m',
+          initials: sbClub.initials || '',
+          isPro: sbClub.is_pro || false,
+          pathway: sbClub.pathway || 'both',
+          clubId: sbClub.club_id,
+          fromSupabase: true
+        };
+
+        // Use authoritative name from CLUB_NAME_MAP if available (for csvTeamData matching)
+        if (CLUB_NAME_MAP[sbClub.club_id]) {
+          clubObj.name = CLUB_NAME_MAP[sbClub.club_id];
+        }
+
+        if (existingIdx !== -1) {
+          // Smart merge: Don't overwrite valid hardcoded coordinates with invalid Supabase data
+          var existingClub = clubs[existingIdx];
+          var supabaseHasValidCoords = clubObj.lat !== 0 && clubObj.lng !== 0;
+          var hardcodedHasValidCoords = existingClub.lat !== 0 && existingClub.lng !== 0;
+
+          if (!supabaseHasValidCoords && hardcodedHasValidCoords) {
+            // Keep hardcoded coordinates if Supabase has invalid ones
+            console.log('[Supabase] Keeping hardcoded coordinates for', clubObj.name, '- Supabase has invalid (0,0)');
+            clubObj.lat = existingClub.lat;
+            clubObj.lng = existingClub.lng;
+            clubObj.driveMiles = existingClub.driveMiles;
+            clubObj.driveTime = existingClub.driveTime;
+          }
+
+          // Keep hardcoded logo if Supabase doesn't have one
+          if (!clubObj.logo && existingClub.logo) {
+            clubObj.logo = existingClub.logo;
+          }
+
+          // Keep hardcoded division if Supabase doesn't have one (CRITICAL for filtering)
+          if (!clubObj.division && existingClub.division) {
+            clubObj.division = existingClub.division;
+          }
+
+          // Keep hardcoded state if Supabase doesn't have one
+          if (!clubObj.state && existingClub.state) {
+            clubObj.state = existingClub.state;
+          }
+
+          // Keep hardcoded initials if Supabase doesn't have one
+          if (!clubObj.initials && existingClub.initials) {
+            clubObj.initials = existingClub.initials;
+          }
+
+          // Keep hardcoded name if Supabase has generic/short name
+          if (existingClub.name && existingClub.name.length > clubObj.name.length) {
+            clubObj.name = existingClub.name;
+          }
+
+          // Update existing club (Supabase wins, except for empty/invalid fields)
+          clubs[existingIdx] = clubObj;
+        } else {
+          // Add new club from Supabase
+          clubs.push(clubObj);
+        }
+      });
+
+      console.log('[Supabase] Successfully merged clubs. Total clubs:', clubs.length);
+      supabaseDataLoaded = true;
+    }
+  } catch (error) {
+    console.warn('[Supabase] Error loading clubs:', error);
+  }
+}
+
+// Call Supabase loading function (async, non-blocking)
+loadSupabaseClubs().then(function() {
+  // After Supabase data loads, refresh the map if needed
+  if (supabaseDataLoaded && typeof refreshMap === 'function') {
+    console.log('[Supabase] Refreshing map with new club data...');
+    refreshMap();
+  }
+});
 
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {
@@ -974,41 +1105,37 @@ var filters = {
   distance: ''
 };
 
-// ── MAP INIT (MapLibre GL) ──
-var map = new maplibregl.Map({
-  container: 'map',
-  style: {
-    version: 8,
-    sources: {
-      'carto': {
-        type: 'raster',
-        tiles: [
-          'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-          'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-          'https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
-        ],
-        tileSize: 256,
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a>'
-      }
-    },
-    layers: [{
-      id: 'carto-tiles',
-      type: 'raster',
-      source: 'carto',
-      minzoom: 0,
-      maxzoom: 19
-    }]
-  },
-  center: [-74.4, 40.82],  // Note: MapLibre uses [lng, lat] not [lat, lng]
+// ── MAP INIT ──
+var map = L.map('map', {
+  center: [40.82, -74.4],
   zoom: 7,
-  maxZoom: 18,
-  minZoom: 4
+  zoomControl: false,
+  zoomSnap: 0.25,
+  zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 120,
+  zoomAnimation: true,
+  zoomAnimationThreshold: 8,
+  fadeAnimation: true,
+  markerZoomAnimation: true,
+  preferCanvas: true,
+  inertia: true,
+  inertiaDeceleration: 3000,
+  inertiaMaxSpeed: 1500,
+  easeLinearity: 0.2,
+  worldCopyJump: false,
+  bounceAtZoomLimits: false,
+  wheelDebounceTime: 40,
+  tapTolerance: 15
 });
 
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
 // ── ZOOM CONTROLS ──
-function zoomIn() { map.zoomIn(); }
-function zoomOut() { map.zoomOut(); }
+function zoomIn() { map.zoomIn(0.5); }
+function zoomOut() { map.zoomOut(0.5); }
 
 // ── SIDEBAR TOGGLE ──
 var sidebarVisible = true;
@@ -1023,33 +1150,34 @@ function toggleSidebar() {
     sidebar.classList.add('collapsed');
     openBtn.classList.add('visible');
   }
-  setTimeout(function() { map.resize(); }, 350);
+  setTimeout(function() { map.invalidateSize(); }, 350);
 }
 
-// ── RB MARKER (MapLibre) ──
-function makeRBElement() {
-  var el = document.createElement('div');
-  el.style.cssText = 'width:52px;height:52px;filter:drop-shadow(0 0 10px rgba(220,0,0,0.9));cursor:pointer;';
-  el.innerHTML = '<img src="MLS Logos/NY Red Bulls.png" style="width:100%;height:100%;object-fit:contain;border-radius:50%;border:3px solid #cc0000;background:#fff;box-shadow:0 0 12px rgba(220,0,0,0.8);" />';
-  return el;
+// ── RB MARKER ──
+function makeRBHtml() {
+  return '<div style="width:52px;height:52px;filter:drop-shadow(0 0 10px rgba(220,0,0,0.9));">' +
+    '<img src="MLS Logos/NY Red Bulls.png" style="width:100%;height:100%;object-fit:contain;border-radius:50%;border:3px solid #cc0000;background:#fff;box-shadow:0 0 12px rgba(220,0,0,0.8);" />' +
+    '</div>';
 }
 
-var rbPopup = new maplibregl.Popup({ offset: 30 })
-  .setHTML(
-    '<div class="popup-inner">' +
-    '<div class="popup-header">' +
-    '<div class="popup-initials" style="background:#cc0000;font-size:14px;">RB</div>' +
-    '<div class="popup-title"><h3>NY Red Bulls Training Facility</h3><small>Whippany, NJ — HQ</small></div>' +
-    '</div>' +
-    '<div class="popup-row"><span class="popup-label">Facility</span><span class="popup-value">MLS HQ</span></div>' +
-    '</div>'
-  );
+var rbIcon = L.divIcon({
+  html: makeRBHtml(),
+  className: '',
+  iconSize: [52, 52],
+  iconAnchor: [26, 26],
+  popupAnchor: [0, -30]
+});
 
-console.log('[DEBUG] RB Marker setLngLat:', [-74.4028, 40.8167]);
-var rbMarker = new maplibregl.Marker({ element: makeRBElement(), anchor: 'center' })
-  .setLngLat([-74.4028, 40.8167])
-  .setPopup(rbPopup)
-  .addTo(map);
+var rbMarker = L.marker([40.8167, -74.4028], {icon: rbIcon}).addTo(map);
+rbMarker.bindPopup(
+  '<div class="popup-inner">' +
+  '<div class="popup-header">' +
+  '<div class="popup-initials" style="background:#cc0000;font-size:14px;">RB</div>' +
+  '<div class="popup-title"><h3>NY Red Bulls Training Facility</h3><small>Whippany, NJ — HQ</small></div>' +
+  '</div>' +
+  '<div class="popup-row"><span class="popup-label">Facility</span><span class="popup-value">MLS HQ</span></div>' +
+  '</div>'
+);
 
 // ── MARKER BUILDER ──
 var markers = [];
@@ -1067,31 +1195,30 @@ function getClubColor(club) {
   return DIVISION_COLORS[club.division] || LEAGUE_COLORS[club.league] || '#555';
 }
 
-function makeClubMarkerElement(club, size) {
+function makeClubIcon(club, size) {
   size = size || 38;
   var color = getClubColor(club);
+  // Use slightly larger size for MLS Pro clubs to fit logos better
   var displaySize = club.isPro ? 42 : size;
-  var innerSize = displaySize - 6;
-
-  var el = document.createElement('div');
-  el.className = 'club-marker';
-  el.style.cssText = 'width:' + displaySize + 'px;height:' + displaySize + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:box-shadow 0.15s, border-color 0.15s;';
-
+  var innerSize = displaySize - 6; // Account for border and padding
+  var inner = '';
   if (club.logo) {
-    el.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">' +
+    inner = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">' +
             '<img src="' + club.logo + '" style="width:' + innerSize + 'px;height:' + innerSize + 'px;object-fit:contain;border-radius:50%;" ' +
             'onerror="this.parentElement.style.display=\'none\';this.parentElement.nextSibling.style.display=\'flex\';" />' +
             '</div>' +
             '<div style="display:none;width:100%;height:100%;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
   } else {
-    el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
+    inner = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
   }
-
-  // Hover effects disabled - was causing MapLibre marker positioning bugs
-  // el.addEventListener('mouseenter', function() { ... });
-  // el.addEventListener('mouseleave', function() { ... });
-
-  return el;
+  var html = '<div style="position:relative;width:' + displaySize + 'px;height:' + displaySize + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#ffffff;display:flex;align-items:center;justify-content:center;">' + inner + '</div>';
+  return L.divIcon({
+    html: html,
+    className: '',
+    iconSize: [displaySize, displaySize],
+    iconAnchor: [displaySize/2, displaySize/2],
+    popupAnchor: [0, -(displaySize/2 + 5)]
+  });
 }
 
 // ── DISTANCE CALCULATION (FALLBACK) ──
@@ -1191,57 +1318,20 @@ function makeCardHtml(club) {
     '</div>';
 }
 
-// ── RENDER CLUBS (MapLibre) ──
-function createMarkers() {
-  // Remove existing markers
-  markers.forEach(function(m) {
-    if (m) m.remove();
-  });
-  markers = [];
+// ── RENDER CLUBS ──
+clubs.forEach(function(club, idx) {
+  // Skip clubs with invalid coordinates
+  if (!isValidCoordinate(club)) {
+    console.warn('Skipping club with invalid coordinates:', club.name, 'lat:', club.lat, 'lng:', club.lng);
+    markers.push(null); // Keep array indices aligned with clubs array
+    return;
+  }
 
-  // Create new markers for all clubs
-  clubs.forEach(function(club, idx) {
-    // Skip clubs with invalid coordinates
-    if (!isValidCoordinate(club)) {
-      console.warn('Skipping club with invalid coordinates:', club.name, 'lat:', club.lat, 'lng:', club.lng);
-      markers.push(null); // Keep array indices aligned with clubs array
-      return;
-    }
-
-    var el = makeClubMarkerElement(club, 38);
-
-    // Create popup
-    var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
-      .setHTML(makePopupHtml(club));
-
-    // DEBUG: Log coordinates being used
-    console.log('[DEBUG] Creating marker for', club.name, '| lat:', club.lat, 'lng:', club.lng, '| setLngLat:', [club.lng, club.lat]);
-
-    // Create marker with centered anchor
-    var m = new maplibregl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([club.lng, club.lat])  // MapLibre uses [lng, lat]
-      .setPopup(popup)
-      .addTo(map);
-
-    // Click handler - use closure to capture correct index
-    (function(clubIdx) {
-      el.addEventListener('click', function() { selectClub(clubIdx); });
-    })(idx);
-
-    markers.push(m);
-  });
-
-  console.log('[Map] Created', markers.filter(m => m !== null).length, 'markers for', clubs.length, 'clubs');
-}
-
-// Initial marker creation
-createMarkers();
-
-// DEBUG: Log map state after load
-map.on('load', function() {
-  var center = map.getCenter();
-  var bounds = map.getBounds();
-  console.log('[DEBUG] Map loaded | Center:', center.lng, center.lat, '| Bounds SW:', bounds.getSouthWest(), 'NE:', bounds.getNorthEast());
+  var icon = makeClubIcon(club, 38);
+  var m = L.marker([club.lat, club.lng], {icon: icon}).addTo(map);
+  m.bindPopup(makePopupHtml(club), {maxWidth:250});
+  m.on('click', function() { selectClub(idx); });
+  markers.push(m);
 });
 
 // ── HIERARCHICAL DIVISION FUNCTIONS ──
@@ -1399,8 +1489,11 @@ function selectClub(idx) {
 
   // Validate coordinates before zooming
   if (isValidCoordinate(club)) {
-    // Fly to the club location
-    map.flyTo({ center: [club.lng, club.lat], zoom: 10 });
+    map.setView([club.lat, club.lng], 9, {animate:true});
+    // Check if marker exists before trying to open popup
+    if (markers[idx]) {
+      markers[idx].openPopup();
+    }
   } else {
     console.warn('Invalid coordinates for club:', club.name, 'lat:', club.lat, 'lng:', club.lng);
     alert('This club has invalid map coordinates and cannot be displayed on the map.\n\nClub: ' + club.name + '\nCoordinates: ' + club.lat + ', ' + club.lng);
@@ -1422,13 +1515,10 @@ function updateMarkerVisibility() {
     var matchesSearch = !searchVal || club.name.toLowerCase().indexOf(searchVal) !== -1 || club.division.toLowerCase().indexOf(searchVal) !== -1;
     var filterMatch = matchesFilters(club);
     var matchesDistance = !filters.distance || club.driveMiles <= parseInt(filters.distance);
-    var marker = markers[idx];
-    var el = marker.getElement();
-
     if (matchesSearch && filterMatch && matchesDistance) {
-      el.style.display = '';  // Show marker
+      markers[idx].addTo(map);
     } else {
-      el.style.display = 'none';  // Hide marker
+      map.removeLayer(markers[idx]);
     }
   });
 }
@@ -2655,63 +2745,18 @@ async function submitAddClub(event) {
     existingCustomClubs.push(newClub);
     localStorage.setItem('customClubs', JSON.stringify(existingCustomClubs));
 
-    // Step 7b: Upload to Supabase (persist for all users)
-    if (supabaseClient) {
-      submitBtn.textContent = 'Saving to database...';
-      try {
-        var clubRecord = {
-          id: clubId,
-          club_id: clubId,
-          name: clubName,
-          state: geocodeResult.state,
-          division: division,
-          lat: geocodeResult.lat,
-          lng: geocodeResult.lng,
-          logo_path: logoData || '',
-          website: '',
-          is_pro: false,
-          league: league,
-          pathway: 'both',
-          drive_miles: parseFloat(driveMiles) || 0,
-          drive_time: driveTime,
-          initials: initials
-        };
-
-        // Upsert to Supabase clubs table
-        supabaseClient
-          .from('clubs')
-          .upsert(clubRecord, { onConflict: 'id' })
-          .then(function(response) {
-            if (response.error) {
-              console.warn('[Supabase] Club save warning:', response.error.message);
-            } else {
-              console.log('[Supabase] Club saved successfully:', clubId);
-            }
-          })
-          .catch(function(err) {
-            console.warn('[Supabase] Club save error:', err);
-          });
-      } catch (supaErr) {
-        console.warn('[Supabase] Upload failed:', supaErr);
-      }
-    }
-
-    // Step 8: Create marker on map immediately (MapLibre)
+    // Step 8: Create marker on map immediately
     submitBtn.textContent = 'Adding to map...';
-    var el = makeClubMarkerElement(newClub, 38);
-    var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
-      .setHTML(makePopupHtml(newClub));
-    var marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([newClub.lng, newClub.lat])
-      .setPopup(popup)
-      .addTo(map);
+    var icon = makeClubIcon(newClub, 38);
+    var marker = L.marker([newClub.lat, newClub.lng], {icon: icon}).addTo(map);
+    marker.bindPopup(makePopupHtml(newClub), {maxWidth: 250});
     var clubIndex = clubs.length - 1;
-    el.addEventListener('click', function() { selectClub(clubIndex); });
+    marker.on('click', function() { selectClub(clubIndex); });
     markers.push(marker);
 
     // Step 9: Update the sidebar list and zoom to marker
     buildList();
-    map.flyTo({ center: [newClub.lng, newClub.lat], zoom: 11 });
+    map.setView([newClub.lat, newClub.lng], 11);
 
     // Step 10: Show success message
     var successMsg = 'SUCCESS! "' + clubName + '" has been added to the map!\n\n';
@@ -2734,13 +2779,12 @@ async function submitAddClub(event) {
     successMsg += 'State: ' + geocodeResult.state + '\n';
     successMsg += 'Drive from NYRB: ' + driveMiles + ' mi • ' + driveTime + '\n\n';
 
-    successMsg += '✓ Club saved to database!\n';
-    successMsg += 'This club will appear for all users on the map.\n\n';
-    successMsg += 'NEXT STEPS:\n';
-    successMsg += '1. Scrape player data: python3 scraper3.py\n';
-    successMsg += '   Enter: ' + clubName + '\n';
-    successMsg += '2. Upload to live site: Choose option 1 (Supabase)\n\n';
-    successMsg += 'Player data will appear instantly on team page after upload.';
+    successMsg += '⚠ IMPORTANT: This club is saved in your browser only.\n';
+    successMsg += 'To make it permanent for everyone:\n\n';
+    successMsg += '1. Scrape data: python3 scraper3.py\n';
+    successMsg += '2. Import data: python3 import_to_scouting.py "' + clubId + '/U13 ' + clubName + '.json"\n';
+    successMsg += '3. Or deploy: python3 deploy_club.py ' + clubId + '\n\n';
+    successMsg += 'The club will appear on this browser until then.';
 
     successEl.innerHTML = '<pre style="text-align:left;font-size:11px;overflow-x:auto;max-height:400px;white-space:pre-wrap;line-height:1.4;">' + successMsg + '</pre>';
     successEl.style.display = 'block';
