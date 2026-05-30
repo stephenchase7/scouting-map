@@ -2949,12 +2949,15 @@ function addToScoutWatchlist(scoutId, scoutName) {
     return;
   }
 
-  // Add new player
+  // Add new player with full data for key matching
   var newPlayer = {
     id: Date.now().toString(),
     scoutId: scoutId,
     name: pendingWatchlistPlayer.name,
     club: pendingWatchlistPlayer.club,
+    clubId: clubId,  // Store clubId for playerOverrides key matching
+    squad: pendingWatchlistPlayer.squad || currentTeam || '',
+    jersey: pendingWatchlistPlayer.jersey || '',
     position: pendingWatchlistPlayer.position || '',
     yob: pendingWatchlistPlayer.yob || '',
     notes: '',

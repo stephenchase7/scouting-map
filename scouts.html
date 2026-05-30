@@ -875,6 +875,25 @@
             color: #cc0000;
             background: #fff5f5;
         }
+        .report-edit-btn {
+            background: none;
+            border: 1px solid #ddd;
+            color: #999;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+        }
+        .report-edit-btn:hover {
+            border-color: #1976d2;
+            color: #1976d2;
+            background: #e3f2fd;
+        }
         .report-meta {
             display: flex;
             gap: 8px;
@@ -1632,7 +1651,12 @@
 
         function getPlayerKey(player) {
             // Key format: clubId_squad_jersey_name (matches team.html)
-            var club = (player.clubId || player.club || '').toLowerCase().replace(/\s+/g, '_');
+            // Prefer clubId over club name for consistent matching
+            var club = player.clubId || '';
+            if (!club && player.club) {
+                // Fallback: normalize club name to match clubId format
+                club = player.club.toLowerCase().replace(/\s+/g, '_');
+            }
             var squad = (player.squad || '').toLowerCase();
             var jersey = player.jersey || '';
             var name = (player.name || '').toLowerCase().replace(/\s+/g, '_');
@@ -2273,6 +2297,38 @@
             var currentScout = scouts.find(function(s) { return s.id === selectedScoutId; });
             if (!currentScout) return;
 
+            // Check if editing existing report
+            if (editingReportId) {
+                var existingReport = reports.find(function(r) { return r.id === editingReportId; });
+                if (existingReport) {
+                    // Update existing report
+                    existingReport.match = document.getElementById('reportMatch').value.trim();
+                    existingReport.source = document.getElementById('reportSource').value;
+                    existingReport.build = document.getElementById('reportBuild').value;
+                    existingReport.weakerFoot = document.getElementById('reportWeakerFoot').value;
+                    existingReport.withBall = document.getElementById('reportWithBall').value.trim();
+                    existingReport.againstBall = document.getElementById('reportAgainstBall').value.trim();
+                    existingReport.nextAction = document.getElementById('reportNextAction').value;
+                    existingReport.priority = document.getElementById('reportPriority').value;
+                    existingReport.notes = document.getElementById('reportNotes').value.trim();
+                    existingReport.lastModified = new Date().toISOString();
+
+                    localStorage.setItem('scoutReports', JSON.stringify(reports));
+                    editingReportId = null;
+
+                    // Reset button text
+                    var submitBtn = document.querySelector('#reportForm button[type="submit"]');
+                    if (submitBtn) submitBtn.textContent = 'Submit Report';
+
+                    document.getElementById('reportForm').reset();
+                    renderReportHistory(currentPlayerId);
+                    renderPlayers();
+                    showToast('Report updated!');
+                    return;
+                }
+            }
+
+            // Create new report
             var report = {
                 id: Date.now().toString(),
                 playerId: currentPlayerId,
@@ -2333,6 +2389,7 @@
                 html += '<div class="report-header-right">';
                 html += '<span class="report-date">' + dateStr + '</span>';
                 if (canDelete) {
+                    html += '<button class="report-edit-btn" onclick="editReport(\'' + report.id + '\')" title="Edit Report">✎</button>';
                     html += '<button class="report-delete-btn" onclick="deleteReport(\'' + report.id + '\')" title="Delete Report">×</button>';
                 }
                 html += '</div>';
@@ -2359,6 +2416,52 @@
             });
 
             container.innerHTML = html;
+        }
+
+        var editingReportId = null; // Track which report is being edited
+
+        function editReport(reportId) {
+            var report = reports.find(function(r) { return r.id === reportId; });
+            if (!report) return;
+
+            // Check permissions
+            var canEdit = isAdminMode || report.authorId === selectedScoutId;
+            if (!canEdit) {
+                alert('You can only edit your own reports.');
+                return;
+            }
+
+            editingReportId = reportId;
+
+            // Populate form with existing data
+            document.getElementById('reportMatch').value = report.match || '';
+            document.getElementById('reportSource').value = report.source || '';
+            document.getElementById('reportBuild').value = report.build || '';
+            document.getElementById('reportWeakerFoot').value = report.weakerFoot || '';
+            document.getElementById('reportWithBall').value = report.withBall || '';
+            document.getElementById('reportAgainstBall').value = report.againstBall || '';
+            document.getElementById('reportNotes').value = report.notes || '';
+            document.getElementById('reportNextAction').value = report.nextAction || '';
+            document.getElementById('reportPriority').value = report.priority || '';
+
+            // Change submit button text
+            var submitBtn = document.querySelector('#reportForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Update Report';
+            }
+
+            // Scroll to form
+            document.getElementById('reportForm').scrollIntoView({ behavior: 'smooth' });
+            showToast('Editing report - make changes and click Update');
+        }
+
+        function cancelEditReport() {
+            editingReportId = null;
+            document.getElementById('reportForm').reset();
+            var submitBtn = document.querySelector('#reportForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submit Report';
+            }
         }
 
         function deleteReport(reportId) {
