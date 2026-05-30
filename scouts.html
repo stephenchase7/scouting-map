@@ -344,6 +344,164 @@
             font-style: italic;
         }
 
+        /* Global Compare Cart */
+        .compare-float-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .compare-float-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5);
+        }
+        .compare-float-btn.visible { display: flex; }
+        .compare-count {
+            background: #fff;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .action-btn.compare-btn {
+            border-color: #1976d2;
+            color: #1976d2;
+        }
+        .action-btn.compare-btn:hover {
+            background: #1976d2;
+            color: #fff;
+        }
+        .action-btn.compare-btn.added {
+            background: #1976d2;
+            color: #fff;
+        }
+
+        /* Compare Modal */
+        #compareModal .modal {
+            max-width: 95vw;
+            width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .compare-grid {
+            display: grid;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .compare-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 16px;
+            min-width: 250px;
+            position: relative;
+        }
+        .compare-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #cc0000;
+        }
+        .compare-card-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .compare-card-club {
+            font-size: 12px;
+            color: #666;
+        }
+        .compare-remove {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .compare-remove:hover { color: #cc0000; }
+        .compare-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        .compare-row:last-child { border-bottom: none; }
+        .compare-label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .compare-value {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .compare-reports-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .compare-reports-title {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .compare-report-mini {
+            background: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 11px;
+            border-left: 2px solid #cc0000;
+        }
+        .compare-report-mini strong { color: #1a1a2e; }
+        .compare-empty {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .compare-actions {
+            padding: 16px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            background: #fafafa;
+        }
+        .btn-clear-compare {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-clear-compare:hover { background: #eee; }
+
         .video-link-btn {
             display: inline-flex;
             align-items: center;
@@ -1202,6 +1360,28 @@
         </div>
     </div>
 
+    <!-- Floating Compare Button -->
+    <button class="compare-float-btn" id="compareFloatBtn" onclick="openCompareModal()">
+        Compare <span class="compare-count" id="compareCount">0</span>
+    </button>
+
+    <!-- Compare Modal -->
+    <div class="modal-overlay" id="compareModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Compare Players</span>
+                <button class="modal-close" onclick="closeCompareModal()">&times;</button>
+            </div>
+            <div class="compare-grid" id="compareGrid">
+                <!-- Player cards inserted here -->
+            </div>
+            <div class="compare-actions">
+                <button class="btn-clear-compare" onclick="clearCompareCart()">Clear All</button>
+                <button class="modal-close" onclick="closeCompareModal()" style="background:#1976d2;color:#fff;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Password Modal -->
     <div class="modal-overlay" id="adminModal">
         <div class="modal">
@@ -1581,7 +1761,13 @@
                 html += '<td>' + videoHtml + '</td>';
                 html += '<td>' + reportHtml + '</td>';
                 html += '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>';
+                // Check if in compare cart
+                var inCompare = isInCompareCart(player.id);
+                var compareBtnClass = inCompare ? 'action-btn compare-btn added' : 'action-btn compare-btn';
+                var compareBtnText = inCompare ? '✓' : '+';
+
                 html += '<td>';
+                html += '<button class="' + compareBtnClass + '" onclick="addToCompareFromList(\'' + player.id + '\')" title="Add to Compare">' + compareBtnText + '</button>';
                 html += '<button class="action-btn" onclick="viewPlayer(\'' + player.id + '\')">View</button>';
                 html += '<button class="action-btn" onclick="deletePlayer(\'' + player.id + '\')">Delete</button>';
                 html += '</td>';
@@ -2248,6 +2434,138 @@
             selectScout(selectedScoutId); // Refresh counts
             showToast('Added to your watchlist!');
         }
+
+        // ═══════════════════════════════════════════════════
+        // GLOBAL COMPARE CART
+        // ═══════════════════════════════════════════════════
+
+        var compareCart = JSON.parse(localStorage.getItem('compareCart') || '[]');
+
+        function updateCompareButton() {
+            var btn = document.getElementById('compareFloatBtn');
+            var count = document.getElementById('compareCount');
+            count.textContent = compareCart.length;
+            if (compareCart.length > 0) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        }
+
+        function isInCompareCart(playerId) {
+            return compareCart.some(function(p) { return p.id === playerId; });
+        }
+
+        function addToCompareFromList(playerId) {
+            var player = players.find(function(p) { return p.id === playerId; });
+            if (player) {
+                addToCompare(player);
+            }
+        }
+
+        function addToCompare(player) {
+            // Check if already in cart
+            if (isInCompareCart(player.id)) {
+                removeFromCompare(player.id);
+                return;
+            }
+
+            // Max 4 players
+            if (compareCart.length >= 4) {
+                alert('Maximum 4 players can be compared at once.');
+                return;
+            }
+
+            compareCart.push(player);
+            localStorage.setItem('compareCart', JSON.stringify(compareCart));
+            updateCompareButton();
+            renderPlayers();
+            showToast('Added to compare');
+        }
+
+        function removeFromCompare(playerId) {
+            compareCart = compareCart.filter(function(p) { return p.id !== playerId; });
+            localStorage.setItem('compareCart', JSON.stringify(compareCart));
+            updateCompareButton();
+            renderPlayers();
+            renderCompareGrid();
+        }
+
+        function clearCompareCart() {
+            compareCart = [];
+            localStorage.setItem('compareCart', JSON.stringify(compareCart));
+            updateCompareButton();
+            renderPlayers();
+            closeCompareModal();
+            showToast('Compare cart cleared');
+        }
+
+        function openCompareModal() {
+            renderCompareGrid();
+            document.getElementById('compareModal').classList.add('active');
+        }
+
+        function closeCompareModal() {
+            document.getElementById('compareModal').classList.remove('active');
+        }
+
+        function renderCompareGrid() {
+            var grid = document.getElementById('compareGrid');
+
+            if (compareCart.length === 0) {
+                grid.innerHTML = '<div class="compare-empty">No players selected for comparison.<br>Add players from your watchlist or team rosters.</div>';
+                return;
+            }
+
+            // Set grid columns based on player count
+            grid.style.gridTemplateColumns = 'repeat(' + compareCart.length + ', 1fr)';
+
+            var html = '';
+            compareCart.forEach(function(player) {
+                // Get reports for this player
+                var playerReports = reports.filter(function(r) { return r.playerId === player.id; });
+
+                html += '<div class="compare-card">';
+                html += '<div class="compare-card-header">';
+                html += '<div>';
+                html += '<div class="compare-card-name">' + player.name + '</div>';
+                html += '<div class="compare-card-club">' + (player.club || 'Unknown Club') + '</div>';
+                html += '</div>';
+                html += '<button class="compare-remove" onclick="removeFromCompare(\'' + player.id + '\')">&times;</button>';
+                html += '</div>';
+
+                html += '<div class="compare-row"><span class="compare-label">Position</span><span class="compare-value">' + (player.position || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">YOB</span><span class="compare-value">' + (player.yob || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Squad</span><span class="compare-value">' + (player.squad || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Foot</span><span class="compare-value">' + (player.foot || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Status</span><span class="compare-value">' + (player.status || 'watching') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Videos</span><span class="compare-value">' + (player.videoLinks ? player.videoLinks.length : 0) + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Reports</span><span class="compare-value">' + playerReports.length + '</span></div>';
+
+                if (playerReports.length > 0) {
+                    html += '<div class="compare-reports-section">';
+                    html += '<div class="compare-reports-title">Latest Reports</div>';
+                    playerReports.slice(0, 2).forEach(function(report) {
+                        var dateStr = new Date(report.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        html += '<div class="compare-report-mini">';
+                        html += '<strong>' + (report.match || 'Report') + '</strong> - ' + dateStr;
+                        if (report.nextAction) html += '<br><span style="color:#1976d2;">' + report.nextAction + '</span>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
+            });
+
+            grid.innerHTML = html;
+        }
+
+        // Initialize compare button on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderScouts();
+            updateCompareButton();
+        });
 
         // Close modals on overlay click
         document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
