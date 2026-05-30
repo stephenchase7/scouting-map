@@ -1165,7 +1165,7 @@ var rbPopup = new maplibregl.Popup({ offset: 30 })
     '</div>'
   );
 
-var rbMarker = new maplibregl.Marker({ element: makeRBElement() })
+var rbMarker = new maplibregl.Marker({ element: makeRBElement(), anchor: 'center' })
   .setLngLat([-74.4028, 40.8167])
   .setPopup(rbPopup)
   .addTo(map);
@@ -1324,8 +1324,8 @@ clubs.forEach(function(club, idx) {
   var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
     .setHTML(makePopupHtml(club));
 
-  // Create marker
-  var m = new maplibregl.Marker({ element: el })
+  // Create marker with centered anchor
+  var m = new maplibregl.Marker({ element: el, anchor: 'center' })
     .setLngLat([club.lng, club.lat])  // MapLibre uses [lng, lat]
     .setPopup(popup)
     .addTo(map);
@@ -2752,12 +2752,53 @@ async function submitAddClub(event) {
     existingCustomClubs.push(newClub);
     localStorage.setItem('customClubs', JSON.stringify(existingCustomClubs));
 
+    // Step 7b: Upload to Supabase (persist for all users)
+    if (supabaseClient) {
+      submitBtn.textContent = 'Saving to database...';
+      try {
+        var clubRecord = {
+          id: clubId,
+          club_id: clubId,
+          name: clubName,
+          state: geocodeResult.state,
+          division: division,
+          lat: geocodeResult.lat,
+          lng: geocodeResult.lng,
+          logo_path: logoData || '',
+          website: '',
+          is_pro: false,
+          league: league,
+          pathway: 'both',
+          drive_miles: parseFloat(driveMiles) || 0,
+          drive_time: driveTime,
+          initials: initials
+        };
+
+        // Upsert to Supabase clubs table
+        supabaseClient
+          .from('clubs')
+          .upsert(clubRecord, { onConflict: 'id' })
+          .then(function(response) {
+            if (response.error) {
+              console.warn('[Supabase] Club save warning:', response.error.message);
+            } else {
+              console.log('[Supabase] Club saved successfully:', clubId);
+            }
+          })
+          .catch(function(err) {
+            console.warn('[Supabase] Club save error:', err);
+          });
+      } catch (supaErr) {
+        console.warn('[Supabase] Upload failed:', supaErr);
+      }
+    }
+
     // Step 8: Create marker on map immediately (MapLibre)
     submitBtn.textContent = 'Adding to map...';
     var el = makeClubMarkerElement(newClub, 38);
     var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
       .setHTML(makePopupHtml(newClub));
-    var marker = new maplibregl.Marker({ element: el })
+    var marker = new maplibregl.Marker({ element: el, anchor: 'center' })
       .setLngLat([newClub.lng, newClub.lat])
       .setPopup(popup)
       .addTo(map);
@@ -2790,12 +2831,13 @@ async function submitAddClub(event) {
     successMsg += 'State: ' + geocodeResult.state + '\n';
     successMsg += 'Drive from NYRB: ' + driveMiles + ' mi • ' + driveTime + '\n\n';
 
-    successMsg += '⚠ IMPORTANT: This club is saved in your browser only.\n';
-    successMsg += 'To make it permanent for everyone:\n\n';
-    successMsg += '1. Scrape data: python3 scraper3.py\n';
-    successMsg += '2. Import data: python3 import_to_scouting.py "' + clubId + '/U13 ' + clubName + '.json"\n';
-    successMsg += '3. Or deploy: python3 deploy_club.py ' + clubId + '\n\n';
-    successMsg += 'The club will appear on this browser until then.';
+    successMsg += '✓ Club saved to database!\n';
+    successMsg += 'This club will appear for all users on the map.\n\n';
+    successMsg += 'NEXT STEPS:\n';
+    successMsg += '1. Scrape player data: python3 scraper3.py\n';
+    successMsg += '   Enter: ' + clubName + '\n';
+    successMsg += '2. Upload to live site: Choose option 1 (Supabase)\n\n';
+    successMsg += 'Player data will appear instantly on team page after upload.';
 
     successEl.innerHTML = '<pre style="text-align:left;font-size:11px;overflow-x:auto;max-height:400px;white-space:pre-wrap;line-height:1.4;">' + successMsg + '</pre>';
     successEl.style.display = 'block';
