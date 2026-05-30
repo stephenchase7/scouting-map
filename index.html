@@ -1086,14 +1086,9 @@ function makeClubMarkerElement(club, size) {
     el.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
   }
 
-  el.addEventListener('mouseenter', function() {
-    el.style.boxShadow = '0 4px 12px rgba(200,16,46,0.5)';
-    el.style.borderColor = '#c8102e';
-  });
-  el.addEventListener('mouseleave', function() {
-    el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-    el.style.borderColor = color;
-  });
+  // Hover effects disabled - was causing MapLibre marker positioning bugs
+  // el.addEventListener('mouseenter', function() { ... });
+  // el.addEventListener('mouseleave', function() { ... });
 
   return el;
 }
