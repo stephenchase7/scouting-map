@@ -182,10 +182,14 @@ class RulesHandler(http.server.SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         """Custom logging"""
-        if '/api/' in args[0] if args else False:
-            print(f"[API] {args[0]}")
-        elif not any(ext in str(args) for ext in ['.js', '.css', '.png', '.ico']):
-            print(f"[{self.address_string()}] {args[0]}")
+        try:
+            msg = str(args[0]) if args else ''
+            if '/api/' in msg:
+                print(f"[API] {msg}")
+            elif not any(ext in msg for ext in ['.js', '.css', '.png', '.ico', '.jpg']):
+                print(f"[{self.address_string()}] {msg}")
+        except:
+            pass  # Silently ignore logging errors
 
 
 def main():
