@@ -3,181 +3,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scout Management</title>
+    <title>Scout Database – NY Red Bulls</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0f;
-            color: #e1e1e6;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a2e;
             min-height: 100vh;
         }
 
+        /* Header - matches index.html */
         .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            padding: 20px 30px;
+            background: linear-gradient(135deg, #8B0000 0%, #cc0000 50%, #8B0000 100%);
+            padding: 18px 24px;
             display: flex;
             align-items: center;
-            gap: 20px;
-            border-bottom: 1px solid #333;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-        .header h1 { font-size: 22px; }
-        .header-nav { margin-left: auto; display: flex; gap: 15px; }
-        .header-nav a { color: #888; text-decoration: none; font-size: 14px; }
+        .header h1 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        .header-nav {
+            display: flex;
+            gap: 20px;
+        }
+        .header-nav a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: color 0.15s;
+        }
         .header-nav a:hover { color: #fff; }
 
-        .container { max-width: 1000px; margin: 0 auto; padding: 30px; }
-
-        /* Cards */
-        .card {
-            background: #1a1a24;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 58px);
         }
-        .card-header {
+
+        /* Scout List Panel */
+        .scout-panel {
+            width: 320px;
+            min-width: 320px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+        }
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #fafafa;
+        }
+        .panel-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .btn-add {
+            background: #cc0000;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-add:hover { background: #a00000; }
+
+        .scout-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .scout-list::-webkit-scrollbar { width: 4px; }
+        .scout-list::-webkit-scrollbar-track { background: #f0f0f0; }
+        .scout-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+        .scout-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .scout-item:hover { background: #f5f5f5; }
+        .scout-item.active { background: #fff5f5; border-left-color: #cc0000; }
+
+        .scout-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #cc0000, #8B0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .scout-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .scout-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .scout-item:hover .scout-actions { opacity: 1; }
+        .scout-action-btn {
+            background: none;
+            border: 1px solid #ddd;
+            color: #666;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.15s;
+        }
+        .scout-action-btn:hover { border-color: #cc0000; color: #cc0000; }
+        .scout-action-btn.delete:hover { border-color: #dc3545; color: #dc3545; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        .empty-state h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 12px;
+        }
+
+        /* Player Panel */
+        .player-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+            overflow: hidden;
+        }
+        .player-panel-header {
+            padding: 20px 24px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .selected-scout-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .selected-scout-stats {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 24px;
+        }
+        .tab {
+            background: none;
+            border: none;
+            color: #666;
+            padding: 14px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .tab:hover { color: #1a1a2e; }
+        .tab.active { color: #cc0000; border-bottom-color: #cc0000; }
+        .tab-badge {
+            background: #cc0000;
+            color: #fff;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 6px;
+        }
+
+        /* Player Content */
+        .player-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             margin-bottom: 20px;
         }
-        .card-title { font-size: 18px; font-weight: 600; }
-
-        /* Scout Grid */
-        .scouts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-        }
-        .scout-card {
-            background: #12121a;
-            border-radius: 10px;
-            padding: 20px;
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
-            gap: 15px;
-            align-items: flex-start;
+            justify-content: space-between;
+            align-items: center;
         }
-        .scout-avatar {
-            width: 50px;
-            height: 50px;
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Player Table */
+        .player-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .player-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: #f9f9f9;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .player-table td {
+            padding: 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .player-table tr:hover td { background: #fafafa; }
+        .player-table tr:last-child td { border-bottom: none; }
+
+        .player-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .player-avatar {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            background: #f0f0f0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 18px;
-            flex-shrink: 0;
+            font-size: 11px;
+            color: #666;
         }
-        .scout-info { flex: 1; }
-        .scout-name { font-weight: 600; margin-bottom: 4px; }
-        .scout-email { font-size: 13px; color: #888; margin-bottom: 8px; }
-        .scout-role {
+
+        .status-badge {
             display: inline-block;
             padding: 3px 10px;
             border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
+            font-size: 10px;
+            font-weight: 600;
             text-transform: uppercase;
         }
-        .scout-role.director { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-        .scout-role.lead_scout { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
-        .scout-role.scout { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-        .scout-actions { display: flex; gap: 8px; margin-top: 10px; }
-        .scout-btn {
-            background: none;
-            border: 1px solid #333;
-            color: #888;
-            padding: 5px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .scout-btn:hover { border-color: #6366f1; color: #6366f1; }
-        .scout-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+        .status-watching { background: #e3f2fd; color: #1976d2; }
+        .status-priority { background: #fff3e0; color: #f57c00; }
+        .status-contacted { background: #e8f5e9; color: #388e3c; }
 
-        /* Forms */
-        .form-group { margin-bottom: 15px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
+        .action-btn {
+            background: none;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-right: 4px;
+        }
+        .action-btn:hover { border-color: #cc0000; color: #cc0000; }
+
+        /* No Scout Selected State */
+        .no-scout-selected {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            background: #f5f5f5;
+        }
+        .no-scout-selected h2 {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .no-scout-selected p {
             font-size: 13px;
-            color: #888;
         }
-        .form-input, .form-select {
-            width: 100%;
-            background: #12121a;
-            border: 1px solid #333;
-            color: #e1e1e6;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: #6366f1;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        /* Buttons */
-        .btn {
-            background: #6366f1;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .btn:hover { background: #5558e3; }
-        .btn-outline {
-            background: none;
-            border: 1px solid #6366f1;
-            color: #6366f1;
-        }
-        .btn-outline:hover { background: rgba(99, 102, 241, 0.1); }
-
-        /* Stats */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: #1a1a24;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-        }
-        .stat-value { font-size: 32px; font-weight: 700; color: #6366f1; }
-        .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
 
         /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
         }
         .modal-overlay.active { display: flex; }
         .modal {
-            background: #1a1a24;
-            border-radius: 12px;
-            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
         .modal-header {
             display: flex;
@@ -185,94 +354,200 @@
             align-items: center;
             margin-bottom: 20px;
         }
-        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
         .modal-close {
             background: none;
             border: none;
-            color: #888;
             font-size: 24px;
+            color: #888;
             cursor: pointer;
         }
+        .modal-close:hover { color: #1a1a2e; }
 
-        /* Activity Feed */
-        .activity-feed { max-height: 300px; overflow-y: auto; }
-        .activity-item {
-            display: flex;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #222;
+        .form-group {
+            margin-bottom: 16px;
         }
-        .activity-item:last-child { border-bottom: none; }
-        .activity-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #6366f1;
-            margin-top: 6px;
-            flex-shrink: 0;
-        }
-        .activity-text { font-size: 13px; line-height: 1.5; }
-        .activity-time { font-size: 11px; color: #666; margin-top: 4px; }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
             color: #666;
+            margin-bottom: 6px;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #1a1a2e;
+            background: #f9f9f9;
+            transition: all 0.15s;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #cc0000;
+            background: #fff;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #cc0000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-top: 8px;
+        }
+        .btn-submit:hover { background: #a00000; }
+
+        /* Footer */
+        .footer {
+            padding: 8px 16px;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            text-align: right;
+        }
+        .footer span {
+            font-size: 10px;
+            color: #888;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Scout Management</h1>
+        <h1>Scout Database</h1>
         <div class="header-nav">
             <a href="index.html">Map</a>
             <a href="team.html">Teams</a>
-            <a href="my-players.html">My Players</a>
             <a href="rules.html">Rules</a>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Stats -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-value" id="totalScouts">0</div>
-                <div class="stat-label">Scouts</div>
+    <div class="main-container">
+        <!-- Scout List Panel -->
+        <div class="scout-panel">
+            <div class="panel-header">
+                <span class="panel-title">Scouts</span>
+                <button class="btn-add" onclick="openAddScoutModal()">+ Add Scout</button>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalPlayers">0</div>
-                <div class="stat-label">Players Tracked</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalReports">0</div>
-                <div class="stat-label">Reports Written</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalShares">0</div>
-                <div class="stat-label">Players Shared</div>
+            <div class="scout-list" id="scoutList">
+                <div class="empty-state">
+                    <h3>No Scouts Yet</h3>
+                    <p>Add a scout to get started</p>
+                </div>
             </div>
         </div>
 
-        <!-- Scouts List -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Scouts</span>
-                <button class="btn" onclick="openAddScoutModal()">+ Add Scout</button>
+        <!-- Player Panel (shows when scout selected) -->
+        <div class="player-panel" id="playerPanel" style="display:none;">
+            <div class="player-panel-header">
+                <div class="selected-scout-name" id="selectedScoutName">Scout Name</div>
+                <div class="selected-scout-stats" id="selectedScoutStats">0 players tracked</div>
             </div>
-            <div class="scouts-grid" id="scoutsGrid">
-                <div class="empty-state">Loading scouts...</div>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('my-players')">
+                    My Players <span class="tab-badge" id="myPlayersBadge">0</span>
+                </button>
+                <button class="tab" onclick="switchTab('shared')">
+                    Shared With Me <span class="tab-badge" id="sharedBadge">0</span>
+                </button>
+                <button class="tab" onclick="switchTab('all')">
+                    All Players
+                </button>
+            </div>
+            <div class="player-content">
+                <!-- My Players Tab -->
+                <div id="my-players-tab" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Players I'm Tracking</span>
+                            <button class="btn-add" onclick="openAddPlayerModal()">+ Add Player</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="player-table" id="myPlayersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Club</th>
+                                        <th>Position</th>
+                                        <th>YOB</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myPlayersBody">
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="noPlayersMsg">
+                                <p>No players added yet. Click "+ Add Player" to start tracking.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shared Tab -->
+                <div id="shared-tab" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">Players Shared With Me</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="empty-state">
+                                <p>No players have been shared with you yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Players Tab -->
+                <div id="all-tab" class="tab-content" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">All Tracked Players</span>
+                        </div>
+                        <div class="card-body">
+                            <table class="player-table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Club</th>
+                                        <th>Tracked By</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allPlayersBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Recent Activity -->
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Recent Activity</span>
-            </div>
-            <div class="activity-feed" id="activityFeed">
-                <div class="empty-state">No recent activity</div>
-            </div>
+        <!-- No Scout Selected -->
+        <div class="no-scout-selected" id="noScoutSelected">
+            <h2>Select a Scout</h2>
+            <p>Choose a scout from the list to view their player watchlist</p>
         </div>
     </div>
 
@@ -285,263 +560,371 @@
             </div>
             <form id="addScoutForm" onsubmit="submitAddScout(event)">
                 <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" class="form-input" name="name" required>
+                    <label>Scout Name</label>
+                    <input type="text" class="form-input" name="name" placeholder="Enter scout name" required>
                 </div>
+                <button type="submit" class="btn-submit">Add Scout</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Scout Modal -->
+    <div class="modal-overlay" id="editScoutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Edit Scout</span>
+                <button class="modal-close" onclick="closeEditScoutModal()">&times;</button>
+            </div>
+            <form id="editScoutForm" onsubmit="submitEditScout(event)">
+                <input type="hidden" name="id" id="editScoutId">
                 <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" class="form-input" name="email" required>
+                    <label>Scout Name</label>
+                    <input type="text" class="form-input" name="name" id="editScoutName" required>
+                </div>
+                <button type="submit" class="btn-submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Player Modal -->
+    <div class="modal-overlay" id="addPlayerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Add Player to Watchlist</span>
+                <button class="modal-close" onclick="closeAddPlayerModal()">&times;</button>
+            </div>
+            <form id="addPlayerForm" onsubmit="submitAddPlayer(event)">
+                <div class="form-group">
+                    <label>Player Name *</label>
+                    <input type="text" class="form-input" name="player_name" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Role</label>
-                        <select class="form-select" name="role">
-                            <option value="scout">Scout</option>
-                            <option value="lead_scout">Lead Scout</option>
-                            <option value="director">Director</option>
-                        </select>
+                        <label>Club</label>
+                        <input type="text" class="form-input" name="club" placeholder="e.g., Cedar Stars Bergen">
                     </div>
                     <div class="form-group">
-                        <label>Department</label>
-                        <select class="form-select" name="department">
-                            <option value="NYRB Academy">NYRB Academy</option>
-                            <option value="NYRB II">NYRB II</option>
-                            <option value="First Team">First Team</option>
+                        <label>Squad</label>
+                        <select class="form-select" name="squad">
+                            <option value="">Select...</option>
+                            <option value="U13">U13</option>
+                            <option value="U14">U14</option>
+                            <option value="U15">U15</option>
+                            <option value="U16">U16</option>
+                            <option value="U17">U17</option>
+                            <option value="U19">U19</option>
                         </select>
                     </div>
                 </div>
-                <button type="submit" class="btn" style="width:100%;margin-top:10px;">Add Scout</button>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Jersey #</label>
+                        <input type="number" class="form-input" name="jersey" min="1" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label>YOB</label>
+                        <input type="number" class="form-input" name="yob" min="2005" max="2015" placeholder="2010">
+                    </div>
+                    <div class="form-group">
+                        <label>Foot</label>
+                        <select class="form-select" name="foot">
+                            <option value="">Select...</option>
+                            <option value="Right">Right</option>
+                            <option value="Left">Left</option>
+                            <option value="Both">Both</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Position</label>
+                        <select class="form-select" name="position">
+                            <option value="">Select...</option>
+                            <option value="GK">GK</option>
+                            <option value="CB">CB</option>
+                            <option value="LB">LB</option>
+                            <option value="RB">RB</option>
+                            <option value="DM">DM</option>
+                            <option value="CM">CM</option>
+                            <option value="AM">AM</option>
+                            <option value="LW">LW</option>
+                            <option value="RW">RW</option>
+                            <option value="CF">CF</option>
+                            <option value="ST">ST</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select class="form-select" name="status">
+                            <option value="watching">Watching</option>
+                            <option value="priority">Priority</option>
+                            <option value="contacted">Contacted</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <input type="text" class="form-input" name="notes" placeholder="Initial observations...">
+                </div>
+                <button type="submit" class="btn-submit">Add Player</button>
             </form>
         </div>
     </div>
 
     <script>
-        var SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
-        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
+        // Data storage (localStorage for now)
+        var scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+        var players = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
+        var selectedScoutId = null;
 
-        var scouts = [];
-
-        async function fetchScouts() {
-            try {
-                var response = await fetch(SUPABASE_URL + '/rest/v1/scouts?order=name', {
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': 'Bearer ' + SUPABASE_KEY
-                    }
-                });
-
-                if (response.ok) {
-                    scouts = await response.json();
-                    renderScouts();
-                    updateStats();
-                } else {
-                    // Table might not exist yet
-                    document.getElementById('scoutsGrid').innerHTML =
-                        '<div class="empty-state">' +
-                        '<h3>Database Not Set Up</h3>' +
-                        '<p>Run supabase_schema.sql in Supabase SQL Editor</p>' +
-                        '</div>';
-                }
-            } catch (error) {
-                console.error('Error fetching scouts:', error);
-                renderLocalScouts();
-            }
-        }
-
-        function renderLocalScouts() {
-            // Fallback to localStorage if Supabase not available
-            scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
             renderScouts();
-            updateStats();
-        }
+        });
 
+        // Render scout list
         function renderScouts() {
-            var grid = document.getElementById('scoutsGrid');
+            var list = document.getElementById('scoutList');
 
             if (scouts.length === 0) {
-                grid.innerHTML = '<div class="empty-state"><h3>No Scouts Yet</h3><p>Add your first scout to get started.</p></div>';
+                list.innerHTML = '<div class="empty-state"><h3>No Scouts Yet</h3><p>Add a scout to get started</p></div>';
                 return;
             }
 
-            grid.innerHTML = scouts.map(function(scout) {
-                var initials = scout.name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase();
-                return '<div class="scout-card">' +
-                    '<div class="scout-avatar">' + initials + '</div>' +
-                    '<div class="scout-info">' +
-                        '<div class="scout-name">' + scout.name + '</div>' +
-                        '<div class="scout-email">' + scout.email + '</div>' +
-                        '<span class="scout-role ' + scout.role + '">' + scout.role.replace('_', ' ') + '</span>' +
-                        '<div class="scout-actions">' +
-                            '<button class="scout-btn" onclick="viewScout(\'' + scout.id + '\')">View</button>' +
-                            '<button class="scout-btn danger" onclick="deleteScout(\'' + scout.id + '\')">Delete</button>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
+            var html = '';
+            scouts.forEach(function(scout) {
+                var initials = scout.name.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var isActive = selectedScoutId === scout.id ? ' active' : '';
+                var playerCount = players.filter(function(p) { return p.scoutId === scout.id; }).length;
+
+                html += '<div class="scout-item' + isActive + '" onclick="selectScout(\'' + scout.id + '\')">';
+                html += '<div class="scout-avatar">' + initials + '</div>';
+                html += '<span class="scout-name">' + scout.name + '</span>';
+                html += '<div class="scout-actions">';
+                html += '<button class="scout-action-btn" onclick="event.stopPropagation(); editScout(\'' + scout.id + '\')">&#9998;</button>';
+                html += '<button class="scout-action-btn delete" onclick="event.stopPropagation(); deleteScout(\'' + scout.id + '\')">&#10005;</button>';
+                html += '</div>';
+                html += '</div>';
+            });
+            list.innerHTML = html;
         }
 
-        async function updateStats() {
-            document.getElementById('totalScouts').textContent = scouts.length;
+        // Select a scout
+        function selectScout(id) {
+            selectedScoutId = id;
+            var scout = scouts.find(function(s) { return s.id === id; });
 
-            // Try to fetch other stats from Supabase
-            try {
-                var playersResp = await fetch(SUPABASE_URL + '/rest/v1/scout_players?select=id', {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-                });
-                if (playersResp.ok) {
-                    var players = await playersResp.json();
-                    document.getElementById('totalPlayers').textContent = players.length;
-                }
+            if (scout) {
+                document.getElementById('noScoutSelected').style.display = 'none';
+                document.getElementById('playerPanel').style.display = 'flex';
+                document.getElementById('selectedScoutName').textContent = scout.name + "'s Watchlist";
 
-                var reportsResp = await fetch(SUPABASE_URL + '/rest/v1/scouting_reports?select=id', {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-                });
-                if (reportsResp.ok) {
-                    var reports = await reportsResp.json();
-                    document.getElementById('totalReports').textContent = reports.length;
-                }
+                var scoutPlayers = players.filter(function(p) { return p.scoutId === id; });
+                document.getElementById('selectedScoutStats').textContent = scoutPlayers.length + ' player' + (scoutPlayers.length !== 1 ? 's' : '') + ' tracked';
+                document.getElementById('myPlayersBadge').textContent = scoutPlayers.length;
 
-                var sharesResp = await fetch(SUPABASE_URL + '/rest/v1/player_shares?select=id', {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-                });
-                if (sharesResp.ok) {
-                    var shares = await sharesResp.json();
-                    document.getElementById('totalShares').textContent = shares.length;
-                }
-            } catch (e) {
-                // Stats remain at 0
+                renderPlayers();
             }
+
+            renderScouts();
         }
 
+        // Render players for selected scout
+        function renderPlayers() {
+            var scoutPlayers = players.filter(function(p) { return p.scoutId === selectedScoutId; });
+            var tbody = document.getElementById('myPlayersBody');
+            var noMsg = document.getElementById('noPlayersMsg');
+
+            if (scoutPlayers.length === 0) {
+                tbody.innerHTML = '';
+                noMsg.style.display = 'block';
+                return;
+            }
+
+            noMsg.style.display = 'none';
+            var html = '';
+            scoutPlayers.forEach(function(player) {
+                var initials = player.name.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var statusClass = 'status-' + player.status;
+
+                html += '<tr>';
+                html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + player.name + '</div></td>';
+                html += '<td>' + (player.club || '-') + '</td>';
+                html += '<td>' + (player.position || '-') + '</td>';
+                html += '<td>' + (player.yob || '-') + '</td>';
+                html += '<td><span class="status-badge ' + statusClass + '">' + player.status + '</span></td>';
+                html += '<td>';
+                html += '<button class="action-btn" onclick="viewPlayer(\'' + player.id + '\')">View</button>';
+                html += '<button class="action-btn" onclick="deletePlayer(\'' + player.id + '\')">Delete</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            // Update all players tab
+            renderAllPlayers();
+        }
+
+        // Render all players across all scouts
+        function renderAllPlayers() {
+            var tbody = document.getElementById('allPlayersBody');
+            var html = '';
+
+            players.forEach(function(player) {
+                var scout = scouts.find(function(s) { return s.id === player.scoutId; });
+                var initials = player.name.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var statusClass = 'status-' + player.status;
+
+                html += '<tr>';
+                html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + player.name + '</div></td>';
+                html += '<td>' + (player.club || '-') + '</td>';
+                html += '<td>' + (scout ? scout.name : 'Unknown') + '</td>';
+                html += '<td><span class="status-badge ' + statusClass + '">' + player.status + '</span></td>';
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').style.display = 'block';
+        }
+
+        // Modal functions
         function openAddScoutModal() {
             document.getElementById('addScoutModal').classList.add('active');
         }
-
         function closeAddScoutModal() {
             document.getElementById('addScoutModal').classList.remove('active');
             document.getElementById('addScoutForm').reset();
         }
+        function openEditScoutModal() {
+            document.getElementById('editScoutModal').classList.add('active');
+        }
+        function closeEditScoutModal() {
+            document.getElementById('editScoutModal').classList.remove('active');
+        }
+        function openAddPlayerModal() {
+            document.getElementById('addPlayerModal').classList.add('active');
+        }
+        function closeAddPlayerModal() {
+            document.getElementById('addPlayerModal').classList.remove('active');
+            document.getElementById('addPlayerForm').reset();
+        }
 
-        async function submitAddScout(event) {
-            event.preventDefault();
-            var form = event.target;
+        // Add scout
+        function submitAddScout(e) {
+            e.preventDefault();
+            var form = e.target;
+            var name = form.name.value.trim();
 
-            var scout = {
-                name: form.name.value,
-                email: form.email.value,
-                role: form.role.value,
-                department: form.department.value
-            };
-
-            try {
-                var response = await fetch(SUPABASE_URL + '/rest/v1/scouts', {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': 'Bearer ' + SUPABASE_KEY,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify(scout)
+            if (name) {
+                scouts.push({
+                    id: Date.now().toString(),
+                    name: name
                 });
-
-                if (response.ok) {
-                    closeAddScoutModal();
-                    fetchScouts();
-                } else {
-                    var error = await response.json();
-                    alert('Error: ' + (error.message || 'Failed to add scout'));
-                }
-            } catch (error) {
-                // Fallback to localStorage
-                scout.id = 'local_' + Date.now();
-                scouts.push(scout);
                 localStorage.setItem('scouts', JSON.stringify(scouts));
+                renderScouts();
                 closeAddScoutModal();
-                renderScouts();
-                updateStats();
             }
         }
 
-        async function deleteScout(id) {
-            if (!confirm('Delete this scout?')) return;
+        // Edit scout
+        function editScout(id) {
+            var scout = scouts.find(function(s) { return s.id === id; });
+            if (scout) {
+                document.getElementById('editScoutId').value = scout.id;
+                document.getElementById('editScoutName').value = scout.name;
+                openEditScoutModal();
+            }
+        }
+        function submitEditScout(e) {
+            e.preventDefault();
+            var id = document.getElementById('editScoutId').value;
+            var name = document.getElementById('editScoutName').value.trim();
 
-            if (id.startsWith('local_')) {
-                scouts = scouts.filter(function(s) { return s.id !== id; });
+            var scout = scouts.find(function(s) { return s.id === id; });
+            if (scout && name) {
+                scout.name = name;
                 localStorage.setItem('scouts', JSON.stringify(scouts));
                 renderScouts();
-                updateStats();
-                return;
-            }
-
-            try {
-                await fetch(SUPABASE_URL + '/rest/v1/scouts?id=eq.' + id, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': 'Bearer ' + SUPABASE_KEY
-                    }
-                });
-                fetchScouts();
-            } catch (error) {
-                alert('Error deleting scout');
-            }
-        }
-
-        function viewScout(id) {
-            window.location.href = 'my-players.html?scout=' + id;
-        }
-
-        // Load activity feed
-        async function loadActivity() {
-            try {
-                var response = await fetch(SUPABASE_URL + '/rest/v1/activity_log?order=created_at.desc&limit=10', {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-                });
-
-                if (response.ok) {
-                    var activities = await response.json();
-                    renderActivity(activities);
+                if (selectedScoutId === id) {
+                    document.getElementById('selectedScoutName').textContent = name + "'s Watchlist";
                 }
-            } catch (e) {
-                // Keep empty state
+                closeEditScoutModal();
             }
         }
 
-        function renderActivity(activities) {
-            var feed = document.getElementById('activityFeed');
+        // Delete scout
+        function deleteScout(id) {
+            if (confirm('Delete this scout and all their tracked players?')) {
+                scouts = scouts.filter(function(s) { return s.id !== id; });
+                players = players.filter(function(p) { return p.scoutId !== id; });
+                localStorage.setItem('scouts', JSON.stringify(scouts));
+                localStorage.setItem('scoutPlayers', JSON.stringify(players));
 
-            if (activities.length === 0) {
-                return;
-            }
-
-            feed.innerHTML = activities.map(function(a) {
-                var time = new Date(a.created_at).toLocaleString();
-                return '<div class="activity-item">' +
-                    '<div class="activity-dot"></div>' +
-                    '<div>' +
-                        '<div class="activity-text">' + formatAction(a.action, a.details) + '</div>' +
-                        '<div class="activity-time">' + time + '</div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-
-        function formatAction(action, details) {
-            var d = details || {};
-            switch (action) {
-                case 'added_player': return 'Added player <strong>' + (d.player_name || 'Unknown') + '</strong>';
-                case 'shared_player': return 'Shared <strong>' + (d.player_name || 'a player') + '</strong> with ' + (d.to_scout || 'another scout');
-                case 'wrote_report': return 'Wrote report for <strong>' + (d.player_name || 'a player') + '</strong>';
-                default: return action;
+                if (selectedScoutId === id) {
+                    selectedScoutId = null;
+                    document.getElementById('playerPanel').style.display = 'none';
+                    document.getElementById('noScoutSelected').style.display = 'flex';
+                }
+                renderScouts();
             }
         }
 
-        // Initialize
-        fetchScouts();
-        loadActivity();
+        // Add player
+        function submitAddPlayer(e) {
+            e.preventDefault();
+            var form = e.target;
+
+            players.push({
+                id: Date.now().toString(),
+                scoutId: selectedScoutId,
+                name: form.player_name.value.trim(),
+                club: form.club.value.trim(),
+                squad: form.squad.value,
+                jersey: form.jersey.value,
+                yob: form.yob.value,
+                foot: form.foot.value,
+                position: form.position.value,
+                status: form.status.value || 'watching',
+                notes: form.notes.value.trim(),
+                dateAdded: new Date().toISOString()
+            });
+
+            localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            renderPlayers();
+            selectScout(selectedScoutId); // Refresh stats
+            closeAddPlayerModal();
+        }
+
+        // Delete player
+        function deletePlayer(id) {
+            if (confirm('Remove this player from watchlist?')) {
+                players = players.filter(function(p) { return p.id !== id; });
+                localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                renderPlayers();
+                selectScout(selectedScoutId); // Refresh stats
+            }
+        }
+
+        // View player (placeholder for reports feature)
+        function viewPlayer(id) {
+            alert('Player details and reports feature coming soon!');
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
     </script>
-
-<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
 </html>
