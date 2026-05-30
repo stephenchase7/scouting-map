@@ -109,6 +109,14 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   box-shadow:0 2px 8px rgba(0,0,0,0.2);
   background:#fff;
   overflow:hidden;
+  /* Ensure marker doesn't affect parent positioning */
+  position: relative;
+}
+
+/* Fix MapLibre marker positioning */
+.maplibregl-marker {
+  will-change: transform;
+  position: absolute !important;
 }
 
 #search-box {
@@ -829,16 +837,16 @@ async function loadSupabaseClubs() {
           state: sbClub.state || '',
           league: sbClub.league || 'HD',
           division: sbClub.division || '',
-          lat: sbClub.latitude || 0,
-          lng: sbClub.longitude || 0,
-          logo: sbClub.logo_path || '',
+          lat: sbClub.lat || sbClub.latitude || 0,
+          lng: sbClub.lng || sbClub.longitude || 0,
+          logo: sbClub.logo_path || sbClub.logo || '',
           website: sbClub.website || '',
-          driveMiles: sbClub.drive_miles || 0,
-          driveTime: sbClub.drive_time || '0m',
+          driveMiles: sbClub.drive_miles || sbClub.driveMiles || 0,
+          driveTime: sbClub.drive_time || sbClub.driveTime || '0m',
           initials: sbClub.initials || '',
-          isPro: sbClub.is_pro || false,
+          isPro: sbClub.is_pro || sbClub.isPro || false,
           pathway: sbClub.pathway || 'both',
-          clubId: sbClub.club_id,
+          clubId: sbClub.club_id || sbClub.id,
           fromSupabase: true
         };
 
