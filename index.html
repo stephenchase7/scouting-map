@@ -23,10 +23,15 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 #sidebar-header p { font-size:11px; color:rgba(255,255,255,0.85); margin-top:3px; }
 
 #selected-card {
-  background:#fafafa; border-bottom:1px solid #e0e0e0; padding:14px; flex-shrink:0; min-height:90px;
+  background:#fafafa; border-top:1px solid #e0e0e0; padding:12px 14px; flex-shrink:0;
 }
-#selected-card.empty { display:flex; align-items:center; justify-content:center; }
+#selected-card.empty { display:none; }
 #selected-card.empty p { color:#888; font-size:12px; font-style:italic; }
+#club-count {
+  padding:8px 14px; font-size:11px; color:#666; background:#fafafa; border-bottom:1px solid #e0e0e0;
+  font-weight:500;
+}
+#club-count span { color:#cc0000; font-weight:700; }
 
 #club-list { overflow-y:auto; flex:1; padding:8px 0; background:#fff; }
 #club-list::-webkit-scrollbar { width:4px; }
@@ -279,12 +284,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 #sidebar-open svg { width:20px; height:20px; fill:#fff; }
 #sidebar-open.visible { display:flex; }
 
-#club-count {
-  padding:6px 14px; background:#fafafa; border-bottom:1px solid #e0e0e0;
-  font-size:11px; color:#666; flex-shrink:0;
-}
-#club-count span { color:#cc0000; font-weight:700; }
-
 /* Add Club Modal */
 .modal-overlay {
   display:none; position:fixed; top:0; left:0; width:100%; height:100%;
@@ -452,28 +451,107 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   content:'▼';
   opacity:1;
 }
-#add-club-section {
-  padding:12px 14px; border-bottom:1px solid #e0e0e0; background:#fff; flex-shrink:0;
+/* Collapsible sections */
+.sidebar-section {
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
 }
-.add-club-btn {
-  width:100%; padding:10px 16px;
-  background:linear-gradient(135deg, #cc0000 0%, #8B0000 100%);
-  border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:700;
-  cursor:pointer; transition:all 0.15s; text-align:center;
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
 }
-.add-club-btn:hover {
-  background:linear-gradient(135deg, #a00000 0%, #700000 100%);
-  box-shadow:0 2px 8px rgba(204, 0, 0, 0.3);
+.section-header:hover {
+  background: #fafafa;
 }
-.search-btn {
-  width:100%; padding:10px 16px;
-  background:linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
-  border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:700;
-  cursor:pointer; transition:all 0.15s; text-align:center;
+.section-header h3 {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #666;
+  margin: 0;
 }
-.search-btn:hover {
-  background:linear-gradient(135deg, #1557b0 0%, #0a3d91 100%);
-  box-shadow:0 2px 8px rgba(26, 115, 232, 0.3);
+.section-chevron {
+  font-size: 12px;
+  color: #999;
+  transition: transform 0.2s;
+}
+.section-header.expanded .section-chevron {
+  transform: rotate(180deg);
+}
+.section-content {
+  display: none;
+  padding: 0 14px 12px 14px;
+}
+.section-content.expanded {
+  display: block;
+}
+/* Tool links - minimal style */
+.tool-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tool-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  color: #444;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  transition: all 0.15s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.tool-link:hover {
+  background: #f5f5f5;
+  color: #cc0000;
+}
+.tool-link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.tool-link:hover svg {
+  opacity: 1;
+}
+/* Compact filter row */
+.filter-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.filter-row:last-child {
+  margin-bottom: 0;
+}
+.filter-group {
+  flex: 1;
+}
+.filter-group label {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 4px;
+}
+.filter-group select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 11px;
 }
 .loading { opacity:0.7; pointer-events:none; }
 .form-error { color:#cc0000; font-size:11px; margin-top:4px; display:none; }
@@ -492,67 +570,97 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
     </button>
   </div>
 
-  <div id="add-club-section">
-    <button class="add-club-btn" onclick="openAddClubModal()">+ Add Club</button>
-  </div>
-
-  <div id="search-section" style="margin-top:10px;">
-    <button class="search-btn" onclick="openSearchModal()">🔍 Search Players</button>
-  </div>
-
-  <div id="nav-links" style="margin-top:20px;display:flex;flex-direction:column;gap:8px;">
-    <a href="scouts.html" class="add-club-btn" style="background:#cc0000;text-align:center;text-decoration:none;">📋 Scout Database</a>
-    <a href="rules.html" class="add-club-btn" style="background:#f59e0b;text-align:center;text-decoration:none;">📖 MLS NEXT Rules</a>
-    <a href="validation.html" class="add-club-btn" style="background:#64748b;text-align:center;text-decoration:none;">✓ Validation</a>
-  </div>
-
-  <div id="selected-card" class="empty">
-    <p>Click a club to see details</p>
-  </div>
-
+  <!-- Search at top - always visible -->
   <div id="search-box">
     <input type="text" id="search-input" placeholder="Search clubs..." oninput="applyFilters()">
   </div>
 
-  <div class="active-filters" id="active-filters">
-    <span class="active-filters-label">Active:</span>
-    <div id="active-chips"></div>
-    <span class="clear-all-btn" onclick="clearAllFilters()">Clear All</span>
+  <!-- Tools section - collapsed by default -->
+  <div class="sidebar-section">
+    <div class="section-header" onclick="toggleSection('tools')">
+      <h3>Tools</h3>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-content" id="tools-content">
+      <div class="tool-links">
+        <button class="tool-link" onclick="openAddClubModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Add Club
+        </button>
+        <button class="tool-link" onclick="openSearchModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          Search Players
+        </button>
+        <a href="scouts.html" class="tool-link">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          Scout Database
+        </a>
+        <a href="rules.html" class="tool-link">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+          MLS NEXT Rules
+        </a>
+        <a href="validation.html" class="tool-link">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+          Validation
+        </a>
+      </div>
+    </div>
   </div>
 
-  <div class="filter-section">
-    <h3>Division</h3>
-    <select class="filter-dropdown" id="division-filter" onchange="updateAgeDropdown(); applyFilters();">
-      <option value="">All Divisions</option>
-    </select>
-  </div>
-
-  <div class="filter-section">
-    <h3>Age Group</h3>
-    <select class="filter-dropdown" id="age-filter" onchange="applyFilters()">
-      <option value="">All Age Groups</option>
-      <option value="U13">U13</option>
-      <option value="U14">U14</option>
-      <option value="U15">U15</option>
-      <option value="U16">U16</option>
-      <option value="U17">U17</option>
-      <option value="U19">U19</option>
-    </select>
-  </div>
-
-  <div class="filter-section">
-    <h3>Distance from NYRB</h3>
-    <select class="filter-dropdown" id="distance-filter" onchange="applyFilters()">
-      <option value="">All distances</option>
-      <option value="50">&lt; 50 miles</option>
-      <option value="100">&lt; 100 miles</option>
-      <option value="200">&lt; 200 miles</option>
-    </select>
+  <!-- Filters section - expanded by default -->
+  <div class="sidebar-section">
+    <div class="section-header expanded" onclick="toggleSection('filters')">
+      <h3>Filters</h3>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-content expanded" id="filters-content">
+      <div class="active-filters" id="active-filters">
+        <span class="active-filters-label">Active:</span>
+        <div id="active-chips"></div>
+        <span class="clear-all-btn" onclick="clearAllFilters()">Clear All</span>
+      </div>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Division</label>
+          <select class="filter-dropdown" id="division-filter" onchange="updateAgeDropdown(); applyFilters();">
+            <option value="">All</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Age Group</label>
+          <select class="filter-dropdown" id="age-filter" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="U13">U13</option>
+            <option value="U14">U14</option>
+            <option value="U15">U15</option>
+            <option value="U16">U16</option>
+            <option value="U17">U17</option>
+            <option value="U19">U19</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Distance</label>
+          <select class="filter-dropdown" id="distance-filter" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="50">&lt;50mi</option>
+            <option value="100">&lt;100mi</option>
+            <option value="200">&lt;200mi</option>
+          </select>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="club-count">Showing <span id="count-num">0</span> clubs</div>
 
   <div id="club-list"></div>
+
+  <!-- Selected card moves to bottom as overlay when active -->
+  <div id="selected-card" class="empty">
+    <p>Click a club to see details</p>
+  </div>
 </div>
 
 <div id="map-container">
@@ -722,7 +830,6 @@ var clubs = [
   {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Mid-America Division", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
   {name:"Sockers FC Chicago", state:"IL", league:"HD", division:"Mid-America Division", lat:42.1125, lng:-88.034, logo:"MLS Logos/Sockers FC Chicago.png", website:"", driveMiles:800, driveTime:"12h 0m", initials:"SFC", isPro:false, pathway:"both", clubId:"sockers_fc_chicago"},
   {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
-  {name:"Sporting Delaware", state:"DE", league:"HD", division:"Mid-Atlantic Division", lat:39.745, lng:-75.548, logo:"MLS Logos/Sporting Delaware.jpg", website:"https://sportingdelaware.com", driveMiles:120, driveTime:"2h 0m", initials:"SD", isPro:false, pathway:"both", clubId:"sporting_de"},
   {name:"Inter Atlanta FC", state:"GA", league:"HD", division:"Southeast Division", lat:33.7590, lng:-84.3312, logo:"MLS Logos/Inter Atlanta fc.png", website:"", driveMiles:860, driveTime:"16h 31m", initials:"IAF", isPro:false, pathway:"both", clubId:"inter_atlanta"},
   {name:"FC DELCO", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.0792766, lng:-75.3015714, logo:"MLS Logos/FC Delco.png", website:"", driveMiles:83, driveTime:"2h 2m", initials:"DEL", isPro:false, pathway:"both", clubId:"fc_delco"},
   {name:"Springfield SYC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7791227, lng:-77.1861196, logo:"MLS Logos/Springfield SYC.jpg", website:"", driveMiles:247, driveTime:"5h 15m", initials:"SS", isPro:false, pathway:"both", clubId:"springfield_syc"},
@@ -1136,6 +1243,19 @@ function toggleSidebar() {
     openBtn.classList.add('visible');
   }
   setTimeout(function() { map.invalidateSize(); }, 350);
+}
+
+// ── SECTION TOGGLE ──
+function toggleSection(sectionName) {
+  var content = document.getElementById(sectionName + '-content');
+  var header = content.previousElementSibling;
+  if (content.classList.contains('expanded')) {
+    content.classList.remove('expanded');
+    header.classList.remove('expanded');
+  } else {
+    content.classList.add('expanded');
+    header.classList.add('expanded');
+  }
 }
 
 // ── RB MARKER ──
