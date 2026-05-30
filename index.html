@@ -1045,6 +1045,7 @@ var rbPopup = new maplibregl.Popup({ offset: 30 })
     '</div>'
   );
 
+console.log('[DEBUG] RB Marker setLngLat:', [-74.4028, 40.8167]);
 var rbMarker = new maplibregl.Marker({ element: makeRBElement(), anchor: 'center' })
   .setLngLat([-74.4028, 40.8167])
   .setPopup(rbPopup)
@@ -1213,6 +1214,9 @@ function createMarkers() {
     var popup = new maplibregl.Popup({ offset: 25, maxWidth: '250px' })
       .setHTML(makePopupHtml(club));
 
+    // DEBUG: Log coordinates being used
+    console.log('[DEBUG] Creating marker for', club.name, '| lat:', club.lat, 'lng:', club.lng, '| setLngLat:', [club.lng, club.lat]);
+
     // Create marker with centered anchor
     var m = new maplibregl.Marker({ element: el, anchor: 'center' })
       .setLngLat([club.lng, club.lat])  // MapLibre uses [lng, lat]
@@ -1232,6 +1236,13 @@ function createMarkers() {
 
 // Initial marker creation
 createMarkers();
+
+// DEBUG: Log map state after load
+map.on('load', function() {
+  var center = map.getCenter();
+  var bounds = map.getBounds();
+  console.log('[DEBUG] Map loaded | Center:', center.lng, center.lat, '| Bounds SW:', bounds.getSouthWest(), 'NE:', bounds.getNorthEast());
+});
 
 // ── HIERARCHICAL DIVISION FUNCTIONS ──
 function extractDivisionsByAge() {
