@@ -1499,13 +1499,9 @@ function selectClub(idx) {
 
   // Validate coordinates before zooming
   if (isValidCoordinate(club)) {
-    map.flyTo({ center: [club.lng, club.lat], zoom: 9 });  // MapLibre uses [lng, lat]
-    // Check if marker exists before trying to open popup
-    if (markers[idx]) {
-      // Close any open popups first
-      markers.forEach(function(m) { if (m && m.getPopup().isOpen()) m.togglePopup(); });
-      markers[idx].togglePopup();
-    }
+    // Just fly to the location - don't manipulate markers/popups
+    // (marker indices may not match club indices after Supabase merge)
+    map.flyTo({ center: [club.lng, club.lat], zoom: 10 });
   } else {
     console.warn('Invalid coordinates for club:', club.name, 'lat:', club.lat, 'lng:', club.lng);
     alert('This club has invalid map coordinates and cannot be displayed on the map.\n\nClub: ' + club.name + '\nCoordinates: ' + club.lat + ', ' + club.lng);
