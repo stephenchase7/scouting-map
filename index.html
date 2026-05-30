@@ -859,47 +859,32 @@ async function loadSupabaseClubs() {
         }
 
         if (existingIdx !== -1) {
-          // Smart merge: Don't overwrite valid hardcoded coordinates with invalid Supabase data
+          // CRITICAL: For existing hardcoded clubs, ALWAYS keep hardcoded values
+          // Supabase data has been unreliable - only use it for NEW clubs
           var existingClub = clubs[existingIdx];
-          var supabaseHasValidCoords = clubObj.lat !== 0 && clubObj.lng !== 0;
-          var hardcodedHasValidCoords = existingClub.lat !== 0 && existingClub.lng !== 0;
 
-          if (!supabaseHasValidCoords && hardcodedHasValidCoords) {
-            // Keep hardcoded coordinates if Supabase has invalid ones
-            console.log('[Supabase] Keeping hardcoded coordinates for', clubObj.name, '- Supabase has invalid (0,0)');
-            clubObj.lat = existingClub.lat;
-            clubObj.lng = existingClub.lng;
-            clubObj.driveMiles = existingClub.driveMiles;
-            clubObj.driveTime = existingClub.driveTime;
-          }
+          // ALWAYS keep hardcoded coordinates - never trust Supabase coordinates
+          clubObj.lat = existingClub.lat;
+          clubObj.lng = existingClub.lng;
+          clubObj.driveMiles = existingClub.driveMiles;
+          clubObj.driveTime = existingClub.driveTime;
 
-          // Keep hardcoded logo if Supabase doesn't have one
-          if (!clubObj.logo && existingClub.logo) {
-            clubObj.logo = existingClub.logo;
-          }
+          // ALWAYS keep hardcoded display values
+          clubObj.logo = existingClub.logo;
+          clubObj.division = existingClub.division;
+          clubObj.state = existingClub.state;
+          clubObj.initials = existingClub.initials;
+          clubObj.name = existingClub.name;
+          clubObj.league = existingClub.league;
+          clubObj.isPro = existingClub.isPro;
+          clubObj.pathway = existingClub.pathway;
+          clubObj.website = existingClub.website || clubObj.website;
 
-          // Keep hardcoded division if Supabase doesn't have one (CRITICAL for filtering)
-          if (!clubObj.division && existingClub.division) {
-            clubObj.division = existingClub.division;
-          }
+          // Mark as merged but keeping hardcoded data
+          clubObj.fromSupabase = false;
 
-          // Keep hardcoded state if Supabase doesn't have one
-          if (!clubObj.state && existingClub.state) {
-            clubObj.state = existingClub.state;
-          }
-
-          // Keep hardcoded initials if Supabase doesn't have one
-          if (!clubObj.initials && existingClub.initials) {
-            clubObj.initials = existingClub.initials;
-          }
-
-          // Keep hardcoded name if Supabase has generic/short name
-          if (existingClub.name && existingClub.name.length > clubObj.name.length) {
-            clubObj.name = existingClub.name;
-          }
-
-          // Update existing club (Supabase wins, except for empty/invalid fields)
-          clubs[existingIdx] = clubObj;
+          // Don't update - keep existing hardcoded club as-is
+          // clubs[existingIdx] = clubObj;  // REMOVED - don't overwrite
         } else {
           // Add new club from Supabase
           clubs.push(clubObj);
@@ -914,14 +899,14 @@ async function loadSupabaseClubs() {
   }
 }
 
-// DISABLED: Supabase club loading - corrupting marker coordinates
-// loadSupabaseClubs().then(function() {
-//   if (supabaseDataLoaded && typeof refreshMap === 'function') {
-//     console.log('[Supabase] Refreshing map with new club data...');
-//     refreshMap();
-//   }
-// });
-console.log('[VERSION] index.html v2026.05.30.1 - Supabase DISABLED');
+// Load Supabase clubs (only adds NEW clubs, never overwrites hardcoded data)
+loadSupabaseClubs().then(function() {
+  if (supabaseDataLoaded && typeof refreshMap === 'function') {
+    console.log('[Supabase] Refreshing map with new club data...');
+    refreshMap();
+  }
+});
+console.log('[VERSION] index.html v2026.05.30.2 - Hardcoded coords protected');
 
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {
