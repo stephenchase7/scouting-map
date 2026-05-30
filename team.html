@@ -630,25 +630,51 @@ td.editable:hover::after {
   white-space:pre-wrap;
   word-break:break-all;
 }
-.watchlist-add-btn {
-  background:linear-gradient(135deg, #f5a623 0%, #d4850d 100%);
+
+/* Player Comparison Bar */
+.compare-bar {
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#1a1a2e;
   color:#fff;
+  padding:15px 20px;
+  display:none;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.3);
+  z-index:1000;
+}
+.compare-bar.active { display:block; }
+.compare-bar-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+.compare-bar-title { font-weight:600; }
+.compare-bar-close {
+  background:none;
   border:none;
-  padding:4px 10px;
-  border-radius:4px;
-  font-size:11px;
-  font-weight:600;
+  color:#888;
   cursor:pointer;
-  transition:all 0.15s;
+  font-size:18px;
 }
-.watchlist-add-btn:hover {
-  background:linear-gradient(135deg, #d4850d 0%, #b87000 100%);
-  box-shadow:0 2px 6px rgba(245, 166, 35, 0.3);
+.compare-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+  gap:15px;
 }
-.watchlist-add-btn.added {
-  background:#e8f5e9;
-  color:#2e7d32;
+.compare-player {
+  background:rgba(255,255,255,0.1);
+  border-radius:8px;
+  padding:12px;
+  text-align:center;
 }
+.compare-player-name { font-weight:600; margin-bottom:8px; }
+.compare-stats { font-size:12px; color:#aaa; }
+.compare-stat { margin:4px 0; }
+.compare-stat-value { color:#fff; font-weight:600; }
+.compare-checkbox { width:18px; height:18px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -1012,6 +1038,14 @@ var clubsData = {
     "isPro": false,
     "director": { "name": "", "email": "", "phone": "" }
   },
+  "sporting_de": {
+    "id": "sporting_de",
+    "name": "Sporting Delaware",
+    "logo": "MLS Logos/Sporting Delaware.jpg",
+    "website": "https://sportingdelaware.com",
+    "isPro": false,
+    "director": { "name": "", "email": "", "phone": "" }
+  },
   "inter_atlanta": {
     "id": "inter_atlanta",
     "name": "Inter Atlanta fc",
@@ -1292,6 +1326,7 @@ var CLUB_ID_TO_SCRAPER_NAME = {
   'scu': 'seacoast_united',
   'valeo': 'valeo_fc',
   'bayside': 'bayside_fc',
+  'sporting_de': 'sporting_delaware',
   'real_salt_lake_az': 'real_salt_lake',
   'baltimore_armour': 'baltimore_armour',
   'fc_delco': 'fc_delco',
@@ -1617,6 +1652,7 @@ function renderRoster() {
   html += '<table>' +
     '<thead>' +
     '<tr>' +
+    '<th style="width:30px;"></th>' +
     '<th>#</th>' +
     '<th>Player</th>' +
     '<th>YOB</th>' +
@@ -1624,9 +1660,9 @@ function renderRoster() {
     '<th>Games</th>' +
     '<th>Goals</th>' +
     '<th>Link</th>' +
-    '<th style="width:60px;">Watch</th>' +
     '</tr>' +
     '<tr class="filter-row">' +
+    '<th></th>' +
     '<th></th>' +
     '<th><input type="text" class="filter-input" placeholder="Filter..." oninput="setFilter(\'name\', this.value)" value="' + (activeFilters.name || '') + '"></th>' +
     '<th><select class="filter-select" onchange="setFilter(\'yob\', this.value)">' +
@@ -1641,7 +1677,6 @@ function renderRoster() {
     '<th></th>' +
     '<th></th>' +
     '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
-    '<th></th>' +
     '</tr>' +
     '</thead><tbody>';
 
@@ -1654,9 +1689,9 @@ function renderRoster() {
     var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
     var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
 
-    var watchlistBtn = '<button class="watchlist-add-btn" onclick="event.stopPropagation(); addPlayerToWatchlist(' + idx + ')" title="Add to watchlist">+ Watch</button>';
-
-    html += '<tr>' +
+    var playerJson = JSON.stringify({name: p.name, jersey: p.jersey, position: p.position, games: p.games, goals: displayGoals, yob: p.yob}).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    html += '<tr data-player="' + playerJson + '">' +
+      '<td><input type="checkbox" class="compare-checkbox" data-index="' + idx + '" onclick="toggleCompare(' + idx + ', JSON.parse(this.closest(\'tr\').dataset.player))"></td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'name\')"><span class="player-name">' + p.name + '</span></td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
@@ -1664,7 +1699,6 @@ function renderRoster() {
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
       '<td class="editable" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
-      '<td>' + watchlistBtn + '</td>' +
       '</tr>';
   });
 
@@ -2176,58 +2210,6 @@ function copyCommand(command, event) {
   });
 }
 
-// ══════════════════════════════════════════════════════════════
-// WATCHLIST INTEGRATION
-// ══════════════════════════════════════════════════════════════
-
-async function addPlayerToWatchlist(playerIndex) {
-  if (!supabaseClient) {
-    alert('Unable to connect to database. Please refresh the page.');
-    return;
-  }
-
-  var clubPlayers = playersData[clubId];
-  if (!clubPlayers || !clubPlayers[currentTeam]) {
-    alert('Player data not found');
-    return;
-  }
-
-  var player = clubPlayers[currentTeam].players[playerIndex];
-  if (!player) {
-    alert('Player not found');
-    return;
-  }
-
-  // Get club name from the header or URL
-  var clubName = document.querySelector('.header-info h1') ?
-    document.querySelector('.header-info h1').textContent : clubId;
-
-  var entry = {
-    player_name: player.name,
-    birth_year: player.yob || null,
-    club: clubName,
-    position: player.position || null,
-    source_club_id: clubId,
-    source_squad: currentTeam
-  };
-
-  try {
-    var result = await supabaseClient.from('player_watchlist').insert([entry]);
-    if (result.error) throw result.error;
-
-    // Update button to show success
-    var btns = document.querySelectorAll('.watchlist-add-btn');
-    if (btns[playerIndex]) {
-      btns[playerIndex].textContent = '✓ Added';
-      btns[playerIndex].classList.add('added');
-      btns[playerIndex].disabled = true;
-    }
-  } catch (e) {
-    console.error('[Watchlist] Add error:', e);
-    alert('Error adding to watchlist: ' + e.message);
-  }
-}
-
 // Start
 init();
 </script>
@@ -2247,5 +2229,77 @@ init();
   </div>
 </div>
 
+<!-- Player Comparison Bar -->
+<div id="compare-bar" class="compare-bar">
+  <div class="compare-bar-header">
+    <span class="compare-bar-title">Compare Players (<span id="compare-count">0</span> selected)</span>
+    <button class="compare-bar-close" onclick="clearComparison()">Clear</button>
+  </div>
+  <div id="compare-grid" class="compare-grid"></div>
+</div>
+
+<script>
+// Player comparison functionality
+var selectedForCompare = [];
+
+function toggleCompare(playerIndex, playerData) {
+  var existingIdx = selectedForCompare.findIndex(function(p) { return p.index === playerIndex; });
+
+  if (existingIdx !== -1) {
+    selectedForCompare.splice(existingIdx, 1);
+  } else if (selectedForCompare.length < 4) {
+    selectedForCompare.push({ index: playerIndex, data: playerData });
+  } else {
+    alert('Maximum 4 players can be compared');
+    return;
+  }
+
+  updateCompareBar();
+  updateCheckboxes();
+}
+
+function updateCheckboxes() {
+  document.querySelectorAll('.compare-checkbox').forEach(function(cb) {
+    var idx = parseInt(cb.dataset.index);
+    cb.checked = selectedForCompare.some(function(p) { return p.index === idx; });
+  });
+}
+
+function updateCompareBar() {
+  var bar = document.getElementById('compare-bar');
+  var grid = document.getElementById('compare-grid');
+  var count = document.getElementById('compare-count');
+
+  count.textContent = selectedForCompare.length;
+
+  if (selectedForCompare.length < 2) {
+    bar.classList.remove('active');
+    return;
+  }
+
+  bar.classList.add('active');
+
+  grid.innerHTML = selectedForCompare.map(function(item) {
+    var p = item.data;
+    return '<div class="compare-player">' +
+      '<div class="compare-player-name">' + p.name + '</div>' +
+      '<div class="compare-stats">' +
+        '<div class="compare-stat">#' + p.jersey + ' | ' + (p.position || '—') + '</div>' +
+        '<div class="compare-stat">Games: <span class="compare-stat-value">' + p.games + '</span></div>' +
+        '<div class="compare-stat">Goals: <span class="compare-stat-value">' + p.goals + '</span></div>' +
+        '<div class="compare-stat">YOB: <span class="compare-stat-value">' + (p.yob || '—') + '</span></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function clearComparison() {
+  selectedForCompare = [];
+  updateCompareBar();
+  updateCheckboxes();
+}
+</script>
+
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
 </html>

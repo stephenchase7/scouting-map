@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Players</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e1e1e6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .header h1 { font-size: 22px; }
+        .header-nav { margin-left: auto; display: flex; gap: 15px; }
+        .header-nav a { color: #888; text-decoration: none; font-size: 14px; }
+        .header-nav a:hover { color: #fff; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .tab {
+            background: none;
+            border: none;
+            color: #888;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 6px 6px 0 0;
+        }
+        .tab:hover { color: #fff; }
+        .tab.active { background: #1a1a24; color: #6366f1; }
+        .tab-badge {
+            background: #6366f1;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        /* Card */
+        .card {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Player Table */
+        .players-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .players-table th, .players-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a34;
+        }
+        .players-table th {
+            background: #12121a;
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .players-table tr:hover { background: #1e1e28; }
+
+        .player-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .player-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .status-badge.watching { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
+        .status-badge.priority { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .status-badge.contacted { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-badge.signed { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        /* Action Buttons */
+        .action-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #888;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .action-btn:hover { border-color: #6366f1; color: #6366f1; }
+
+        /* Form Styles */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #888;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: #12121a;
+            border: 1px solid #333;
+            color: #e1e1e6;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-textarea { min-height: 80px; resize: vertical; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn:hover { background: #5558e3; }
+        .btn-success { background: #22c55e; }
+        .btn-success:hover { background: #16a34a; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Shared Player Card */
+        .shared-card {
+            background: #12121a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .shared-card.unread { border-color: #6366f1; }
+        .shared-from { font-size: 12px; color: #6366f1; margin-bottom: 5px; }
+        .shared-player { font-weight: 600; margin-bottom: 5px; }
+        .shared-message { font-size: 13px; color: #888; margin-bottom: 10px; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state h3 { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>My Players</h1>
+        <div class="header-nav">
+            <a href="index.html">Map</a>
+            <a href="team.html">Teams</a>
+            <a href="scouts.html">Scouts</a>
+            <a href="rules.html">Rules</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('my-players')">
+                My Players <span class="tab-badge" id="myPlayersBadge">0</span>
+            </button>
+            <button class="tab" onclick="switchTab('shared')">
+                Shared With Me <span class="tab-badge" id="sharedBadge">0</span>
+            </button>
+            <button class="tab" onclick="switchTab('all')">
+                All Players
+            </button>
+        </div>
+
+        <!-- My Players Tab -->
+        <div id="my-players-tab" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span style="font-size:16px;font-weight:600;">Players I'm Tracking</span>
+                    <button class="btn" onclick="openAddPlayerModal()">+ Add Player</button>
+                </div>
+                <table class="players-table" id="myPlayersTable">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Club</th>
+                            <th>Position</th>
+                            <th>YOB</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myPlayersBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Shared Tab -->
+        <div id="shared-tab" class="tab-content" style="display:none;">
+            <div class="card">
+                <div class="card-header">
+                    <span style="font-size:16px;font-weight:600;">Players Shared With Me</span>
+                </div>
+                <div id="sharedList">
+                    <div class="empty-state">
+                        <h3>No Shared Players</h3>
+                        <p>Players that other scouts share with you will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Players Tab -->
+        <div id="all-tab" class="tab-content" style="display:none;">
+            <div class="card">
+                <div class="card-header">
+                    <span style="font-size:16px;font-weight:600;">All Tracked Players</span>
+                </div>
+                <table class="players-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Club</th>
+                            <th>Tracked By</th>
+                            <th>Status</th>
+                            <th>Reports</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allPlayersBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Player Modal -->
+    <div class="modal-overlay" id="addPlayerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Add Player</span>
+                <button class="modal-close" onclick="closeAddPlayerModal()">&times;</button>
+            </div>
+            <form id="addPlayerForm" onsubmit="submitAddPlayer(event)">
+                <div class="form-group">
+                    <label>Player Name *</label>
+                    <input type="text" class="form-input" name="player_name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Club</label>
+                        <input type="text" class="form-input" name="club_id" placeholder="e.g., Cedar Stars Bergen">
+                    </div>
+                    <div class="form-group">
+                        <label>Squad</label>
+                        <select class="form-select" name="squad">
+                            <option value="">Select...</option>
+                            <option value="U13">U13</option>
+                            <option value="U14">U14</option>
+                            <option value="U15">U15</option>
+                            <option value="U16">U16</option>
+                            <option value="U17">U17</option>
+                            <option value="U19">U19</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Jersey #</label>
+                        <input type="number" class="form-input" name="jersey_number" min="1" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label>YOB</label>
+                        <input type="number" class="form-input" name="yob" min="2005" max="2015" placeholder="2010">
+                    </div>
+                    <div class="form-group">
+                        <label>Foot</label>
+                        <select class="form-select" name="foot">
+                            <option value="">Select...</option>
+                            <option value="right">Right</option>
+                            <option value="left">Left</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Primary Position</label>
+                        <select class="form-select" name="position">
+                            <option value="">Select...</option>
+                            <option value="GK">GK</option>
+                            <option value="CB">CB</option>
+                            <option value="LB">LB</option>
+                            <option value="RB">RB</option>
+                            <option value="DM">DM</option>
+                            <option value="CM">CM</option>
+                            <option value="AM">AM</option>
+                            <option value="LW">LW</option>
+                            <option value="RW">RW</option>
+                            <option value="CF">CF</option>
+                            <option value="ST">ST</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary Position</label>
+                        <select class="form-select" name="secondary_position">
+                            <option value="">Select...</option>
+                            <option value="GK">GK</option>
+                            <option value="CB">CB</option>
+                            <option value="LB">LB</option>
+                            <option value="RB">RB</option>
+                            <option value="DM">DM</option>
+                            <option value="CM">CM</option>
+                            <option value="AM">AM</option>
+                            <option value="LW">LW</option>
+                            <option value="RW">RW</option>
+                            <option value="CF">CF</option>
+                            <option value="ST">ST</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nationality</label>
+                    <input type="text" class="form-input" name="nationality" placeholder="e.g., USA">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea class="form-textarea" name="notes" placeholder="Initial observations..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select class="form-select" name="status">
+                        <option value="watching">Watching</option>
+                        <option value="priority">Priority</option>
+                        <option value="contacted">Contacted</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="width:100%;margin-top:10px;">Add Player</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Share Player</span>
+                <button class="modal-close" onclick="closeShareModal()">&times;</button>
+            </div>
+            <form id="shareForm" onsubmit="submitShare(event)">
+                <input type="hidden" name="player_id" id="sharePlayerId">
+                <div class="form-group">
+                    <label>Share with Scout</label>
+                    <select class="form-select" name="to_scout_id" id="shareScoutSelect" required>
+                        <option value="">Select scout...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Message (optional)</label>
+                    <textarea class="form-textarea" name="message" placeholder="Why are you sharing this player?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success" style="width:100%;margin-top:10px;">Share Player</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
+
+        var currentScoutId = localStorage.getItem('currentScoutId');
+        var myPlayers = [];
+        var allScouts = [];
+
+        // Get scout from URL or localStorage
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('scout')) {
+            currentScoutId = urlParams.get('scout');
+            localStorage.setItem('currentScoutId', currentScoutId);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').style.display = 'block';
+
+            if (tabName === 'all') loadAllPlayers();
+            if (tabName === 'shared') loadSharedPlayers();
+        }
+
+        async function loadMyPlayers() {
+            if (!currentScoutId) {
+                document.getElementById('myPlayersBody').innerHTML =
+                    '<tr><td colspan="6" style="text-align:center;padding:40px;color:#666;">Select a scout from the Scouts page to view players</td></tr>';
+                return;
+            }
+
+            try {
+                var response = await fetch(
+                    SUPABASE_URL + '/rest/v1/scout_players?scout_id=eq.' + currentScoutId + '&order=added_at.desc',
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+                );
+
+                if (response.ok) {
+                    myPlayers = await response.json();
+                    renderMyPlayers();
+                }
+            } catch (e) {
+                myPlayers = JSON.parse(localStorage.getItem('myPlayers_' + currentScoutId) || '[]');
+                renderMyPlayers();
+            }
+        }
+
+        function renderMyPlayers() {
+            var tbody = document.getElementById('myPlayersBody');
+            document.getElementById('myPlayersBadge').textContent = myPlayers.length;
+
+            if (myPlayers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#666;">No players yet. Click "Add Player" to start tracking.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = myPlayers.map(function(p) {
+                var initials = (p.player_name || 'U').split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+                return '<tr>' +
+                    '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div><div><strong>' + (p.player_name || 'Unknown') + '</strong><br><span style="font-size:12px;color:#888;">#' + (p.jersey_number || '?') + '</span></div></div></td>' +
+                    '<td>' + (p.club_id || '—') + '<br><span style="font-size:12px;color:#888;">' + (p.squad || '') + '</span></td>' +
+                    '<td>' + (p.position || '—') + '</td>' +
+                    '<td>' + (p.yob || '—') + '</td>' +
+                    '<td><span class="status-badge ' + (p.status || 'watching') + '">' + (p.status || 'watching') + '</span></td>' +
+                    '<td>' +
+                        '<button class="action-btn" onclick="openReportModal(\'' + p.id + '\')">Report</button>' +
+                        '<button class="action-btn" onclick="openShareModal(\'' + p.id + '\')">Share</button>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        async function loadAllPlayers() {
+            try {
+                var response = await fetch(
+                    SUPABASE_URL + '/rest/v1/scout_players?order=added_at.desc',
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+                );
+
+                if (response.ok) {
+                    var allPlayers = await response.json();
+                    renderAllPlayers(allPlayers);
+                }
+            } catch (e) {
+                document.getElementById('allPlayersBody').innerHTML =
+                    '<tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">Could not load players</td></tr>';
+            }
+        }
+
+        function renderAllPlayers(players) {
+            var tbody = document.getElementById('allPlayersBody');
+
+            if (players.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">No players being tracked</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = players.map(function(p) {
+                return '<tr>' +
+                    '<td>' + (p.player_name || 'Unknown') + '</td>' +
+                    '<td>' + (p.club_id || '—') + '</td>' +
+                    '<td>' + (p.scout_id ? p.scout_id.slice(0, 8) + '...' : '—') + '</td>' +
+                    '<td><span class="status-badge ' + (p.status || 'watching') + '">' + (p.status || 'watching') + '</span></td>' +
+                    '<td>—</td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        async function loadSharedPlayers() {
+            if (!currentScoutId) return;
+
+            try {
+                var response = await fetch(
+                    SUPABASE_URL + '/rest/v1/player_shares?to_scout_id=eq.' + currentScoutId + '&order=shared_at.desc',
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+                );
+
+                if (response.ok) {
+                    var shares = await response.json();
+                    renderSharedPlayers(shares);
+                }
+            } catch (e) {
+                // Keep empty state
+            }
+        }
+
+        function renderSharedPlayers(shares) {
+            var container = document.getElementById('sharedList');
+            document.getElementById('sharedBadge').textContent = shares.length;
+
+            if (shares.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No Shared Players</h3><p>Players that other scouts share with you will appear here.</p></div>';
+                return;
+            }
+
+            container.innerHTML = shares.map(function(s) {
+                return '<div class="shared-card ' + (s.seen ? '' : 'unread') + '">' +
+                    '<div class="shared-from">Shared by ' + (s.from_scout_id ? s.from_scout_id.slice(0, 8) + '...' : 'Unknown') + '</div>' +
+                    '<div class="shared-player">' + (s.scout_player_id || 'Player') + '</div>' +
+                    '<div class="shared-message">' + (s.message || 'No message') + '</div>' +
+                    '<button class="action-btn" onclick="viewSharedPlayer(\'' + s.scout_player_id + '\')">View</button>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function loadScouts() {
+            try {
+                var response = await fetch(
+                    SUPABASE_URL + '/rest/v1/scouts?order=name',
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+                );
+
+                if (response.ok) {
+                    allScouts = await response.json();
+                    updateScoutSelect();
+                }
+            } catch (e) {
+                allScouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+                updateScoutSelect();
+            }
+        }
+
+        function updateScoutSelect() {
+            var select = document.getElementById('shareScoutSelect');
+            select.innerHTML = '<option value="">Select scout...</option>' +
+                allScouts.filter(function(s) { return s.id !== currentScoutId; })
+                    .map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; })
+                    .join('');
+        }
+
+        function openAddPlayerModal() {
+            document.getElementById('addPlayerModal').classList.add('active');
+        }
+
+        function closeAddPlayerModal() {
+            document.getElementById('addPlayerModal').classList.remove('active');
+            document.getElementById('addPlayerForm').reset();
+        }
+
+        async function submitAddPlayer(event) {
+            event.preventDefault();
+            var form = event.target;
+
+            var player = {
+                scout_id: currentScoutId,
+                player_name: form.player_name.value,
+                club_id: form.club_id.value || null,
+                squad: form.squad.value || null,
+                jersey_number: form.jersey_number.value ? parseInt(form.jersey_number.value) : null,
+                yob: form.yob.value ? parseInt(form.yob.value) : null,
+                foot: form.foot.value || null,
+                position: form.position.value || null,
+                secondary_position: form.secondary_position.value || null,
+                nationality: form.nationality.value || null,
+                notes: form.notes.value || null,
+                status: form.status.value
+            };
+
+            try {
+                var response = await fetch(SUPABASE_URL + '/rest/v1/scout_players', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(player)
+                });
+
+                if (response.ok) {
+                    closeAddPlayerModal();
+                    loadMyPlayers();
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (e) {
+                // Fallback to localStorage
+                player.id = 'local_' + Date.now();
+                player.added_at = new Date().toISOString();
+                myPlayers.push(player);
+                localStorage.setItem('myPlayers_' + currentScoutId, JSON.stringify(myPlayers));
+                closeAddPlayerModal();
+                renderMyPlayers();
+            }
+        }
+
+        function openShareModal(playerId) {
+            document.getElementById('sharePlayerId').value = playerId;
+            document.getElementById('shareModal').classList.add('active');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+            document.getElementById('shareForm').reset();
+        }
+
+        async function submitShare(event) {
+            event.preventDefault();
+            var form = event.target;
+
+            var share = {
+                from_scout_id: currentScoutId,
+                to_scout_id: form.to_scout_id.value,
+                scout_player_id: form.player_id.value,
+                message: form.message.value || null
+            };
+
+            try {
+                await fetch(SUPABASE_URL + '/rest/v1/player_shares', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(share)
+                });
+                closeShareModal();
+                alert('Player shared successfully!');
+            } catch (e) {
+                alert('Error sharing player');
+            }
+        }
+
+        function openReportModal(playerId) {
+            window.location.href = 'report.html?player=' + playerId;
+        }
+
+        // Initialize
+        loadMyPlayers();
+        loadScouts();
+    </script>
+
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+</body>
+</html>

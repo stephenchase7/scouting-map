@@ -475,60 +475,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   background:linear-gradient(135deg, #1557b0 0%, #0a3d91 100%);
   box-shadow:0 2px 8px rgba(26, 115, 232, 0.3);
 }
-.watchlist-btn {
-  width:100%; padding:10px 16px;
-  background:linear-gradient(135deg, #f5a623 0%, #d4850d 100%);
-  border:none; border-radius:6px; color:#fff; font-size:13px; font-weight:700;
-  cursor:pointer; transition:all 0.15s; text-align:center;
-  display:flex; justify-content:center; align-items:center; gap:8px;
-}
-.watchlist-btn:hover {
-  background:linear-gradient(135deg, #d4850d 0%, #b87000 100%);
-  box-shadow:0 2px 8px rgba(245, 166, 35, 0.3);
-}
-.watchlist-badge {
-  background:#fff; color:#d4850d; padding:2px 8px; border-radius:10px;
-  font-size:11px; font-weight:700;
-}
-.priority-badge {
-  padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; text-transform:uppercase;
-}
-.priority-low { background:#e8f5e9; color:#2e7d32; }
-.priority-medium { background:#fff3e0; color:#ef6c00; }
-.priority-high { background:#ffebee; color:#c62828; }
-.age-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
-.age-chip {
-  padding:6px 12px; border-radius:16px; font-size:12px; font-weight:600;
-  border:1px solid #ddd; background:#fff; cursor:pointer; transition:all 0.15s;
-}
-.age-chip:hover { border-color:#f5a623; }
-.age-chip.active { background:#f5a623; color:#fff; border-color:#f5a623; }
-.watchlist-table { width:100%; border-collapse:collapse; font-size:13px; }
-.watchlist-table th { background:#f5f5f5; padding:10px 8px; text-align:left; font-weight:600; border-bottom:2px solid #ddd; }
-.watchlist-table td { padding:10px 8px; border-bottom:1px solid #eee; vertical-align:middle; }
-.watchlist-table tr:hover { background:#fafafa; }
-.watchlist-actions { display:flex; gap:4px; }
-.watchlist-actions button { padding:4px 8px; border:none; border-radius:4px; cursor:pointer; font-size:12px; }
-.watchlist-actions .edit-btn { background:#e3f2fd; color:#1976d2; }
-.watchlist-actions .delete-btn { background:#ffebee; color:#c62828; }
-.video-play-btn { background:#e8f5e9; color:#2e7d32; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; }
-.add-to-watchlist-btn { background:none; border:none; cursor:pointer; font-size:16px; opacity:0.5; transition:opacity 0.15s; }
-.add-to-watchlist-btn:hover { opacity:1; }
-.add-to-watchlist-btn.added { opacity:1; color:#f5a623; }
-.watchlist-modal-container { width:90vw; max-width:1100px; max-height:90vh; }
-.watchlist-filter-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; align-items:flex-end; }
-.watchlist-filter-row .filter-group { flex:1; min-width:120px; }
-.watchlist-filter-row input[type="text"] { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; }
-.watchlist-filter-row select { width:100%; padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; background:#fff; }
-.watchlist-action-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-.watchlist-action-bar button { padding:8px 16px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; }
-.watchlist-action-bar .primary-btn { background:#f5a623; color:#fff; border:none; }
-.watchlist-action-bar .primary-btn:hover { background:#d4850d; }
-.watchlist-action-bar .secondary-btn { background:#fff; color:#333; border:1px solid #ddd; }
-.watchlist-action-bar .secondary-btn:hover { background:#f5f5f5; }
-.video-modal-content { background:#000; border-radius:12px; width:80vw; max-width:900px; aspect-ratio:16/9; position:relative; }
-.video-modal-content iframe { width:100%; height:100%; border:none; border-radius:12px; }
-.video-modal-content .modal-close { position:absolute; top:-40px; right:0; background:none; border:none; color:#fff; font-size:32px; cursor:pointer; }
 .loading { opacity:0.7; pointer-events:none; }
 .form-error { color:#cc0000; font-size:11px; margin-top:4px; display:none; }
 .form-success { color:#2ecc71; font-size:12px; text-align:center; padding:10px; display:none; }
@@ -554,8 +500,11 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
     <button class="search-btn" onclick="openSearchModal()">🔍 Search Players</button>
   </div>
 
-  <div id="watchlist-section" style="margin-top:10px;">
-    <button class="watchlist-btn" onclick="openWatchlistModal()">⭐ Watchlist <span id="watchlist-count" class="watchlist-badge" style="display:none;">0</span></button>
+  <div id="nav-links" style="margin-top:20px;display:flex;flex-direction:column;gap:8px;">
+    <a href="scouts.html" class="add-club-btn" style="background:#6366f1;text-align:center;text-decoration:none;">📋 Scout Database</a>
+    <a href="my-players.html" class="add-club-btn" style="background:#22c55e;text-align:center;text-decoration:none;">⭐ My Players</a>
+    <a href="rules.html" class="add-club-btn" style="background:#f59e0b;text-align:center;text-decoration:none;">📖 MLS NEXT Rules</a>
+    <a href="validation.html" class="add-club-btn" style="background:#64748b;text-align:center;text-decoration:none;">✓ Validation</a>
   </div>
 
   <div id="selected-card" class="empty">
@@ -774,15 +723,16 @@ var clubs = [
   {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Mid-America Division", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
   {name:"Sockers FC Chicago", state:"IL", league:"HD", division:"Mid-America Division", lat:42.1125, lng:-88.034, logo:"MLS Logos/Sockers FC Chicago.png", website:"", driveMiles:800, driveTime:"12h 0m", initials:"SFC", isPro:false, pathway:"both", clubId:"sockers_fc_chicago"},
   {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
+  {name:"Sporting Delaware", state:"DE", league:"HD", division:"Mid-Atlantic Division", lat:39.745, lng:-75.548, logo:"MLS Logos/Sporting Delaware.jpg", website:"https://sportingdelaware.com", driveMiles:120, driveTime:"2h 0m", initials:"SD", isPro:false, pathway:"both", clubId:"sporting_de"},
   {name:"Inter Atlanta FC", state:"GA", league:"HD", division:"Southeast Division", lat:33.7590, lng:-84.3312, logo:"MLS Logos/Inter Atlanta fc.png", website:"", driveMiles:860, driveTime:"16h 31m", initials:"IAF", isPro:false, pathway:"both", clubId:"inter_atlanta"},
-  {name:"FC DELCO", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.0792766, lng:-75.3015714, logo:"MLS Logos/FC DELCO.png", website:"", driveMiles:83, driveTime:"2h 2m", initials:"DEL", isPro:false, pathway:"both", clubId:"fc_delco"},
+  {name:"FC DELCO", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.0792766, lng:-75.3015714, logo:"MLS Logos/FC Delco.png", website:"", driveMiles:83, driveTime:"2h 2m", initials:"DEL", isPro:false, pathway:"both", clubId:"fc_delco"},
   {name:"Springfield SYC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7791227, lng:-77.1861196, logo:"MLS Logos/Springfield SYC.jpg", website:"", driveMiles:247, driveTime:"5h 15m", initials:"SS", isPro:false, pathway:"both", clubId:"springfield_syc"},
   {name:"RSL Arizona", state:"AZ", league:"HD", division:"Southwest Division", lat:33.4942189, lng:-111.926018, logo:"MLS Logos/Real Salt Lake (AZ).png", website:"", driveMiles:2401, driveTime:"43h 36m", initials:"RSL", isPro:false, pathway:"both", clubId:"real_salt_lake_az"},
   {name:"Sporting Athletic Club", state:"DE", league:"HD", division:"Mid-Atlantic Division", lat:39.7471805, lng:-75.5500972, logo:"MLS Logos/Sporting Athletic Club.jpg", website:"", driveMiles:120, driveTime:"2h 0m", initials:"SAC", isPro:false, pathway:"both", clubId:"sporting_athletic_club"},
   {name:"Beadling SC", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.7022913, lng:-80.2860955, logo:"MLS Logos/Beadling SC.jpg", website:"", driveMiles:320, driveTime:"5h 10m", initials:"BSC", isPro:false, pathway:"both", clubId:"beadling_sc"},
   {name:"Players Development Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:40.532801, lng:-74.575501, logo:"MLS Logos/Players Development Academy.png", website:"", driveMiles:22, driveTime:"43m", initials:"PDA", isPro:false, pathway:"both", clubId:"players_development_academy"},
   {name:"The Football Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:40.7557497, lng:-74.3613575, logo:"MLS Logos/The Football Academy.jpg", website:"", driveMiles:5, driveTime:"9m", initials:"TFA", isPro:false, pathway:"both", clubId:"the_football_academy"},
-  {name:"Keystone FC", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.214, lng:-77.008, logo:"MLS Logos/Keystone FC.jpg", website:"https://www.keystonefc.com", driveMiles:150, driveTime:"2h 30m", initials:"KFC", isPro:false, pathway:"both", clubId:"keystone_fc"},
+  {name:"Keystone FC", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.214, lng:-77.008, logo:"MLS Logos/Keystone Fc.jpg", website:"https://www.keystonefc.com", driveMiles:150, driveTime:"2h 30m", initials:"KFC", isPro:false, pathway:"both", clubId:"keystone_fc"},
   {name:"PA Classics", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.163, lng:-76.396, logo:"MLS Logos/PA Classics .png", website:"https://www.paclassics.org", driveMiles:120, driveTime:"2h 0m", initials:"PAC", isPro:false, pathway:"both", clubId:"pa_classics"},
   {name:"Bethesda SC", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.1399187, lng:-77.1929215, logo:"MLS Logos/Bethesda SC.jpg", website:"", driveMiles:188, driveTime:"6h 16m", initials:"BSC", isPro:false, pathway:"both", clubId:"bethesda_sc"},
   {name:"Northern Virginia Alliance", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:39.077885, lng:-77.5532296, logo:"MLS Logos/Northern Virginia Alliance.png", website:"", driveMiles:206, driveTime:"6h 52m", initials:"NVA", isPro:false, pathway:"both", clubId:"northern_virginia_alliance"},
@@ -2040,13 +1990,13 @@ function displaySearchResults(results) {
   tbody.innerHTML = '';
 
   if (results.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:#999;">No players match your search criteria</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">No players match your search criteria</td></tr>';
     container.style.display = 'block';
     return;
   }
 
   // Populate results
-  results.forEach(function(player, idx) {
+  results.forEach(function(player) {
     var row = document.createElement('tr');
 
     var linkHtml = player.link ?
@@ -2062,10 +2012,6 @@ function displaySearchResults(results) {
       indicators += '<span title="Playing Up">⭐</span> ';
     }
 
-    // Check if already in watchlist
-    var inWatchlist = isInWatchlist(player.name, player.club);
-    var starBtn = '<button class="add-to-watchlist-btn' + (inWatchlist ? ' added' : '') + '" onclick="quickAddToWatchlist(' + idx + ')" title="' + (inWatchlist ? 'Already in watchlist' : 'Add to watchlist') + '">' + (inWatchlist ? '★' : '☆') + '</button>';
-
     row.innerHTML =
       '<td>' + player.jersey + '</td>' +
       '<td>' + player.club + '</td>' +
@@ -2075,8 +2021,7 @@ function displaySearchResults(results) {
       '<td>' + player.games + '</td>' +
       '<td><strong>' + player.goals + '</strong></td>' +
       '<td>' + player.ratio.toFixed(2) + '</td>' +
-      '<td>' + linkHtml + '</td>' +
-      '<td>' + starBtn + '</td>';
+      '<td>' + linkHtml + '</td>';
 
     tbody.appendChild(row);
   });
@@ -2954,454 +2899,6 @@ document.addEventListener('keydown', function(e) {
 
 // Load search from URL parameters on page load
 loadSearchFromURL();
-
-// ══════════════════════════════════════════════════════════════
-// WATCHLIST FUNCTIONALITY
-// ══════════════════════════════════════════════════════════════
-
-var watchlistData = [];
-var watchlistFilters = {
-  ageGroups: ['ALL'],
-  position: '',
-  foot: '',
-  priority: '',
-  searchText: ''
-};
-
-// Load watchlist from Supabase
-async function loadWatchlist() {
-  if (!supabaseClient) {
-    console.warn('[Watchlist] Supabase not initialized');
-    return [];
-  }
-  try {
-    var result = await supabaseClient
-      .from('player_watchlist')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (result.error) throw result.error;
-    watchlistData = result.data || [];
-    updateWatchlistBadge();
-    return watchlistData;
-  } catch (e) {
-    console.error('[Watchlist] Load error:', e);
-    return [];
-  }
-}
-
-// Update badge count
-function updateWatchlistBadge() {
-  var badge = document.getElementById('watchlist-count');
-  if (badge) {
-    badge.textContent = watchlistData.length;
-    badge.style.display = watchlistData.length > 0 ? 'inline' : 'none';
-  }
-}
-
-// Get age group from birth year
-function getAgeGroup(birthYear) {
-  if (!birthYear) return 'Unknown';
-  var currentYear = new Date().getFullYear();
-  var age = currentYear - birthYear;
-  if (age <= 11) return 'U12';
-  if (age === 12) return 'U13';
-  if (age === 13) return 'U14';
-  if (age === 14) return 'U15';
-  if (age === 15) return 'U16';
-  if (age === 16) return 'U17';
-  return 'U19';
-}
-
-// Filter watchlist
-function filterWatchlist() {
-  watchlistFilters.searchText = document.getElementById('watchlist-search').value.toLowerCase();
-  watchlistFilters.position = document.getElementById('watchlist-filter-position').value;
-  watchlistFilters.foot = document.getElementById('watchlist-filter-foot').value;
-  watchlistFilters.priority = document.getElementById('watchlist-filter-priority').value;
-  renderWatchlistTable();
-}
-
-// Toggle age chip
-function toggleAgeChip(chip) {
-  var age = chip.dataset.age;
-
-  if (age === 'ALL') {
-    // Reset to ALL only
-    document.querySelectorAll('.age-chip').forEach(function(c) { c.classList.remove('active'); });
-    chip.classList.add('active');
-    watchlistFilters.ageGroups = ['ALL'];
-  } else {
-    // Remove ALL if selecting specific ages
-    var allChip = document.querySelector('.age-chip[data-age="ALL"]');
-    allChip.classList.remove('active');
-
-    chip.classList.toggle('active');
-
-    // Update filter array
-    var activeChips = document.querySelectorAll('.age-chip.active');
-    watchlistFilters.ageGroups = Array.from(activeChips).map(function(c) { return c.dataset.age; });
-
-    // If none selected, default to ALL
-    if (watchlistFilters.ageGroups.length === 0) {
-      allChip.classList.add('active');
-      watchlistFilters.ageGroups = ['ALL'];
-    }
-  }
-
-  renderWatchlistTable();
-}
-
-// Get filtered data
-function getFilteredWatchlist() {
-  return watchlistData.filter(function(entry) {
-    // Age group filter
-    if (!watchlistFilters.ageGroups.includes('ALL')) {
-      var entryAgeGroup = getAgeGroup(entry.birth_year);
-      if (!watchlistFilters.ageGroups.includes(entryAgeGroup)) return false;
-    }
-
-    // Other filters
-    if (watchlistFilters.position && entry.position !== watchlistFilters.position) return false;
-    if (watchlistFilters.foot && entry.foot !== watchlistFilters.foot) return false;
-    if (watchlistFilters.priority && entry.priority !== watchlistFilters.priority) return false;
-
-    // Text search
-    if (watchlistFilters.searchText) {
-      var search = watchlistFilters.searchText;
-      var nameMatch = (entry.player_name || '').toLowerCase().includes(search);
-      var clubMatch = (entry.club || '').toLowerCase().includes(search);
-      if (!nameMatch && !clubMatch) return false;
-    }
-
-    return true;
-  });
-}
-
-// Render watchlist table
-function renderWatchlistTable() {
-  var filtered = getFilteredWatchlist();
-  var tbody = document.getElementById('watchlist-body');
-  var countDisplay = document.getElementById('watchlist-count-display');
-
-  countDisplay.textContent = filtered.length + ' player' + (filtered.length !== 1 ? 's' : '');
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">No players in watchlist</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(function(entry) {
-    var priorityClass = entry.priority ? 'priority-' + entry.priority.toLowerCase() : 'priority-medium';
-    var videoBtn = entry.video_url ?
-      '<button class="video-play-btn" onclick="playVideo(\'' + entry.video_url.replace(/'/g, "\\'") + '\')">▶ Play</button>' :
-      '<span style="color:#ccc;">—</span>';
-
-    return '<tr data-id="' + entry.id + '">' +
-      '<td><strong>' + (entry.player_name || '') + '</strong></td>' +
-      '<td>' + (entry.birth_year || '—') + '</td>' +
-      '<td>' + (entry.club || '') + '</td>' +
-      '<td>' + (entry.position || '—') + '</td>' +
-      '<td>' + (entry.foot || '—') + '</td>' +
-      '<td><span class="priority-badge ' + priorityClass + '">' + (entry.priority || 'Medium') + '</span></td>' +
-      '<td>' + videoBtn + '</td>' +
-      '<td class="watchlist-actions">' +
-        '<button class="edit-btn" onclick="editWatchlistEntry(\'' + entry.id + '\')">✏️</button>' +
-        '<button class="delete-btn" onclick="confirmDeleteEntry(\'' + entry.id + '\')">🗑️</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
-}
-
-// Open watchlist modal
-function openWatchlistModal() {
-  document.getElementById('watchlist-modal').style.display = 'flex';
-  loadWatchlist().then(renderWatchlistTable);
-}
-
-// Close watchlist modal
-function closeWatchlistModal() {
-  document.getElementById('watchlist-modal').style.display = 'none';
-}
-
-// Open add/edit modal
-function openAddWatchlistModal(prefill) {
-  document.getElementById('add-watchlist-modal').style.display = 'flex';
-  document.getElementById('add-watchlist-title').textContent = prefill && prefill.id ? 'Edit Player' : 'Add to Watchlist';
-
-  // Clear or prefill form
-  document.getElementById('watchlist-edit-id').value = prefill && prefill.id || '';
-  document.getElementById('watchlist-player-name').value = prefill && prefill.player_name || '';
-  document.getElementById('watchlist-birth-year').value = prefill && prefill.birth_year || '';
-  document.getElementById('watchlist-club').value = prefill && prefill.club || '';
-  document.getElementById('watchlist-position').value = prefill && prefill.position || '';
-  document.getElementById('watchlist-foot').value = prefill && prefill.foot || '';
-  document.getElementById('watchlist-priority').value = prefill && prefill.priority || 'Medium';
-  document.getElementById('watchlist-video-url').value = prefill && prefill.video_url || '';
-  document.getElementById('watchlist-notes').value = prefill && prefill.notes || '';
-}
-
-// Close add/edit modal
-function closeAddWatchlistModal() {
-  document.getElementById('add-watchlist-modal').style.display = 'none';
-}
-
-// Save watchlist entry
-async function saveWatchlistEntry() {
-  var id = document.getElementById('watchlist-edit-id').value;
-  var playerName = document.getElementById('watchlist-player-name').value.trim();
-  var club = document.getElementById('watchlist-club').value.trim();
-
-  if (!playerName || !club) {
-    alert('Player name and club are required');
-    return;
-  }
-
-  var entry = {
-    player_name: playerName,
-    birth_year: parseInt(document.getElementById('watchlist-birth-year').value) || null,
-    club: club,
-    position: document.getElementById('watchlist-position').value || null,
-    foot: document.getElementById('watchlist-foot').value || null,
-    priority: document.getElementById('watchlist-priority').value || 'Medium',
-    video_url: document.getElementById('watchlist-video-url').value.trim() || null,
-    notes: document.getElementById('watchlist-notes').value.trim() || null
-  };
-
-  try {
-    if (id) {
-      // Update existing
-      entry.updated_at = new Date().toISOString();
-      var result = await supabaseClient.from('player_watchlist').update(entry).eq('id', id);
-      if (result.error) throw result.error;
-    } else {
-      // Insert new
-      var result = await supabaseClient.from('player_watchlist').insert([entry]);
-      if (result.error) throw result.error;
-    }
-
-    closeAddWatchlistModal();
-    await loadWatchlist();
-    renderWatchlistTable();
-  } catch (e) {
-    console.error('[Watchlist] Save error:', e);
-    alert('Error saving: ' + e.message);
-  }
-}
-
-// Edit entry
-function editWatchlistEntry(id) {
-  var entry = watchlistData.find(function(e) { return e.id === id; });
-  if (entry) {
-    openAddWatchlistModal(entry);
-  }
-}
-
-// Delete entry
-async function confirmDeleteEntry(id) {
-  if (!confirm('Remove this player from watchlist?')) return;
-
-  try {
-    var result = await supabaseClient.from('player_watchlist').delete().eq('id', id);
-    if (result.error) throw result.error;
-
-    await loadWatchlist();
-    renderWatchlistTable();
-  } catch (e) {
-    console.error('[Watchlist] Delete error:', e);
-    alert('Error deleting: ' + e.message);
-  }
-}
-
-// Quick add from search results
-function quickAddToWatchlist(playerIndex) {
-  var player = currentSearchResults[playerIndex];
-  if (!player) return;
-
-  openAddWatchlistModal({
-    player_name: player.name,
-    birth_year: player.yob !== '-' ? player.yob : null,
-    club: player.club,
-    position: player.position !== '-' ? player.position : null,
-    source_club_id: player.clubId,
-    source_squad: player.squad
-  });
-}
-
-// Check if player is in watchlist
-function isInWatchlist(playerName, club) {
-  return watchlistData.some(function(e) {
-    return e.player_name === playerName && e.club === club;
-  });
-}
-
-// Video playback
-function playVideo(url) {
-  var embedUrl = getEmbedUrl(url);
-
-  if (embedUrl) {
-    document.getElementById('video-iframe').src = embedUrl;
-    document.getElementById('video-modal').style.display = 'flex';
-  } else {
-    window.open(url, '_blank');
-  }
-}
-
-function getEmbedUrl(url) {
-  if (!url) return null;
-
-  // YouTube
-  var ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-  if (ytMatch) return 'https://www.youtube.com/embed/' + ytMatch[1];
-
-  // Vimeo
-  var vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return 'https://player.vimeo.com/video/' + vimeoMatch[1];
-
-  return null;
-}
-
-function closeVideoModal() {
-  document.getElementById('video-iframe').src = '';
-  document.getElementById('video-modal').style.display = 'none';
-}
-
-// CSV Import
-function triggerCSVImport() {
-  document.getElementById('csv-file-input').click();
-}
-
-async function handleCSVImport(event) {
-  var file = event.target.files[0];
-  if (!file) return;
-
-  try {
-    var text = await file.text();
-    var lines = text.split('\n');
-    var headers = lines[0].split(',').map(function(h) { return h.trim().toLowerCase(); });
-
-    var entries = [];
-    for (var i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-
-      var values = parseCSVLine(lines[i]);
-      var entry = {};
-
-      headers.forEach(function(header, idx) {
-        var value = values[idx] ? values[idx].trim() : '';
-        switch(header) {
-          case 'player':
-          case 'name':
-          case 'player_name':
-            entry.player_name = value;
-            break;
-          case 'age':
-          case 'yob':
-          case 'birth_year':
-            entry.birth_year = parseInt(value) || null;
-            break;
-          case 'club':
-            entry.club = value;
-            break;
-          case 'position':
-          case 'pos':
-            entry.position = value;
-            break;
-          case 'foot':
-            entry.foot = value;
-            break;
-          case 'priority':
-            entry.priority = value;
-            break;
-          case 'video':
-          case 'video_url':
-            entry.video_url = value;
-            break;
-          case 'notes':
-            entry.notes = value;
-            break;
-        }
-      });
-
-      if (entry.player_name && entry.club) {
-        entries.push(entry);
-      }
-    }
-
-    if (entries.length === 0) {
-      alert('No valid entries found in CSV');
-      return;
-    }
-
-    var result = await supabaseClient.from('player_watchlist').insert(entries);
-    if (result.error) throw result.error;
-
-    alert('Imported ' + entries.length + ' players');
-    event.target.value = '';
-    await loadWatchlist();
-    renderWatchlistTable();
-  } catch (e) {
-    console.error('[Watchlist] Import error:', e);
-    alert('Error importing: ' + e.message);
-  }
-}
-
-// Parse CSV line handling quoted values
-function parseCSVLine(line) {
-  var result = [];
-  var current = '';
-  var inQuotes = false;
-
-  for (var i = 0; i < line.length; i++) {
-    var char = line[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current);
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  result.push(current);
-  return result;
-}
-
-// CSV Export
-function exportWatchlistCSV() {
-  var filtered = getFilteredWatchlist();
-  if (filtered.length === 0) {
-    alert('No data to export');
-    return;
-  }
-
-  var headers = ['Player', 'YOB', 'Club', 'Position', 'Foot', 'Priority', 'Video', 'Notes'];
-  var rows = filtered.map(function(e) {
-    return [
-      '"' + (e.player_name || '').replace(/"/g, '""') + '"',
-      e.birth_year || '',
-      '"' + (e.club || '').replace(/"/g, '""') + '"',
-      e.position || '',
-      e.foot || '',
-      e.priority || '',
-      e.video_url || '',
-      '"' + (e.notes || '').replace(/"/g, '""') + '"'
-    ].join(',');
-  });
-
-  var csv = headers.join(',') + '\n' + rows.join('\n');
-  var blob = new Blob([csv], { type: 'text/csv' });
-  var url = URL.createObjectURL(blob);
-
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'watchlist_' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Load watchlist on page load
-loadWatchlist();
 </script>
 
 <!-- Add Club Modal -->
@@ -3513,18 +3010,13 @@ loadWatchlist();
                 <span class="dropdown-arrow">▼</span>
               </button>
               <div class="dropdown-checkbox-menu" id="filter-division" style="display:none;">
-                <label><input type="checkbox" value="Central (Pro Player Pathway)" onchange="updateDropdownLabel('filter-division')"> Central (Pro Player Pathway)</label>
-                <label><input type="checkbox" value="Florida Division" onchange="updateDropdownLabel('filter-division')"> Florida Division</label>
-                <label><input type="checkbox" value="Frontier Division" onchange="updateDropdownLabel('filter-division')"> Frontier Division</label>
-                <label><input type="checkbox" value="Mid-America Division" onchange="updateDropdownLabel('filter-division')"> Mid-America Division</label>
-                <label><input type="checkbox" value="Mid-Atlantic Division" onchange="updateDropdownLabel('filter-division')"> Mid-Atlantic Division</label>
-                <label><input type="checkbox" value="Northeast (Pro Player Pathway)" onchange="updateDropdownLabel('filter-division')"> Northeast (Pro Player Pathway)</label>
-                <label><input type="checkbox" value="Northeast Division" onchange="updateDropdownLabel('filter-division')"> Northeast Division</label>
-                <label><input type="checkbox" value="Northwest Division" onchange="updateDropdownLabel('filter-division')"> Northwest Division</label>
-                <label><input type="checkbox" value="Southeast (Pro Player Pathway)" onchange="updateDropdownLabel('filter-division')"> Southeast (Pro Player Pathway)</label>
-                <label><input type="checkbox" value="Southeast Division" onchange="updateDropdownLabel('filter-division')"> Southeast Division</label>
-                <label><input type="checkbox" value="Southwest Division" onchange="updateDropdownLabel('filter-division')"> Southwest Division</label>
-                <label><input type="checkbox" value="West (Pro Player Pathway)" onchange="updateDropdownLabel('filter-division')"> West (Pro Player Pathway)</label>
+                <label><input type="checkbox" value="Northeast Division" onchange="updateDropdownLabel('filter-division')"> Northeast</label>
+                <label><input type="checkbox" value="Mid-Atlantic Division" onchange="updateDropdownLabel('filter-division')"> Mid-Atlantic</label>
+                <label><input type="checkbox" value="New England" onchange="updateDropdownLabel('filter-division')"> New England</label>
+                <label><input type="checkbox" value="Tri-State" onchange="updateDropdownLabel('filter-division')"> Tri-State</label>
+                <label><input type="checkbox" value="Southeast" onchange="updateDropdownLabel('filter-division')"> Southeast</label>
+                <label><input type="checkbox" value="Mid-America Division" onchange="updateDropdownLabel('filter-division')"> Mid-America</label>
+                <label><input type="checkbox" value="Southwest" onchange="updateDropdownLabel('filter-division')"> Southwest</label>
               </div>
             </div>
           </div>
@@ -3603,7 +3095,6 @@ loadWatchlist();
                 <th class="sortable" onclick="sortSearchResults('goals')">Goals <span class="sort-indicator"></span></th>
                 <th class="sortable" onclick="sortSearchResults('ratio')">G/G <span class="sort-indicator"></span></th>
                 <th>Link</th>
-                <th style="width:40px;">⭐</th>
               </tr>
             </thead>
             <tbody id="search-results-body">
@@ -3616,171 +3107,6 @@ loadWatchlist();
   </div>
 </div>
 
-<!-- WATCHLIST MODAL -->
-<div id="watchlist-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeWatchlistModal()">
-  <div class="modal-container watchlist-modal-container" onclick="event.stopPropagation()">
-    <div class="modal-header" style="background:linear-gradient(135deg, #f5a623, #d4850d);">
-      <h2>⭐ Player Watchlist</h2>
-      <button class="modal-close" onclick="closeWatchlistModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <!-- Age Group Chips -->
-      <div class="age-chips">
-        <button class="age-chip active" data-age="ALL" onclick="toggleAgeChip(this)">ALL</button>
-        <button class="age-chip" data-age="U12" onclick="toggleAgeChip(this)">U12</button>
-        <button class="age-chip" data-age="U13" onclick="toggleAgeChip(this)">U13</button>
-        <button class="age-chip" data-age="U14" onclick="toggleAgeChip(this)">U14</button>
-        <button class="age-chip" data-age="U15" onclick="toggleAgeChip(this)">U15</button>
-        <button class="age-chip" data-age="U16" onclick="toggleAgeChip(this)">U16</button>
-        <button class="age-chip" data-age="U17" onclick="toggleAgeChip(this)">U17</button>
-        <button class="age-chip" data-age="U19" onclick="toggleAgeChip(this)">U19</button>
-      </div>
-
-      <!-- Filter Row -->
-      <div class="watchlist-filter-row">
-        <div class="filter-group">
-          <label style="font-size:11px;color:#666;">Search</label>
-          <input type="text" id="watchlist-search" placeholder="Search name, club..." oninput="filterWatchlist()">
-        </div>
-        <div class="filter-group">
-          <label style="font-size:11px;color:#666;">Position</label>
-          <select id="watchlist-filter-position" onchange="filterWatchlist()">
-            <option value="">All</option>
-            <option value="GK">GK</option>
-            <option value="DEF">DEF</option>
-            <option value="MID">MID</option>
-            <option value="FOR">FOR</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label style="font-size:11px;color:#666;">Foot</label>
-          <select id="watchlist-filter-foot" onchange="filterWatchlist()">
-            <option value="">All</option>
-            <option value="Left">Left</option>
-            <option value="Right">Right</option>
-            <option value="Both">Both</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label style="font-size:11px;color:#666;">Priority</label>
-          <select id="watchlist-filter-priority" onchange="filterWatchlist()">
-            <option value="">All</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Action Bar -->
-      <div class="watchlist-action-bar">
-        <button class="primary-btn" onclick="openAddWatchlistModal()">+ Add Player</button>
-        <button class="secondary-btn" onclick="triggerCSVImport()">📄 Import CSV</button>
-        <button class="secondary-btn" onclick="exportWatchlistCSV()">📥 Export CSV</button>
-        <input type="file" id="csv-file-input" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
-      </div>
-
-      <!-- Results Count -->
-      <div id="watchlist-count-display" style="font-size:13px; color:#666; margin-bottom:10px;">0 players</div>
-
-      <!-- Results Table -->
-      <div style="max-height:400px; overflow-y:auto;">
-        <table class="watchlist-table" id="watchlist-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>YOB</th>
-              <th>Club</th>
-              <th>Pos</th>
-              <th>Foot</th>
-              <th>Priority</th>
-              <th>Video</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="watchlist-body">
-            <!-- Populated by JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ADD/EDIT WATCHLIST MODAL -->
-<div id="add-watchlist-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeAddWatchlistModal()">
-  <div class="modal-container" style="width:450px;" onclick="event.stopPropagation()">
-    <div class="modal-header" style="background:linear-gradient(135deg, #f5a623, #d4850d);">
-      <h2 id="add-watchlist-title">Add to Watchlist</h2>
-      <button class="modal-close" onclick="closeAddWatchlistModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="watchlist-edit-id">
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <div>
-          <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Player Name *</label>
-          <input type="text" id="watchlist-player-name" placeholder="Full name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-        </div>
-        <div style="display:flex; gap:12px;">
-          <div style="flex:1;">
-            <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Birth Year</label>
-            <input type="number" id="watchlist-birth-year" placeholder="2012" min="2005" max="2016" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-          </div>
-          <div style="flex:1;">
-            <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Position</label>
-            <select id="watchlist-position" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-              <option value="">Select</option>
-              <option value="GK">GK</option>
-              <option value="DEF">DEF</option>
-              <option value="MID">MID</option>
-              <option value="FOR">FOR</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Club *</label>
-          <input type="text" id="watchlist-club" placeholder="Club name" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-        </div>
-        <div style="display:flex; gap:12px;">
-          <div style="flex:1;">
-            <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Foot</label>
-            <select id="watchlist-foot" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-              <option value="">Select</option>
-              <option value="Right">Right</option>
-              <option value="Left">Left</option>
-              <option value="Both">Both</option>
-            </select>
-          </div>
-          <div style="flex:1;">
-            <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Priority</label>
-            <select id="watchlist-priority" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Video URL</label>
-          <input type="url" id="watchlist-video-url" placeholder="YouTube, Vimeo, TikTok link..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
-        </div>
-        <div>
-          <label style="font-size:12px; font-weight:600; color:#333; display:block; margin-bottom:4px;">Notes</label>
-          <textarea id="watchlist-notes" placeholder="Scouting notes..." rows="3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; resize:vertical;"></textarea>
-        </div>
-        <button class="modal-btn modal-btn-primary" onclick="saveWatchlistEntry()" style="background:linear-gradient(135deg, #f5a623, #d4850d); margin-top:8px;">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- VIDEO PLAYER MODAL -->
-<div id="video-modal" class="modal-overlay" style="display:none;" onclick="closeVideoModal()">
-  <div class="video-modal-content" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeVideoModal()">×</button>
-    <iframe id="video-iframe" allowfullscreen></iframe>
-  </div>
-</div>
-
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
 </html>

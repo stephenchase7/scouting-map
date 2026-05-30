@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouting Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e1e1e6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .header h1 { font-size: 22px; }
+        .header-nav { margin-left: auto; display: flex; gap: 15px; }
+        .header-nav a { color: #888; text-decoration: none; font-size: 14px; }
+        .header-nav a:hover { color: #fff; }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 30px; }
+
+        /* Section */
+        .section {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #6366f1;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* Form Styles */
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #888;
+        }
+        .form-group label .required { color: #ef4444; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: #12121a;
+            border: 1px solid #333;
+            color: #e1e1e6;
+            padding: 12px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Rating Scale */
+        .rating-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .rating-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background: #12121a;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rating-btn:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+        .rating-btn.selected {
+            background: #6366f1;
+            border-color: #6366f1;
+            color: #fff;
+        }
+        .rating-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn:hover { background: #5558e3; }
+        .btn-success { background: #22c55e; }
+        .btn-success:hover { background: #16a34a; }
+        .btn-outline {
+            background: none;
+            border: 1px solid #333;
+            color: #888;
+        }
+        .btn-outline:hover { border-color: #6366f1; color: #6366f1; }
+
+        .btn-row {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        /* Player Header */
+        .player-header {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .player-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .player-info h2 { font-size: 24px; margin-bottom: 5px; }
+        .player-info p { opacity: 0.9; }
+
+        /* Report History */
+        .history-item {
+            background: #12121a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .history-date { font-size: 12px; color: #888; }
+        .history-author { font-size: 12px; color: #6366f1; }
+        .history-ratings {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+        }
+        .history-ratings span { color: #888; }
+        .history-ratings strong { color: #fff; }
+
+        /* Success Message */
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #22c55e;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .success-message.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Scouting Report</h1>
+        <div class="header-nav">
+            <a href="my-players.html">My Players</a>
+            <a href="scouts.html">Scouts</a>
+            <a href="index.html">Map</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            Report saved successfully!
+        </div>
+
+        <!-- Player Header -->
+        <div class="player-header" id="playerHeader">
+            <div class="player-avatar" id="playerAvatar">?</div>
+            <div class="player-info">
+                <h2 id="playerName">Loading...</h2>
+                <p id="playerMeta">—</p>
+            </div>
+        </div>
+
+        <form id="reportForm" onsubmit="submitReport(event)">
+            <!-- Match Context -->
+            <div class="section">
+                <div class="section-title">Match Context</div>
+                <div class="form-group">
+                    <label>Match <span class="required">*</span></label>
+                    <input type="text" class="form-input" name="match_info" placeholder="e.g., Cedar Stars vs NYRB U15, 11/15/25" required>
+                </div>
+                <div class="form-group">
+                    <label>Additional Matches Observed</label>
+                    <textarea class="form-textarea" name="additional_matches" placeholder="List other matches where you've seen this player..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Viewing Type <span class="required">*</span></label>
+                        <select class="form-select" name="viewing_type" required>
+                            <option value="">Select...</option>
+                            <option value="live">Live</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Department <span class="required">*</span></label>
+                        <select class="form-select" name="department" required>
+                            <option value="">Select...</option>
+                            <option value="NYRB Academy">NYRB Academy</option>
+                            <option value="NYRB II">NYRB II</option>
+                            <option value="First Team">First Team</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Assessment -->
+            <div class="section">
+                <div class="section-title">Physical Assessment</div>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Biological Development</label>
+                        <select class="form-select" name="biological_development">
+                            <option value="">Select...</option>
+                            <option value="early">Early Developer</option>
+                            <option value="on_time">On Time</option>
+                            <option value="late">Late Developer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Build <span class="required">*</span></label>
+                        <select class="form-select" name="build" required>
+                            <option value="">Select...</option>
+                            <option value="ectomorphic">Ectomorphic (Lean)</option>
+                            <option value="mesomorphic">Mesomorphic (Athletic)</option>
+                            <option value="endomorphic">Endomorphic (Stocky)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Size Estimate</label>
+                        <input type="text" class="form-input" name="size_estimate" placeholder="e.g., 5'8&quot;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Assessment -->
+            <div class="section">
+                <div class="section-title">Technical Assessment</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Dominant Foot <span class="required">*</span></label>
+                        <select class="form-select" name="dominant_foot" required>
+                            <option value="">Select...</option>
+                            <option value="right">Right</option>
+                            <option value="left">Left</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Weaker Foot Rating</label>
+                        <div class="rating-group" id="weakerFootRating">
+                            <button type="button" class="rating-btn" data-value="1">1</button>
+                            <button type="button" class="rating-btn" data-value="2">2</button>
+                            <button type="button" class="rating-btn" data-value="3">3</button>
+                            <button type="button" class="rating-btn" data-value="4">4</button>
+                            <button type="button" class="rating-btn" data-value="5">5</button>
+                        </div>
+                        <input type="hidden" name="weaker_foot_rating" id="weakerFootValue">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Performance - With the Ball</label>
+                    <textarea class="form-textarea" name="with_ball_notes" placeholder="Technical ability, dribbling, passing, first touch, shooting..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Performance - Against the Ball</label>
+                    <textarea class="form-textarea" name="against_ball_notes" placeholder="Defensive work rate, tackling, positioning, pressing..."></textarea>
+                </div>
+            </div>
+
+            <!-- Ratings -->
+            <div class="section">
+                <div class="section-title">Overall Ratings</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Current Performance Level <span class="required">*</span></label>
+                        <div class="rating-group" id="currentPerformanceRating">
+                            <button type="button" class="rating-btn" data-value="1">1</button>
+                            <button type="button" class="rating-btn" data-value="2">2</button>
+                            <button type="button" class="rating-btn" data-value="3">3</button>
+                            <button type="button" class="rating-btn" data-value="4">4</button>
+                            <button type="button" class="rating-btn" data-value="5">5</button>
+                        </div>
+                        <input type="hidden" name="current_performance" id="currentPerformanceValue" required>
+                        <div class="rating-labels"><span>Below Level</span><span>Excellent</span></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Development Potential <span class="required">*</span></label>
+                        <div class="rating-group" id="potentialRating">
+                            <button type="button" class="rating-btn" data-value="1">1</button>
+                            <button type="button" class="rating-btn" data-value="2">2</button>
+                            <button type="button" class="rating-btn" data-value="3">3</button>
+                            <button type="button" class="rating-btn" data-value="4">4</button>
+                            <button type="button" class="rating-btn" data-value="5">5</button>
+                        </div>
+                        <input type="hidden" name="development_potential" id="potentialValue" required>
+                        <div class="rating-labels"><span>Limited</span><span>Outstanding</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="section">
+                <div class="section-title">Recommended Actions</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Next Action - NYRB <span class="required">*</span></label>
+                        <select class="form-select" name="next_action" required>
+                            <option value="">Select...</option>
+                            <option value="continue_monitoring">Continue Monitoring</option>
+                            <option value="follow_up">Follow Up (1-2 more viewings)</option>
+                            <option value="invite_training">Invite to Training</option>
+                            <option value="invite_trial">Invite to Trial</option>
+                            <option value="sign">Recommend Signing</option>
+                            <option value="pass">Pass / Not a Fit</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority Status <span class="required">*</span></label>
+                        <select class="form-select" name="priority_status" required>
+                            <option value="">Select...</option>
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                            <option value="none">No Follow-Up Needed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Report Context / Additional Notes</label>
+                    <textarea class="form-textarea" name="report_context" placeholder="Any additional context, comparisons to other players, concerns, or highlights..."></textarea>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="button" class="btn btn-outline" onclick="window.history.back()">Cancel</button>
+                <button type="submit" class="btn btn-success">Save Report</button>
+            </div>
+        </form>
+
+        <!-- Report History -->
+        <div class="section" id="historySection" style="display:none;">
+            <div class="section-title">Previous Reports</div>
+            <div id="reportHistory"></div>
+        </div>
+    </div>
+
+    <script>
+        var SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
+
+        var currentPlayerId = new URLSearchParams(window.location.search).get('player');
+        var currentScoutId = localStorage.getItem('currentScoutId');
+        var playerData = null;
+
+        // Rating button handlers
+        document.querySelectorAll('.rating-group').forEach(function(group) {
+            group.querySelectorAll('.rating-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    group.querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); });
+                    btn.classList.add('selected');
+                    var hiddenInput = group.nextElementSibling;
+                    if (hiddenInput && hiddenInput.type === 'hidden') {
+                        hiddenInput.value = btn.dataset.value;
+                    }
+                });
+            });
+        });
+
+        async function loadPlayer() {
+            if (!currentPlayerId) {
+                document.getElementById('playerName').textContent = 'No Player Selected';
+                document.getElementById('playerMeta').textContent = 'Go to My Players to select a player';
+                return;
+            }
+
+            try {
+                var response = await fetch(
+                    SUPABASE_URL + '/rest/v1/scout_players?id=eq.' + currentPlayerId,
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+                );
+
+                if (response.ok) {
+                    var players = await response.json();
+                    if (players.length > 0) {
+                        playerData = players[0];
+                        renderPlayerHeader();
+                        loadReportHistory();
+                    }
+                }
+            } catch (e) {
+                // Try localStorage
+                var localPlayers = JSON.parse(localStorage.getItem('myPlayers_' + currentScoutId) || '[]');
+                playerData = localPlayers.find(function(p) { return p.id === currentPlayerId; });
+                if (playerData) {
+                    renderPlayerHeader();
+                }
+            }
+        }
+
+        function renderPlayerHeader() {
+            var initials = (playerData.player_name || 'U').split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().slice(0, 2);
+            document.getElementById('playerAvatar').textContent = initials;
+            document.getElementById('playerName').textContent = playerData.player_name || 'Unknown';
+            document.getElementById('playerMeta').textContent =
+                (playerData.club_id || '—') + ' | ' +
+                (playerData.squad || '—') + ' | ' +
+                (playerData.position || '—') + ' | YOB: ' +
+                (playerData.yob || '—');
+        }
+
+        async function loadReportHistory() {
+            try {
+                var response = await fetch(
+                    SUPABASE_URL + '/rest/v1/scouting_reports?scout_player_id=eq.' + currentPlayerId + '&order=created_at.desc',
+                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+                );
+
+                if (response.ok) {
+                    var reports = await response.json();
+                    if (reports.length > 0) {
+                        renderReportHistory(reports);
+                    }
+                }
+            } catch (e) {
+                // No history
+            }
+        }
+
+        function renderReportHistory(reports) {
+            document.getElementById('historySection').style.display = 'block';
+            document.getElementById('reportHistory').innerHTML = reports.map(function(r) {
+                var date = new Date(r.created_at).toLocaleDateString();
+                return '<div class="history-item">' +
+                    '<div class="history-header">' +
+                        '<span class="history-date">' + date + ' - ' + (r.match_info || '') + '</span>' +
+                        '<span class="history-author">' + (r.viewing_type || '') + '</span>' +
+                    '</div>' +
+                    '<div class="history-ratings">' +
+                        '<span>Performance: <strong>' + (r.current_performance || '—') + '/5</strong></span>' +
+                        '<span>Potential: <strong>' + (r.development_potential || '—') + '/5</strong></span>' +
+                        '<span>Action: <strong>' + (r.next_action || '—').replace(/_/g, ' ') + '</strong></span>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function submitReport(event) {
+            event.preventDefault();
+
+            // Validate required ratings
+            if (!document.getElementById('currentPerformanceValue').value) {
+                alert('Please select a Current Performance rating');
+                return;
+            }
+            if (!document.getElementById('potentialValue').value) {
+                alert('Please select a Development Potential rating');
+                return;
+            }
+
+            var form = event.target;
+            var report = {
+                scout_player_id: currentPlayerId,
+                author_id: currentScoutId,
+                match_info: form.match_info.value,
+                additional_matches: form.additional_matches.value || null,
+                viewing_type: form.viewing_type.value,
+                department: form.department.value,
+                biological_development: form.biological_development.value || null,
+                build: form.build.value,
+                size_estimate: form.size_estimate.value || null,
+                dominant_foot: form.dominant_foot.value,
+                weaker_foot_rating: form.weaker_foot_rating.value ? parseInt(form.weaker_foot_rating.value) : null,
+                with_ball_notes: form.with_ball_notes.value || null,
+                against_ball_notes: form.against_ball_notes.value || null,
+                current_performance: parseInt(form.current_performance.value),
+                development_potential: parseInt(form.development_potential.value),
+                next_action: form.next_action.value,
+                priority_status: form.priority_status.value,
+                report_context: form.report_context.value || null
+            };
+
+            try {
+                var response = await fetch(SUPABASE_URL + '/rest/v1/scouting_reports', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(report)
+                });
+
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (e) {
+                // Fallback to localStorage
+                report.id = 'local_' + Date.now();
+                report.created_at = new Date().toISOString();
+                var reports = JSON.parse(localStorage.getItem('reports_' + currentPlayerId) || '[]');
+                reports.push(report);
+                localStorage.setItem('reports_' + currentPlayerId, JSON.stringify(reports));
+                showSuccess();
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('successMessage').classList.add('active');
+            document.getElementById('reportForm').reset();
+            document.querySelectorAll('.rating-btn').forEach(function(b) { b.classList.remove('selected'); });
+
+            setTimeout(function() {
+                document.getElementById('successMessage').classList.remove('active');
+            }, 3000);
+
+            loadReportHistory();
+        }
+
+        // Initialize
+        loadPlayer();
+    </script>
+
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+</body>
+</html>

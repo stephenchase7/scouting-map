@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scout Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e1e1e6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .header h1 { font-size: 22px; }
+        .header-nav { margin-left: auto; display: flex; gap: 15px; }
+        .header-nav a { color: #888; text-decoration: none; font-size: 14px; }
+        .header-nav a:hover { color: #fff; }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 30px; }
+
+        /* Cards */
+        .card {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 18px; font-weight: 600; }
+
+        /* Scout Grid */
+        .scouts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .scout-card {
+            background: #12121a;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        .scout-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .scout-info { flex: 1; }
+        .scout-name { font-weight: 600; margin-bottom: 4px; }
+        .scout-email { font-size: 13px; color: #888; margin-bottom: 8px; }
+        .scout-role {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .scout-role.director { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .scout-role.lead_scout { background: rgba(99, 102, 241, 0.2); color: #6366f1; }
+        .scout-role.scout { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .scout-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .scout-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #888;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .scout-btn:hover { border-color: #6366f1; color: #6366f1; }
+        .scout-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #888;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            background: #12121a;
+            border: 1px solid #333;
+            color: #e1e1e6;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn:hover { background: #5558e3; }
+        .btn-outline {
+            background: none;
+            border: 1px solid #6366f1;
+            color: #6366f1;
+        }
+        .btn-outline:hover { background: rgba(99, 102, 241, 0.1); }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #1a1a24;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value { font-size: 32px; font-weight: 700; color: #6366f1; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Activity Feed */
+        .activity-feed { max-height: 300px; overflow-y: auto; }
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6366f1;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+        .activity-text { font-size: 13px; line-height: 1.5; }
+        .activity-time { font-size: 11px; color: #666; margin-top: 4px; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Scout Management</h1>
+        <div class="header-nav">
+            <a href="index.html">Map</a>
+            <a href="team.html">Teams</a>
+            <a href="my-players.html">My Players</a>
+            <a href="rules.html">Rules</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalScouts">0</div>
+                <div class="stat-label">Scouts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalPlayers">0</div>
+                <div class="stat-label">Players Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalReports">0</div>
+                <div class="stat-label">Reports Written</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalShares">0</div>
+                <div class="stat-label">Players Shared</div>
+            </div>
+        </div>
+
+        <!-- Scouts List -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Scouts</span>
+                <button class="btn" onclick="openAddScoutModal()">+ Add Scout</button>
+            </div>
+            <div class="scouts-grid" id="scoutsGrid">
+                <div class="empty-state">Loading scouts...</div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Recent Activity</span>
+            </div>
+            <div class="activity-feed" id="activityFeed">
+                <div class="empty-state">No recent activity</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Scout Modal -->
+    <div class="modal-overlay" id="addScoutModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Add Scout</span>
+                <button class="modal-close" onclick="closeAddScoutModal()">&times;</button>
+            </div>
+            <form id="addScoutForm" onsubmit="submitAddScout(event)">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-input" name="email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select class="form-select" name="role">
+                            <option value="scout">Scout</option>
+                            <option value="lead_scout">Lead Scout</option>
+                            <option value="director">Director</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select class="form-select" name="department">
+                            <option value="NYRB Academy">NYRB Academy</option>
+                            <option value="NYRB II">NYRB II</option>
+                            <option value="First Team">First Team</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="width:100%;margin-top:10px;">Add Scout</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        var SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
+
+        var scouts = [];
+
+        async function fetchScouts() {
+            try {
+                var response = await fetch(SUPABASE_URL + '/rest/v1/scouts?order=name', {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY
+                    }
+                });
+
+                if (response.ok) {
+                    scouts = await response.json();
+                    renderScouts();
+                    updateStats();
+                } else {
+                    // Table might not exist yet
+                    document.getElementById('scoutsGrid').innerHTML =
+                        '<div class="empty-state">' +
+                        '<h3>Database Not Set Up</h3>' +
+                        '<p>Run supabase_schema.sql in Supabase SQL Editor</p>' +
+                        '</div>';
+                }
+            } catch (error) {
+                console.error('Error fetching scouts:', error);
+                renderLocalScouts();
+            }
+        }
+
+        function renderLocalScouts() {
+            // Fallback to localStorage if Supabase not available
+            scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+            renderScouts();
+            updateStats();
+        }
+
+        function renderScouts() {
+            var grid = document.getElementById('scoutsGrid');
+
+            if (scouts.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h3>No Scouts Yet</h3><p>Add your first scout to get started.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = scouts.map(function(scout) {
+                var initials = scout.name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase();
+                return '<div class="scout-card">' +
+                    '<div class="scout-avatar">' + initials + '</div>' +
+                    '<div class="scout-info">' +
+                        '<div class="scout-name">' + scout.name + '</div>' +
+                        '<div class="scout-email">' + scout.email + '</div>' +
+                        '<span class="scout-role ' + scout.role + '">' + scout.role.replace('_', ' ') + '</span>' +
+                        '<div class="scout-actions">' +
+                            '<button class="scout-btn" onclick="viewScout(\'' + scout.id + '\')">View</button>' +
+                            '<button class="scout-btn danger" onclick="deleteScout(\'' + scout.id + '\')">Delete</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function updateStats() {
+            document.getElementById('totalScouts').textContent = scouts.length;
+
+            // Try to fetch other stats from Supabase
+            try {
+                var playersResp = await fetch(SUPABASE_URL + '/rest/v1/scout_players?select=id', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                if (playersResp.ok) {
+                    var players = await playersResp.json();
+                    document.getElementById('totalPlayers').textContent = players.length;
+                }
+
+                var reportsResp = await fetch(SUPABASE_URL + '/rest/v1/scouting_reports?select=id', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                if (reportsResp.ok) {
+                    var reports = await reportsResp.json();
+                    document.getElementById('totalReports').textContent = reports.length;
+                }
+
+                var sharesResp = await fetch(SUPABASE_URL + '/rest/v1/player_shares?select=id', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                if (sharesResp.ok) {
+                    var shares = await sharesResp.json();
+                    document.getElementById('totalShares').textContent = shares.length;
+                }
+            } catch (e) {
+                // Stats remain at 0
+            }
+        }
+
+        function openAddScoutModal() {
+            document.getElementById('addScoutModal').classList.add('active');
+        }
+
+        function closeAddScoutModal() {
+            document.getElementById('addScoutModal').classList.remove('active');
+            document.getElementById('addScoutForm').reset();
+        }
+
+        async function submitAddScout(event) {
+            event.preventDefault();
+            var form = event.target;
+
+            var scout = {
+                name: form.name.value,
+                email: form.email.value,
+                role: form.role.value,
+                department: form.department.value
+            };
+
+            try {
+                var response = await fetch(SUPABASE_URL + '/rest/v1/scouts', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(scout)
+                });
+
+                if (response.ok) {
+                    closeAddScoutModal();
+                    fetchScouts();
+                } else {
+                    var error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to add scout'));
+                }
+            } catch (error) {
+                // Fallback to localStorage
+                scout.id = 'local_' + Date.now();
+                scouts.push(scout);
+                localStorage.setItem('scouts', JSON.stringify(scouts));
+                closeAddScoutModal();
+                renderScouts();
+                updateStats();
+            }
+        }
+
+        async function deleteScout(id) {
+            if (!confirm('Delete this scout?')) return;
+
+            if (id.startsWith('local_')) {
+                scouts = scouts.filter(function(s) { return s.id !== id; });
+                localStorage.setItem('scouts', JSON.stringify(scouts));
+                renderScouts();
+                updateStats();
+                return;
+            }
+
+            try {
+                await fetch(SUPABASE_URL + '/rest/v1/scouts?id=eq.' + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_KEY
+                    }
+                });
+                fetchScouts();
+            } catch (error) {
+                alert('Error deleting scout');
+            }
+        }
+
+        function viewScout(id) {
+            window.location.href = 'my-players.html?scout=' + id;
+        }
+
+        // Load activity feed
+        async function loadActivity() {
+            try {
+                var response = await fetch(SUPABASE_URL + '/rest/v1/activity_log?order=created_at.desc&limit=10', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+
+                if (response.ok) {
+                    var activities = await response.json();
+                    renderActivity(activities);
+                }
+            } catch (e) {
+                // Keep empty state
+            }
+        }
+
+        function renderActivity(activities) {
+            var feed = document.getElementById('activityFeed');
+
+            if (activities.length === 0) {
+                return;
+            }
+
+            feed.innerHTML = activities.map(function(a) {
+                var time = new Date(a.created_at).toLocaleString();
+                return '<div class="activity-item">' +
+                    '<div class="activity-dot"></div>' +
+                    '<div>' +
+                        '<div class="activity-text">' + formatAction(a.action, a.details) + '</div>' +
+                        '<div class="activity-time">' + time + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function formatAction(action, details) {
+            var d = details || {};
+            switch (action) {
+                case 'added_player': return 'Added player <strong>' + (d.player_name || 'Unknown') + '</strong>';
+                case 'shared_player': return 'Shared <strong>' + (d.player_name || 'a player') + '</strong> with ' + (d.to_scout || 'another scout');
+                case 'wrote_report': return 'Wrote report for <strong>' + (d.player_name || 'a player') + '</strong>';
+                default: return action;
+            }
+        }
+
+        // Initialize
+        fetchScouts();
+        loadActivity();
+    </script>
+
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+</body>
+</html>
