@@ -914,14 +914,14 @@ async function loadSupabaseClubs() {
   }
 }
 
-// Call Supabase loading function (async, non-blocking)
-loadSupabaseClubs().then(function() {
-  // After Supabase data loads, refresh the map if needed
-  if (supabaseDataLoaded && typeof refreshMap === 'function') {
-    console.log('[Supabase] Refreshing map with new club data...');
-    refreshMap();
-  }
-});
+// DISABLED: Supabase club loading - corrupting marker coordinates
+// loadSupabaseClubs().then(function() {
+//   if (supabaseDataLoaded && typeof refreshMap === 'function') {
+//     console.log('[Supabase] Refreshing map with new club data...');
+//     refreshMap();
+//   }
+// });
+console.log('[Supabase] Club loading DISABLED - using hardcoded coordinates only');
 
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {
