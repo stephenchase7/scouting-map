@@ -1613,6 +1613,68 @@
         var ADMIN_PASSWORD = 'NYRBScout@26';
 
         // ═══════════════════════════════════════════════════
+        // SHARED PLAYER OVERRIDES (syncs with team.html)
+        // ═══════════════════════════════════════════════════
+
+        var OVERRIDES_KEY = 'playerOverrides';
+
+        function loadPlayerOverrides() {
+            try {
+                return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function savePlayerOverrides(overrides) {
+            localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+        }
+
+        function getPlayerKey(player) {
+            // Key format: clubId_squad_jersey_name (matches team.html)
+            var club = (player.clubId || player.club || '').toLowerCase().replace(/\s+/g, '_');
+            var squad = (player.squad || '').toLowerCase();
+            var jersey = player.jersey || '';
+            var name = (player.name || '').toLowerCase().replace(/\s+/g, '_');
+            return (club + '_' + squad + '_' + jersey + '_' + name);
+        }
+
+        function applyOverridesToPlayer(player) {
+            // Apply saved overrides to player data
+            var key = getPlayerKey(player);
+            var overrides = loadPlayerOverrides();
+            var playerOverrides = overrides[key] || {};
+
+            // Merge overrides onto player
+            var result = Object.assign({}, player);
+            for (var field in playerOverrides) {
+                result[field] = playerOverrides[field];
+            }
+            return result;
+        }
+
+        function savePlayerOverride(player, field, value) {
+            var key = getPlayerKey(player);
+            var overrides = loadPlayerOverrides();
+            if (!overrides[key]) {
+                overrides[key] = {};
+            }
+            overrides[key][field] = value;
+            savePlayerOverrides(overrides);
+        }
+
+        // Listen for changes from other tabs (e.g., team.html)
+        window.addEventListener('storage', function(e) {
+            if (e.key === OVERRIDES_KEY) {
+                // Re-render to show updated data
+                renderPlayers();
+                if (currentPlayerId) {
+                    showPlayerDetails(currentPlayerId);
+                }
+            }
+        });
+
+        // ═══════════════════════════════════════════════════
         // ADMIN MODE
         // ═══════════════════════════════════════════════════
 
@@ -1732,10 +1794,16 @@
 
             noMsg.style.display = 'none';
             var html = '';
-            scoutPlayers.forEach(function(player) {
+            scoutPlayers.forEach(function(basePlayer) {
+                // Apply overrides from shared storage (syncs with team.html edits)
+                var player = applyOverridesToPlayer(basePlayer);
+
                 var initials = player.name.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2).toUpperCase();
                 var status = player.status || 'watching';
                 var statusClass = 'status-' + status;
+
+                // Use primaryPosition if available, fall back to position
+                var displayPosition = player.primaryPosition || player.position || '-';
 
                 // Check for video links
                 var hasVideo = player.videoLinks && player.videoLinks.length > 0;
@@ -1750,26 +1818,26 @@
                 }
 
                 // Check for reports
-                var playerReports = reports.filter(function(r) { return r.playerId === player.id; });
+                var playerReports = reports.filter(function(r) { return r.playerId === basePlayer.id; });
                 var reportHtml = playerReports.length > 0 ? '<span class="report-indicator">' + playerReports.length + '</span>' : '';
 
                 html += '<tr>';
                 html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + player.name + '</div></td>';
                 html += '<td>' + (player.club || '-') + '</td>';
-                html += '<td>' + (player.position || '-') + '</td>';
+                html += '<td>' + displayPosition + '</td>';
                 html += '<td>' + (player.yob || '-') + '</td>';
                 html += '<td>' + videoHtml + '</td>';
                 html += '<td>' + reportHtml + '</td>';
                 html += '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>';
                 // Check if in compare cart
-                var inCompare = isInCompareCart(player.id);
+                var inCompare = isInCompareCart(basePlayer.id);
                 var compareBtnClass = inCompare ? 'action-btn compare-btn added' : 'action-btn compare-btn';
                 var compareBtnText = inCompare ? '✓' : '+';
 
                 html += '<td>';
-                html += '<button class="' + compareBtnClass + '" onclick="addToCompareFromList(\'' + player.id + '\')" title="Add to Compare">' + compareBtnText + '</button>';
-                html += '<button class="action-btn" onclick="viewPlayer(\'' + player.id + '\')">View</button>';
-                html += '<button class="action-btn" onclick="deletePlayer(\'' + player.id + '\')">Delete</button>';
+                html += '<button class="' + compareBtnClass + '" onclick="addToCompareFromList(\'' + basePlayer.id + '\')" title="Add to Compare">' + compareBtnText + '</button>';
+                html += '<button class="action-btn" onclick="viewPlayer(\'' + basePlayer.id + '\')">View</button>';
+                html += '<button class="action-btn" onclick="deletePlayer(\'' + basePlayer.id + '\')">Delete</button>';
                 html += '</td>';
                 html += '</tr>';
             });
@@ -1956,23 +2024,29 @@
         function viewPlayer(id) {
             currentPlayerId = id;
             isEditMode = false;
-            var player = players.find(function(p) { return p.id === id; });
-            if (!player) return;
+            var basePlayer = players.find(function(p) { return p.id === id; });
+            if (!basePlayer) return;
+
+            // Apply overrides from shared storage
+            var player = applyOverridesToPlayer(basePlayer);
 
             // Reset report form
             document.getElementById('reportForm').reset();
+
+            // Use primaryPosition if available
+            var displayPosition = player.primaryPosition || player.position || 'Unknown Position';
 
             // Fill in player details
             document.getElementById('panelPlayerName').textContent = player.name;
             document.getElementById('panelPlayerInfo').textContent =
                 (player.club || 'Unknown Club') + ' • ' +
-                (player.position || 'Unknown Position') + ' • ' +
+                displayPosition + ' • ' +
                 (player.yob || 'YOB Unknown');
 
             // Display values
             document.getElementById('detailClub').textContent = player.club || '-';
             document.getElementById('detailSquad').textContent = player.squad || '-';
-            document.getElementById('detailPosition').textContent = player.position || '-';
+            document.getElementById('detailPosition').textContent = displayPosition;
             document.getElementById('detailYob').textContent = player.yob || '-';
             document.getElementById('detailFoot').textContent = player.foot || '-';
             document.getElementById('detailJersey').textContent = player.jersey ? '#' + player.jersey : '-';
@@ -1980,10 +2054,10 @@
                 new Date(player.dateAdded).toLocaleDateString() : '-';
             document.getElementById('detailStatus').value = player.status || 'watching';
 
-            // Edit values
+            // Edit values (use current values including overrides)
             document.getElementById('editClub').value = player.club || '';
             document.getElementById('editSquad').value = player.squad || '';
-            document.getElementById('editPosition').value = player.position || '';
+            document.getElementById('editPosition').value = player.primaryPosition || player.position || '';
             document.getElementById('editYob').value = player.yob || '';
             document.getElementById('editFoot').value = player.foot || '';
             document.getElementById('editJersey').value = player.jersey || '';
@@ -2054,12 +2128,30 @@
             var player = players.find(function(p) { return p.id === currentPlayerId; });
             if (!player) return;
 
-            player.club = document.getElementById('editClub').value.trim();
-            player.squad = document.getElementById('editSquad').value;
-            player.position = document.getElementById('editPosition').value;
-            player.yob = document.getElementById('editYob').value;
-            player.foot = document.getElementById('editFoot').value;
-            player.jersey = document.getElementById('editJersey').value;
+            // Get new values
+            var newClub = document.getElementById('editClub').value.trim();
+            var newSquad = document.getElementById('editSquad').value;
+            var newPosition = document.getElementById('editPosition').value;
+            var newYob = document.getElementById('editYob').value;
+            var newFoot = document.getElementById('editFoot').value;
+            var newJersey = document.getElementById('editJersey').value;
+
+            // Save to shared playerOverrides (syncs with team.html)
+            if (newPosition !== player.position) {
+                savePlayerOverride(player, 'position', newPosition);
+                savePlayerOverride(player, 'primaryPosition', newPosition);
+            }
+            if (newYob !== player.yob) {
+                savePlayerOverride(player, 'yob', newYob);
+            }
+
+            // Update local scoutPlayers record
+            player.club = newClub;
+            player.squad = newSquad;
+            player.position = newPosition;
+            player.yob = newYob;
+            player.foot = newFoot;
+            player.jersey = newJersey;
 
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
 
@@ -2079,6 +2171,7 @@
 
             hideEditMode();
             renderPlayers();
+            showToast('Changes saved');
         }
 
         function cancelEdit() {

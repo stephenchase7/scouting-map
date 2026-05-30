@@ -904,6 +904,56 @@ td.editable:hover::after {
   color: #666;
 }
 .btn-clear-compare:hover { background: #f5f5f5; }
+
+/* Save Bar */
+.save-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 2px solid #f0ad4e;
+  padding: 12px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+.save-bar.visible { transform: translateY(0); }
+.save-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #856404;
+  font-size: 14px;
+}
+.save-bar-left svg { width: 20px; height: 20px; }
+.save-bar-right { display: flex; gap: 10px; }
+.btn-discard {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+}
+.btn-discard:hover { background: #f5f5f5; border-color: #ccc; }
+.btn-save {
+  background: #28a745;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
+}
+.btn-save:hover { background: #218838; }
+.edited-cell { background: #fff3cd !important; }
 </style>
 </head>
 <body>
@@ -934,6 +984,18 @@ td.editable:hover::after {
       <button class="modal-btn secondary" onclick="closeEditModal()">Cancel</button>
       <button class="modal-btn primary" onclick="saveEdit()">Save</button>
     </div>
+  </div>
+</div>
+
+<!-- Save Bar -->
+<div id="save-bar" class="save-bar">
+  <div class="save-bar-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span id="save-bar-text">Unsaved changes</span>
+  </div>
+  <div class="save-bar-right">
+    <button class="btn-discard" onclick="discardChanges()">Discard</button>
+    <button class="btn-save" onclick="confirmSave()">Save Changes</button>
   </div>
 </div>
 
@@ -2078,8 +2140,11 @@ function renderRoster() {
     '</thead><tbody>';
 
   playersWithIndex.forEach(function(item) {
-    var p = item.player;
+    var originalPlayer = item.player;
     var idx = item.originalIndex;
+
+    // Apply saved and pending overrides
+    var p = applyOverrides(originalPlayer, clubId, currentTeam);
     var displayGoals = calculateFilteredGoals(p);
 
     var displayPos = p.primaryPosition || p.position || p.originalPosition || '';
@@ -2087,6 +2152,11 @@ function renderRoster() {
     var posHtml = displayPos ? '<span class="position">' + displayPos + (secondaryPos ? ' <span style="color:#888;">(' + secondaryPos + ')</span>' : '') + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
     var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
     var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
+
+    // Check for pending changes to highlight cells
+    var editedClass = function(field) {
+      return hasPendingChange(originalPlayer, field) ? ' edited-cell' : '';
+    };
 
     var playerJson = JSON.stringify({name: p.name, jersey: p.jersey, position: p.position, games: p.games, goals: displayGoals, yob: p.yob}).replace(/'/g, "\\'").replace(/"/g, '&quot;');
     var playerId = (p.name + '_' + (currentClub ? currentClub.name : '') + '_' + (currentTeam || '')).replace(/\s+/g, '_');
@@ -2096,13 +2166,13 @@ function renderRoster() {
 
     html += '<tr data-player="' + playerJson + '">' +
       '<td><button class="' + compareBtnClass + '" onclick="toggleGlobalCompare(JSON.parse(this.closest(\'tr\').dataset.player))" title="' + (isInCart ? 'Remove from Compare' : 'Add to Compare') + '">' + compareBtnText + '</button></td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'name\')"><span class="player-name">' + p.name + '</span></td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
-      '<td class="editable" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
+      '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
+      '<td class="editable' + editedClass('name') + '" onclick="handleCellClick(' + idx + ', \'name\')"><span class="player-name">' + p.name + '</span></td>' +
+      '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
+      '<td class="editable' + editedClass('position') + '" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
+      '<td class="editable' + editedClass('games') + '" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
+      '<td class="editable' + editedClass('goals') + '" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
+      '<td class="editable' + editedClass('link') + '" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
       '<td><button class="add-watchlist-btn" onclick="openWatchlistModal(this)" title="Add to Watchlist">+</button></td>' +
       '</tr>';
   });
@@ -2143,6 +2213,115 @@ var pendingEdit = null; // {playerIndex, field}
 var activeFilters = {};
 var dateFilterStart = null;
 var dateFilterEnd = null;
+
+// ══════════════════════════════════════════════════════════════
+// PLAYER OVERRIDES SYSTEM (shared with scouts.html)
+// ══════════════════════════════════════════════════════════════
+
+var pendingOverrides = {}; // Unsaved changes: {playerKey: {field: newValue}}
+var OVERRIDES_KEY = 'playerOverrides'; // localStorage key
+
+function getPlayerKey(player, club, squad) {
+  // Unique key: clubId_squad_jersey_name
+  var clubName = club || clubId || '';
+  var squadName = squad || currentTeam || '';
+  return (clubName + '_' + squadName + '_' + player.jersey + '_' + player.name).replace(/\s+/g, '_').toLowerCase();
+}
+
+function loadPlayerOverrides() {
+  try {
+    return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePlayerOverrides(overrides) {
+  localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+  // Dispatch event so other tabs/pages can sync
+  window.dispatchEvent(new StorageEvent('storage', {key: OVERRIDES_KEY}));
+}
+
+function applyOverrides(player, club, squad) {
+  // Apply saved overrides to player object
+  var key = getPlayerKey(player, club, squad);
+  var saved = loadPlayerOverrides();
+  var overrides = saved[key] || {};
+  var pending = pendingOverrides[key] || {};
+
+  // Merge: saved first, then pending (pending wins)
+  var merged = Object.assign({}, overrides, pending);
+
+  // Apply to player copy (don't mutate original)
+  var result = Object.assign({}, player);
+  for (var field in merged) {
+    result[field] = merged[field];
+  }
+  return result;
+}
+
+function stagePendingChange(player, field, newValue) {
+  var key = getPlayerKey(player);
+  if (!pendingOverrides[key]) {
+    pendingOverrides[key] = {};
+  }
+  pendingOverrides[key][field] = newValue;
+  updateSaveBar();
+}
+
+function updateSaveBar() {
+  var bar = document.getElementById('save-bar');
+  var count = Object.keys(pendingOverrides).length;
+  if (count > 0) {
+    var editCount = 0;
+    for (var k in pendingOverrides) {
+      editCount += Object.keys(pendingOverrides[k]).length;
+    }
+    document.getElementById('save-bar-text').textContent = 'Unsaved changes (' + editCount + ' edit' + (editCount !== 1 ? 's' : '') + ')';
+    bar.classList.add('visible');
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function confirmSave() {
+  // Merge pending into saved overrides
+  var saved = loadPlayerOverrides();
+  for (var key in pendingOverrides) {
+    if (!saved[key]) {
+      saved[key] = {};
+    }
+    for (var field in pendingOverrides[key]) {
+      saved[key][field] = pendingOverrides[key][field];
+    }
+  }
+  savePlayerOverrides(saved);
+  pendingOverrides = {};
+  updateSaveBar();
+  renderRoster();
+
+  // Show success toast
+  showToast('Changes saved successfully');
+}
+
+function discardChanges() {
+  pendingOverrides = {};
+  updateSaveBar();
+  renderRoster();
+}
+
+function showToast(message) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#28a745;color:#fff;padding:12px 24px;border-radius:5px;font-size:14px;z-index:1001;box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.remove(); }, 2500);
+}
+
+function hasPendingChange(player, field) {
+  var key = getPlayerKey(player);
+  return pendingOverrides[key] && pendingOverrides[key].hasOwnProperty(field);
+}
 
 // Password Modal
 function showPasswordModal(playerIndex, field) {
@@ -2217,8 +2396,11 @@ function showEditModal(playerIndex, field) {
   var data = clubPlayers ? clubPlayers[currentTeam] : null;
   if (!data) return;
 
-  var player = data.players[playerIndex];
-  if (!player) return;
+  var originalPlayer = data.players[playerIndex];
+  if (!originalPlayer) return;
+
+  // Apply overrides to get current value
+  var player = applyOverrides(originalPlayer, clubId, currentTeam);
 
   document.getElementById('edit-field-label').innerHTML = 'Player: <strong id="edit-player-name">' + player.name + '</strong>';
   document.getElementById('edit-field-name').textContent = field.charAt(0).toUpperCase() + field.slice(1);
@@ -2257,7 +2439,7 @@ function saveEdit() {
   var input = document.getElementById('edit-value');
   var newValue = input.value;
 
-  // Handle director field edits
+  // Handle director field edits (save immediately - not player data)
   if (pendingEdit.type === 'director') {
     ensureDirectorsArray();
     if (currentClub.directors[pendingEdit.directorIndex]) {
@@ -2269,19 +2451,21 @@ function saveEdit() {
     }
   }
 
-  // Handle player field edits
+  // Handle player field edits - stage to pending overrides
   var clubPlayers = playersData[clubId];
   var data = clubPlayers ? clubPlayers[currentTeam] : null;
   if (!data) return;
+
+  var player = data.players[pendingEdit.playerIndex];
+  if (!player) return;
 
   // Convert to appropriate type
   if (['yob', 'goals', 'games', 'jersey'].indexOf(pendingEdit.field) !== -1) {
     newValue = parseInt(newValue) || 0;
   }
 
-  // Update the data
-  data.players[pendingEdit.playerIndex][pendingEdit.field] = newValue;
-  data.lastUpdated = new Date().toISOString().split('T')[0];
+  // Stage the change (don't save yet)
+  stagePendingChange(player, pendingEdit.field, newValue);
 
   closeEditModal();
   renderRoster();
