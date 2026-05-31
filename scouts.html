@@ -1131,6 +1131,7 @@
             font-weight: 600;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="header">
@@ -1624,12 +1625,197 @@
     </div>
 
     <script>
-        // Data storage (localStorage for now)
-        var scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
-        var players = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
+        // ═══════════════════════════════════════════════════
+        // SUPABASE INTEGRATION
+        // ═══════════════════════════════════════════════════
+        const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
+
+        let supabaseClient = null;
+        let supabaseConnected = false;
+
+        // Initialize Supabase client
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('[Supabase] Client initialized');
+        } catch (e) {
+            console.warn('[Supabase] Failed to initialize client:', e);
+        }
+
+        // Data storage (will be populated from Supabase or localStorage)
+        var scouts = [];
+        var players = [];
         var selectedScoutId = null;
         var isAdminMode = false;
         var ADMIN_PASSWORD = 'NYRBScout@26';
+
+        // Load data from Supabase
+        async function loadFromSupabase() {
+            if (!supabaseClient) return false;
+            try {
+                console.log('[Supabase] Loading scouts data...');
+
+                // Load scouts
+                const { data: scoutsData, error: scoutsError } = await supabaseClient
+                    .from('scouts')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (scoutsError) {
+                    console.warn('[Supabase] Scouts error:', scoutsError);
+                    return false;
+                }
+
+                if (scoutsData && scoutsData.length > 0) {
+                    scouts = scoutsData.map(s => ({
+                        id: s.id,
+                        name: s.name
+                    }));
+                    console.log('[Supabase] Loaded', scouts.length, 'scouts');
+                }
+
+                // Load players
+                const { data: playersData, error: playersError } = await supabaseClient
+                    .from('scout_players')
+                    .select('*')
+                    .order('date_added', { ascending: false });
+
+                if (playersError) {
+                    console.warn('[Supabase] Players error:', playersError);
+                    return false;
+                }
+
+                if (playersData && playersData.length > 0) {
+                    players = playersData.map(p => ({
+                        id: p.id,
+                        scoutId: p.scout_id,
+                        name: p.name,
+                        club: p.club,
+                        squad: p.squad,
+                        jersey: p.jersey,
+                        yob: p.yob,
+                        foot: p.foot,
+                        position: p.position,
+                        status: p.status || 'watching',
+                        notes: p.notes,
+                        videoLinks: p.video_links || [],
+                        sharedWith: p.shared_with || [],
+                        dateAdded: p.date_added
+                    }));
+                    console.log('[Supabase] Loaded', players.length, 'players');
+                }
+
+                // Load reports
+                const { data: reportsData, error: reportsError } = await supabaseClient
+                    .from('scout_reports')
+                    .select('*')
+                    .order('report_date', { ascending: false });
+
+                if (reportsError) {
+                    console.warn('[Supabase] Reports error:', reportsError);
+                } else if (reportsData && reportsData.length > 0) {
+                    reports = reportsData.map(r => ({
+                        id: r.id,
+                        playerId: r.player_id,
+                        authorId: r.author_id,
+                        authorName: r.author_name,
+                        date: r.report_date,
+                        match: r.match,
+                        source: r.source,
+                        build: r.build,
+                        weakerFoot: r.weaker_foot,
+                        withBall: r.with_ball,
+                        againstBall: r.against_ball,
+                        nextAction: r.next_action,
+                        priority: r.priority,
+                        notes: r.notes
+                    }));
+                    console.log('[Supabase] Loaded', reports.length, 'reports');
+                }
+
+                supabaseConnected = true;
+                return true;
+            } catch (e) {
+                console.error('[Supabase] Load error:', e);
+                return false;
+            }
+        }
+
+        // Save scout to Supabase
+        async function saveScoutToSupabase(scout) {
+            if (!supabaseClient || !supabaseConnected) return;
+            try {
+                await supabaseClient.from('scouts').upsert({
+                    id: scout.id,
+                    name: scout.name,
+                    updated_at: new Date().toISOString()
+                });
+            } catch (e) {
+                console.error('[Supabase] Save scout error:', e);
+            }
+        }
+
+        // Save player to Supabase
+        async function savePlayerToSupabase(player) {
+            if (!supabaseClient || !supabaseConnected) return;
+            try {
+                await supabaseClient.from('scout_players').upsert({
+                    id: player.id,
+                    scout_id: player.scoutId,
+                    name: player.name,
+                    club: player.club,
+                    squad: player.squad,
+                    jersey: player.jersey,
+                    yob: player.yob,
+                    foot: player.foot,
+                    position: player.position,
+                    status: player.status || 'watching',
+                    notes: player.notes,
+                    video_links: player.videoLinks || [],
+                    shared_with: player.sharedWith || [],
+                    date_added: player.dateAdded,
+                    updated_at: new Date().toISOString()
+                });
+            } catch (e) {
+                console.error('[Supabase] Save player error:', e);
+            }
+        }
+
+        // Save report to Supabase
+        async function saveReportToSupabase(report) {
+            if (!supabaseClient || !supabaseConnected) return;
+            try {
+                await supabaseClient.from('scout_reports').upsert({
+                    id: report.id,
+                    player_id: report.playerId,
+                    author_id: report.authorId,
+                    author_name: report.authorName,
+                    report_date: report.date,
+                    match: report.match,
+                    source: report.source,
+                    build: report.build,
+                    weaker_foot: report.weakerFoot,
+                    with_ball: report.withBall,
+                    against_ball: report.againstBall,
+                    next_action: report.nextAction,
+                    priority: report.priority,
+                    notes: report.notes,
+                    updated_at: new Date().toISOString()
+                });
+            } catch (e) {
+                console.error('[Supabase] Save report error:', e);
+            }
+        }
+
+        // Delete from Supabase
+        async function deleteFromSupabase(table, id) {
+            if (!supabaseClient || !supabaseConnected) return;
+            try {
+                await supabaseClient.from(table).delete().eq('id', id);
+            } catch (e) {
+                console.error('[Supabase] Delete error:', e);
+            }
+        }
 
         // ═══════════════════════════════════════════════════
         // SHARED PLAYER OVERRIDES (syncs with team.html)
@@ -1750,11 +1936,6 @@
                 }
             }
         }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            renderScouts();
-        });
 
         // Render scout list
         function renderScouts() {
@@ -1948,11 +2129,13 @@
             var name = form.name.value.trim();
 
             if (name) {
-                scouts.push({
+                var newScout = {
                     id: Date.now().toString(),
                     name: name
-                });
+                };
+                scouts.push(newScout);
                 localStorage.setItem('scouts', JSON.stringify(scouts));
+                saveScoutToSupabase(newScout);
                 renderScouts();
                 closeAddScoutModal();
             }
@@ -1976,6 +2159,7 @@
             if (scout && name) {
                 scout.name = name;
                 localStorage.setItem('scouts', JSON.stringify(scouts));
+                saveScoutToSupabase(scout);
                 renderScouts();
                 if (selectedScoutId === id) {
                     document.getElementById('selectedScoutName').textContent = name + "'s Watchlist";
@@ -1987,10 +2171,19 @@
         // Delete scout
         function deleteScout(id) {
             if (confirm('Delete this scout and all their tracked players?')) {
+                // Get players to delete from Supabase
+                var playersToDelete = players.filter(function(p) { return p.scoutId === id; });
+
                 scouts = scouts.filter(function(s) { return s.id !== id; });
                 players = players.filter(function(p) { return p.scoutId !== id; });
                 localStorage.setItem('scouts', JSON.stringify(scouts));
                 localStorage.setItem('scoutPlayers', JSON.stringify(players));
+
+                // Delete from Supabase
+                playersToDelete.forEach(function(p) {
+                    deleteFromSupabase('scout_players', p.id);
+                });
+                deleteFromSupabase('scouts', id);
 
                 if (selectedScoutId === id) {
                     selectedScoutId = null;
@@ -2006,7 +2199,7 @@
             e.preventDefault();
             var form = e.target;
 
-            players.push({
+            var newPlayer = {
                 id: Date.now().toString(),
                 scoutId: selectedScoutId,
                 name: form.player_name.value.trim(),
@@ -2019,9 +2212,11 @@
                 status: form.status.value || 'watching',
                 notes: form.notes.value.trim(),
                 dateAdded: new Date().toISOString()
-            });
+            };
+            players.push(newPlayer);
 
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            savePlayerToSupabase(newPlayer);
             renderPlayers();
             selectScout(selectedScoutId); // Refresh stats
             closeAddPlayerModal();
@@ -2032,6 +2227,7 @@
             if (confirm('Remove this player from watchlist?')) {
                 players = players.filter(function(p) { return p.id !== id; });
                 localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                deleteFromSupabase('scout_players', id);
                 renderPlayers();
                 selectScout(selectedScoutId); // Refresh stats
             }
@@ -2043,7 +2239,7 @@
 
         var currentPlayerId = null;
         var isEditMode = false;
-        var reports = JSON.parse(localStorage.getItem('scoutReports') || '[]');
+        var reports = []; // Will be loaded from Supabase or localStorage
 
         function viewPlayer(id) {
             currentPlayerId = id;
@@ -2178,6 +2374,7 @@
             player.jersey = newJersey;
 
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            savePlayerToSupabase(player);
 
             // Update display values
             document.getElementById('detailClub').textContent = player.club || '-';
@@ -2218,6 +2415,7 @@
             if (player) {
                 player.status = newStatus;
                 localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                savePlayerToSupabase(player);
                 renderPlayers();
             }
         }
@@ -2260,6 +2458,7 @@
             if (!player.videoLinks) player.videoLinks = [];
             player.videoLinks.push(url);
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            savePlayerToSupabase(player);
 
             input.value = '';
             renderVideoLinks(currentPlayerId);
@@ -2284,6 +2483,7 @@
             if (player && player.videoLinks) {
                 player.videoLinks.splice(idx, 1);
                 localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                savePlayerToSupabase(player);
                 renderVideoLinks(currentPlayerId);
             }
         }
@@ -2314,6 +2514,7 @@
                     existingReport.lastModified = new Date().toISOString();
 
                     localStorage.setItem('scoutReports', JSON.stringify(reports));
+                    saveReportToSupabase(existingReport);
                     editingReportId = null;
 
                     // Reset button text
@@ -2348,6 +2549,7 @@
 
             reports.push(report);
             localStorage.setItem('scoutReports', JSON.stringify(reports));
+            saveReportToSupabase(report);
 
             // Reset form
             document.getElementById('reportForm').reset();
@@ -2478,6 +2680,7 @@
             if (confirm('Delete this scouting report?')) {
                 reports = reports.filter(function(r) { return r.id !== reportId; });
                 localStorage.setItem('scoutReports', JSON.stringify(reports));
+                deleteFromSupabase('scout_reports', reportId);
                 renderReportHistory(currentPlayerId);
                 renderPlayers();
                 showToast('Report deleted');
@@ -2548,6 +2751,7 @@
             if (player.sharedWith.indexOf(scoutId) === -1) {
                 player.sharedWith.push(scoutId);
                 localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                savePlayerToSupabase(player);
                 showToast('Shared with ' + scout.name + '!');
                 closeShareModal();
             }
@@ -2625,6 +2829,7 @@
 
             players.push(newPlayer);
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            savePlayerToSupabase(newPlayer);
 
             renderSharedPlayers();
             selectScout(selectedScoutId); // Refresh counts
@@ -2757,8 +2962,19 @@
             grid.innerHTML = html;
         }
 
-        // Initialize compare button on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Try Supabase first
+            const loaded = await loadFromSupabase();
+
+            if (!loaded) {
+                // Fallback to localStorage
+                console.log('[Scouts] Falling back to localStorage');
+                scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+                players = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
+                reports = JSON.parse(localStorage.getItem('scoutReports') || '[]');
+            }
+
             renderScouts();
             updateCompareButton();
         });
