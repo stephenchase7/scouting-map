@@ -1,0 +1,33 @@
+{
+  "name": "NYRB Scouting",
+  "short_name": "Scout",
+  "description": "MLS NEXT Youth Soccer Scouting Platform",
+  "start_url": "/scouts.html",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#c8102e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "MLS Logos/NYRB.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Quick Add Player",
+      "short_name": "Quick Add",
+      "url": "/scouts.html?action=quickadd",
+      "icons": [{ "src": "MLS Logos/NYRB.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Match Mode",
+      "short_name": "Match",
+      "url": "/scouts.html?action=matchmode",
+      "icons": [{ "src": "MLS Logos/NYRB.png", "sizes": "96x96" }]
+    }
+  ]
+}
