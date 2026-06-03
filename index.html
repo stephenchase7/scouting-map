@@ -556,6 +556,63 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .loading { opacity:0.7; pointer-events:none; }
 .form-error { color:#cc0000; font-size:11px; margin-top:4px; display:none; }
 .form-success { color:#2ecc71; font-size:12px; text-align:center; padding:10px; display:none; }
+
+/* Catchment Area Styles */
+.catchment-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.catchment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.catchment-toggle:hover {
+  background: #f0f0f0;
+  border-color: #ccc;
+}
+.catchment-toggle.active {
+  background: #fff5f5;
+  border-color: #cc0000;
+}
+.catchment-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #cc0000;
+  cursor: pointer;
+}
+.catchment-toggle label {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.catchment-toggle label small {
+  font-size: 9px;
+  font-weight: 400;
+  color: #888;
+  margin-top: 2px;
+}
+.catchment-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.catchment-1 { background: rgba(204, 0, 0, 0.4); border: 2px solid #cc0000; }
+.catchment-2 { background: rgba(0, 100, 200, 0.4); border: 2px solid #0064c8; }
+.catchment-3 { background: rgba(46, 204, 113, 0.4); border: 2px solid #2ecc71; }
+.open-territory { background: rgba(241, 196, 15, 0.4); border: 2px solid #f1c40f; }
 </style>
 <script src="playersData.js"></script>
 </head>
@@ -599,10 +656,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
           MLS NEXT Rules
         </a>
-        <a href="validation.html" class="tool-link">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-          Validation
-        </a>
       </div>
     </div>
   </div>
@@ -640,20 +693,55 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
             <option value="U19">U19</option>
           </select>
         </div>
-        <div class="filter-group">
-          <label>Distance</label>
-          <select class="filter-dropdown" id="distance-filter" onchange="applyFilters()">
-            <option value="">All</option>
-            <option value="50">&lt;50mi</option>
-            <option value="100">&lt;100mi</option>
-            <option value="200">&lt;200mi</option>
-          </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catchment Areas section -->
+  <div class="sidebar-section">
+    <div class="section-header" onclick="toggleSection('catchment')">
+      <h3>Catchment Areas</h3>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-content" id="catchment-content">
+      <div class="catchment-toggles">
+        <div class="catchment-toggle" onclick="toggleCatchment(1, this)">
+          <input type="checkbox" id="catchment-1-check">
+          <div class="catchment-indicator catchment-1"></div>
+          <label for="catchment-1-check">
+            Primary (75mi radius)
+            <small>NJ, NYC, CT, Eastern PA</small>
+          </label>
+        </div>
+        <div class="catchment-toggle" onclick="toggleCatchment(2, this)">
+          <input type="checkbox" id="catchment-2-check">
+          <div class="catchment-indicator catchment-2"></div>
+          <label for="catchment-2-check">
+            Regional (East Coast)
+            <small>DC, MD, VA, PA, CT, MA, NH, RI</small>
+          </label>
+        </div>
+        <div class="catchment-toggle" onclick="toggleCatchment(3, this)">
+          <input type="checkbox" id="catchment-3-check">
+          <div class="catchment-indicator catchment-3"></div>
+          <label for="catchment-3-check">
+            National (5-10% focus)
+            <small>Full country coverage</small>
+          </label>
+        </div>
+        <div class="catchment-toggle" onclick="toggleOpenTerritory(this)">
+          <input type="checkbox" id="open-territory-check">
+          <div class="catchment-indicator open-territory"></div>
+          <label for="open-territory-check">
+            Open Territory
+            <small>MI, NV - no MLS affiliate</small>
+          </label>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="club-count">Showing <span id="count-num">0</span> clubs</div>
+  <div id="club-count">Showing <span id="count-num">0</span> of <span id="count-total">0</span> clubs</div>
 
   <div id="club-list"></div>
 
@@ -1286,6 +1374,231 @@ rbMarker.bindPopup(
   '</div>'
 );
 
+// ── CATCHMENT AREAS ──
+var NYRB_LAT = 40.8167;
+var NYRB_LNG = -74.4028;
+var MILES_TO_METERS = 1609.34;
+
+// Catchment area layers
+var catchmentLayers = {
+  circle75: null,  // 75-mile radius circle
+  regionalCircle: null,  // Larger regional circle for visualization
+  openTerritoryMarkers: []
+};
+
+// Catchment area state
+var catchmentState = {
+  catchment1: false,  // 75mi radius
+  catchment2: false,  // Regional (includes catchment1 + states)
+  catchment3: false,  // National
+  openTerritory: false  // MI, NV highlight
+};
+
+// States in Catchment 2 (Regional)
+var CATCHMENT_2_STATES = ['DC', 'MD', 'VA', 'PA', 'CT', 'MA', 'NH', 'RI', 'NJ', 'NY'];
+
+// Open territory states (no MLS affiliate nearby)
+var OPEN_TERRITORY_STATES = ['MI', 'NV'];
+
+// Draw 75-mile radius circle (Catchment 1)
+function drawCatchment1Circle() {
+  if (!catchmentLayers.circle75) {
+    catchmentLayers.circle75 = L.circle([NYRB_LAT, NYRB_LNG], {
+      radius: 75 * MILES_TO_METERS,
+      color: '#cc0000',
+      fillColor: '#cc0000',
+      fillOpacity: 0.08,
+      weight: 2,
+      dashArray: '8, 4'
+    }).addTo(map);
+
+    // Add label at edge
+    var labelLat = NYRB_LAT + 0.9;  // Slightly north
+    catchmentLayers.circle75Label = L.marker([labelLat, NYRB_LNG], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="background:#cc0000;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;white-space:nowrap;">75 mi radius</div>',
+        iconAnchor: [35, 10]
+      })
+    }).addTo(map);
+  }
+}
+
+function removeCatchment1Circle() {
+  if (catchmentLayers.circle75) {
+    map.removeLayer(catchmentLayers.circle75);
+    catchmentLayers.circle75 = null;
+  }
+  if (catchmentLayers.circle75Label) {
+    map.removeLayer(catchmentLayers.circle75Label);
+    catchmentLayers.circle75Label = null;
+  }
+}
+
+// Calculate distance from NYRB in miles
+function distanceFromNYRB(lat, lng) {
+  var R = 3959; // Earth's radius in miles
+  var dLat = (lat - NYRB_LAT) * Math.PI / 180;
+  var dLng = (lng - NYRB_LNG) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(NYRB_LAT * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Check if club is in catchment area
+function isInCatchment(club, catchmentNum) {
+  if (catchmentNum === 1) {
+    // Within 75 miles of NYRB
+    return distanceFromNYRB(club.lat, club.lng) <= 75;
+  } else if (catchmentNum === 2) {
+    // Catchment 1 OR in regional states
+    return isInCatchment(club, 1) || CATCHMENT_2_STATES.includes(club.state);
+  } else if (catchmentNum === 3) {
+    // All clubs (national)
+    return true;
+  }
+  return false;
+}
+
+// Toggle catchment area visibility
+function toggleCatchment(num, element) {
+  var checkbox = document.getElementById('catchment-' + num + '-check');
+  checkbox.checked = !checkbox.checked;
+  catchmentState['catchment' + num] = checkbox.checked;
+
+  if (element) {
+    element.classList.toggle('active', checkbox.checked);
+  }
+
+  // Handle visual layers
+  if (num === 1) {
+    if (checkbox.checked) {
+      drawCatchment1Circle();
+    } else {
+      removeCatchment1Circle();
+    }
+  }
+
+  if (num === 2) {
+    // Catchment 2 includes catchment 1 circle
+    if (checkbox.checked) {
+      drawCatchment1Circle();
+      // Also check catchment 1 checkbox visually
+      document.getElementById('catchment-1-check').checked = true;
+      catchmentState.catchment1 = true;
+      var c1Element = document.querySelector('.catchment-toggle:nth-child(1)');
+      if (c1Element) c1Element.classList.add('active');
+    }
+  }
+
+  // Zoom to fit all clubs in the selected catchment area
+  if (checkbox.checked && (num === 1 || num === 2)) {
+    setTimeout(function() { zoomToCatchmentBounds(num); }, 100);
+  } else if (!checkbox.checked && num !== 3) {
+    // Reset to default view when unchecking
+    map.setView([40.82, -74.4], 7);
+  }
+
+  if (num === 3) {
+    // National view - zoom out to show US
+    if (checkbox.checked) {
+      map.setView([39.8, -98.5], 4);  // Center of US
+    } else {
+      map.setView([40.82, -74.4], 7);  // Back to Northeast
+    }
+  }
+
+  // Refresh the club list/map markers with filtering
+  applyFilters();
+}
+
+// Toggle open territory highlighting
+function toggleOpenTerritory(element) {
+  var checkbox = document.getElementById('open-territory-check');
+  checkbox.checked = !checkbox.checked;
+  catchmentState.openTerritory = checkbox.checked;
+
+  if (element) {
+    element.classList.toggle('active', checkbox.checked);
+  }
+
+  // Highlight open territory clubs
+  updateOpenTerritoryMarkers();
+  applyFilters();
+}
+
+// Update open territory markers with special styling
+function updateOpenTerritoryMarkers() {
+  // Clear existing open territory highlights
+  catchmentLayers.openTerritoryMarkers.forEach(function(marker) {
+    map.removeLayer(marker);
+  });
+  catchmentLayers.openTerritoryMarkers = [];
+
+  if (catchmentState.openTerritory) {
+    // Add pulsing highlight to open territory states on the map
+    // Michigan center
+    var miMarker = L.circleMarker([44.3148, -85.6024], {
+      radius: 30,
+      color: '#f1c40f',
+      fillColor: '#f1c40f',
+      fillOpacity: 0.15,
+      weight: 2
+    }).addTo(map);
+    miMarker.bindPopup('<b>Michigan</b><br>Open Territory - No MLS Affiliate');
+    catchmentLayers.openTerritoryMarkers.push(miMarker);
+
+    // Nevada (Las Vegas) center
+    var nvMarker = L.circleMarker([36.1699, -115.1398], {
+      radius: 30,
+      color: '#f1c40f',
+      fillColor: '#f1c40f',
+      fillOpacity: 0.15,
+      weight: 2
+    }).addTo(map);
+    nvMarker.bindPopup('<b>Las Vegas / Nevada</b><br>Open Territory - No MLS Affiliate');
+    catchmentLayers.openTerritoryMarkers.push(nvMarker);
+
+    // Zoom out to show open territories if catchment 3 is not active
+    if (!catchmentState.catchment3) {
+      map.setView([39.8, -98.5], 4);
+    }
+  }
+}
+
+// Zoom map to fit all clubs in catchment area
+function zoomToCatchmentBounds(catchmentNum) {
+  var boundsClubs = [];
+
+  clubs.forEach(function(club) {
+    if (!isValidCoordinate(club)) return;
+    if (isInCatchment(club, catchmentNum)) {
+      boundsClubs.push([club.lat, club.lng]);
+    }
+  });
+
+  if (boundsClubs.length > 0) {
+    var bounds = L.latLngBounds(boundsClubs);
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+  }
+}
+
+// Get catchment badge for club
+function getCatchmentBadge(club) {
+  if (OPEN_TERRITORY_STATES.includes(club.state)) {
+    return '<span style="background:#f1c40f;color:#333;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">OPEN</span>';
+  }
+  if (isInCatchment(club, 1)) {
+    return '<span style="background:#cc0000;color:#fff;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">C1</span>';
+  }
+  if (isInCatchment(club, 2)) {
+    return '<span style="background:#0064c8;color:#fff;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">C2</span>';
+  }
+  return '';
+}
+
 // ── MARKER BUILDER ──
 var markers = [];
 var selectedIdx = null;
@@ -1394,6 +1707,11 @@ function makePopupHtml(club) {
   }
   buttonsHtml += '</div>';
 
+  // Add delete button
+  var deleteHtml = '<div style="margin-top:8px;text-align:center;">' +
+    '<button onclick="deleteClub(\'' + club.clubId + '\')" class="popup-btn" style="background:#fee;color:#c00;border:1px solid #fcc;font-size:10px;padding:4px 8px;">Delete Club</button>' +
+    '</div>';
+
   return '<div class="popup-inner">' +
     '<div class="popup-header">' + logoHtml +
     '<div class="popup-title"><h3>' + club.name + '</h3><small>' + club.state + ' &bull; ' + club.division + '</small></div>' +
@@ -1401,7 +1719,99 @@ function makePopupHtml(club) {
     '<div class="popup-row"><span class="popup-label">League</span><span class="popup-value" style="color:' + color + '">' + club.league + '</span></div>' +
     '<div class="popup-row"><span class="popup-label">Drive from NYRB</span><span class="popup-value">' + club.driveMiles + ' mi &bull; ' + club.driveTime + '</span></div>' +
     buttonsHtml +
+    deleteHtml +
     '</div>';
+}
+
+// Delete club from map and database
+async function deleteClub(clubId) {
+  if (!clubId) {
+    alert('Cannot delete: No club ID');
+    return;
+  }
+
+  var club = clubs.find(function(c) { return c.clubId === clubId; });
+  var clubName = club ? club.name : clubId;
+
+  if (!confirm('Delete "' + clubName + '" from the map?\n\nThis will remove the club from the database permanently.')) {
+    return;
+  }
+
+  try {
+    // Delete from Supabase
+    if (!supabaseClient) {
+      initSupabase();
+    }
+
+    const { error } = await supabaseClient
+      .from('clubs')
+      .delete()
+      .eq('club_id', clubId);
+
+    if (error) {
+      console.error('Supabase delete error:', error);
+      alert('Database error: ' + error.message);
+      return;
+    }
+
+    // Remove from local clubs array
+    var clubIndex = clubs.findIndex(function(c) { return c.clubId === clubId; });
+    if (clubIndex !== -1) {
+      // Remove marker from map
+      if (markers[clubIndex]) {
+        map.removeLayer(markers[clubIndex]);
+        markers.splice(clubIndex, 1);
+      }
+      clubs.splice(clubIndex, 1);
+    }
+
+    // Also remove from localStorage custom clubs if present
+    try {
+      var saved = localStorage.getItem('customClubs');
+      if (saved) {
+        var customClubs = JSON.parse(saved);
+        customClubs = customClubs.filter(function(c) { return c.clubId !== clubId; });
+        localStorage.setItem('customClubs', JSON.stringify(customClubs));
+      }
+    } catch (e) {}
+
+    // Close any open popup
+    map.closePopup();
+
+    // Rebuild markers array to fix indices
+    rebuildMarkers();
+
+    // Update sidebar
+    buildList();
+
+    alert('"' + clubName + '" has been deleted.');
+
+  } catch (err) {
+    console.error('Delete error:', err);
+    alert('Error deleting club: ' + err.message);
+  }
+}
+
+// Rebuild all markers (after delete)
+function rebuildMarkers() {
+  // Clear all existing markers
+  markers.forEach(function(m) {
+    if (m) map.removeLayer(m);
+  });
+  markers = [];
+
+  // Recreate markers for all clubs
+  clubs.forEach(function(club, idx) {
+    if (!isValidCoordinate(club)) {
+      markers.push(null);
+      return;
+    }
+    var icon = makeClubIcon(club, 38);
+    var marker = L.marker([club.lat, club.lng], {icon: icon}).addTo(map);
+    marker.bindPopup(makePopupHtml(club), {maxWidth: 250});
+    marker.on('click', function() { selectClub(idx); });
+    markers.push(marker);
+  });
 }
 
 function makeCardHtml(club) {
@@ -1541,6 +1951,21 @@ function buildList() {
     // Distance filter
     if (filters.distance && club.driveMiles > parseInt(filters.distance)) return;
 
+    // Catchment area filter - if any catchment is active, filter by it
+    if (catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
+      // Only Catchment 1 active - show only clubs within 75mi
+      if (!isInCatchment(club, 1)) return;
+    } else if (catchmentState.catchment2 && !catchmentState.catchment3) {
+      // Catchment 2 active - show clubs in catchment 2 states + catchment 1
+      if (!isInCatchment(club, 2)) return;
+    }
+    // Catchment 3 (national) shows all clubs - no filter
+
+    // Open territory filter - if active alone, show only open territory clubs
+    if (catchmentState.openTerritory && !catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
+      if (!OPEN_TERRITORY_STATES.includes(club.state)) return;
+    }
+
     count++;
 
     // Ensure distance data is calculated
@@ -1562,9 +1987,12 @@ function buildList() {
     // Format distance display (hide if 0 mi)
     var distanceText = (club.driveMiles > 0) ? ' &bull; ' + club.driveMiles + ' mi &bull; ' + club.driveTime : '';
 
+    // Add catchment badge if any catchment is active
+    var catchmentBadge = (catchmentState.catchment1 || catchmentState.catchment2 || catchmentState.catchment3 || catchmentState.openTerritory) ? getCatchmentBadge(club) : '';
+
     div.innerHTML = logoHtml +
       '<div class="club-info">' +
-      '<div class="club-name">' + club.name + '</div>' +
+      '<div class="club-name">' + club.name + catchmentBadge + '</div>' +
       '<div class="club-meta">' + club.state + ' &bull; ' + club.division + distanceText + '</div>' +
       '</div>' +
       '<div class="tier-badge">' + badge + '</div>';
@@ -1572,7 +2000,11 @@ function buildList() {
     list.appendChild(div);
   });
 
+  // Calculate total valid clubs
+  var totalClubs = clubs.filter(function(c) { return isValidCoordinate(c); }).length;
+
   document.getElementById('count-num').textContent = count;
+  document.getElementById('count-total').textContent = totalClubs;
 }
 
 // Validate club coordinates
@@ -1622,7 +2054,21 @@ function updateMarkerVisibility() {
     var matchesSearch = !searchVal || club.name.toLowerCase().indexOf(searchVal) !== -1 || club.division.toLowerCase().indexOf(searchVal) !== -1;
     var filterMatch = matchesFilters(club);
     var matchesDistance = !filters.distance || club.driveMiles <= parseInt(filters.distance);
-    if (matchesSearch && filterMatch && matchesDistance) {
+
+    // Catchment area filter
+    var matchesCatchment = true;
+    if (catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
+      matchesCatchment = isInCatchment(club, 1);
+    } else if (catchmentState.catchment2 && !catchmentState.catchment3) {
+      matchesCatchment = isInCatchment(club, 2);
+    }
+
+    // Open territory filter
+    if (catchmentState.openTerritory && !catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
+      matchesCatchment = OPEN_TERRITORY_STATES.includes(club.state);
+    }
+
+    if (matchesSearch && filterMatch && matchesDistance && matchesCatchment) {
       markers[idx].addTo(map);
     } else {
       map.removeLayer(markers[idx]);
@@ -1634,7 +2080,7 @@ function applyFilters() {
   // Read filter values from dropdowns
   filters.division = document.getElementById('division-filter').value;
   filters.age = document.getElementById('age-filter').value;
-  filters.distance = document.getElementById('distance-filter').value;
+  filters.distance = '';  // Distance filter removed - using catchment areas instead
 
   // Update active filter chips
   updateActiveFilters();
@@ -1661,26 +2107,18 @@ function updateActiveFilters() {
     chips.innerHTML += '<span class="filter-chip">' + filters.age + '<span class="filter-chip-close" onclick="clearFilter(\'age\')">&times;</span></span>';
   }
 
-  if (filters.distance) {
-    hasFilters = true;
-    var distanceLabel = filters.distance === '50' ? '<50mi' : filters.distance === '100' ? '<100mi' : '<200mi';
-    chips.innerHTML += '<span class="filter-chip">' + distanceLabel + '<span class="filter-chip-close" onclick="clearFilter(\'distance\')">&times;</span></span>';
-  }
-
   container.classList.toggle('visible', hasFilters);
 }
 
 function clearFilter(type) {
   if (type === 'division') document.getElementById('division-filter').value = '';
   if (type === 'age') document.getElementById('age-filter').value = '';
-  if (type === 'distance') document.getElementById('distance-filter').value = '';
   applyFilters();
 }
 
 function clearAllFilters() {
   document.getElementById('division-filter').value = '';
   document.getElementById('age-filter').value = '';
-  document.getElementById('distance-filter').value = '';
   applyFilters();
 }
 
@@ -2838,21 +3276,54 @@ async function submitAddClub(event) {
     // Step 7: Add to clubs array
     clubs.push(newClub);
 
-    // Step 8: Save to localStorage (temporary - see warning in success message)
-    var existingCustomClubs = [];
+    // Step 8: Save to Supabase (permanent)
+    submitBtn.textContent = 'Saving to database...';
     try {
-      var saved = localStorage.getItem('customClubs');
-      if (saved) {
-        existingCustomClubs = JSON.parse(saved);
+      if (!supabaseClient) {
+        initSupabase();
       }
-    } catch (e) {
-      console.error('Error loading existing custom clubs:', e);
+
+      const supabaseClub = {
+        club_id: clubId,
+        name: clubName,
+        state: geocodeResult.state,
+        league: league,
+        division: division,
+        lat: geocodeResult.lat,
+        lng: geocodeResult.lng,
+        logo_url: logoBase64 || null,
+        website: '',
+        drive_miles: driveMiles,
+        drive_time: driveTime,
+        initials: initials,
+        is_pro: false,
+        pathway: 'both'
+      };
+
+      const { data, error } = await supabaseClient
+        .from('clubs')
+        .insert([supabaseClub])
+        .select();
+
+      if (error) {
+        console.error('Supabase save error:', error);
+        // Fall back to localStorage if Supabase fails
+        var existingCustomClubs = [];
+        try {
+          var saved = localStorage.getItem('customClubs');
+          if (saved) existingCustomClubs = JSON.parse(saved);
+        } catch (e) {}
+        existingCustomClubs.push(newClub);
+        localStorage.setItem('customClubs', JSON.stringify(existingCustomClubs));
+        throw new Error('Database save failed: ' + error.message + '. Saved locally instead.');
+      }
+
+      console.log('[Supabase] Club saved:', data);
+    } catch (supabaseError) {
+      console.error('Supabase error:', supabaseError);
     }
 
-    existingCustomClubs.push(newClub);
-    localStorage.setItem('customClubs', JSON.stringify(existingCustomClubs));
-
-    // Step 8: Create marker on map immediately
+    // Step 9: Create marker on map immediately
     submitBtn.textContent = 'Adding to map...';
     var icon = makeClubIcon(newClub, 38);
     var marker = L.marker([newClub.lat, newClub.lng], {icon: icon}).addTo(map);
@@ -2886,12 +3357,8 @@ async function submitAddClub(event) {
     successMsg += 'State: ' + geocodeResult.state + '\n';
     successMsg += 'Drive from NYRB: ' + driveMiles + ' mi • ' + driveTime + '\n\n';
 
-    successMsg += '⚠ IMPORTANT: This club is saved in your browser only.\n';
-    successMsg += 'To make it permanent for everyone:\n\n';
-    successMsg += '1. Scrape data: python3 scraper3.py\n';
-    successMsg += '2. Import data: python3 import_to_scouting.py "' + clubId + '/U13 ' + clubName + '.json"\n';
-    successMsg += '3. Or deploy: python3 deploy_club.py ' + clubId + '\n\n';
-    successMsg += 'The club will appear on this browser until then.';
+    successMsg += '✓ Club saved to database permanently!\n';
+    successMsg += 'Visible to all users on refresh.';
 
     successEl.innerHTML = '<pre style="text-align:left;font-size:11px;overflow-x:auto;max-height:400px;white-space:pre-wrap;line-height:1.4;">' + successMsg + '</pre>';
     successEl.style.display = 'block';
