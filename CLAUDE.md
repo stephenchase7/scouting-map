@@ -10,42 +10,42 @@ Static web application for MLS NEXT youth soccer scouting. Displays club locatio
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Leaflet.js map with club markers, filtering, "Add Club" feature |
+| `index.html` | Leaflet.js map with club markers, catchment areas, Add/Delete Club |
 | `team.html` | Team rosters by age group (U13-U19), player stats tables |
 | `scouts.html` | Scout database, player watchlists, scouting reports, player comparison |
 | `rules.html` | MLS NEXT rules viewer with AI Q&A (requires rules_server.py) |
 | `playersData.js` | Embedded player statistics loaded by team.html |
+| `live.html` | Live match tracking |
 
 ## Running Locally
 
 ```bash
-# Static pages (map, team rosters) - just open in browser
-open index.html
+# Static pages - use Python HTTP server
+cd scouting-map
+python3 -m http.server 8001
+# Open http://localhost:8001/index.html
 
-# Rules page with AI search - requires Python server
+# Rules page with AI search - requires separate server
 python3 rules_server.py
 # Then open http://localhost:8080/rules.html
-
-# Add Club server (for geocoding/file updates)
-python3 server.py
-# or
-python3 add_club_server.py
 ```
 
 ## Data Storage
 
-**Embedded in HTML/JS (permanent):**
+**Supabase (primary, permanent):**
+- `clubs` table - Club metadata, coordinates, logos (Add/Delete Club uses this)
+- `squad_data` table - Player rosters and statistics
+- API key in `SUPABASE_ANON_KEY` constant (index.html, team.html, scouts.html)
+
+**Embedded in HTML/JS (fallback):**
 - `index.html`: `clubs` array with coordinates, logos, divisions
 - `team.html`: `clubsData` (metadata) and `playersData` (player stats)
-- `playersData.js`: Alternative player data source
 
-**localStorage (browser-only, not permanent):**
+**localStorage (browser-only):**
 - `scouts` - Scout profiles
 - `scoutPlayers` - Players in watchlists
 - `scoutReports` - Scouting reports with ratings
-- `customClubs` - Clubs added via "Add Club" button
 - `compareCart` - Global player comparison cart (shared between scouts.html and team.html)
-- `clubData_{id}` - Director edits for clubs
 
 ## Authentication
 
@@ -55,13 +55,18 @@ Password `NYRBScout@26` unlocks:
 
 ## Architecture Notes
 
-**scouts.html features:**
-- Scout CRUD with localStorage persistence
-- Player watchlist per scout
-- Scouting reports with custom fields (Match, Build, Next Action, Priority)
-- Video links per player
-- Share players between scouts
-- Global compare cart (syncs with team.html via localStorage)
+**index.html features:**
+- Leaflet.js map centered on NYRB HQ (40.8167, -74.4028)
+- Club markers with custom icons (logos or initials)
+- **Catchment Areas** - 3 scouting zones:
+  - Primary: 75-mile radius circle from NYRB
+  - Regional: East Coast states (DC, MD, VA, PA, CT, MA, NH, RI, NJ, NY)
+  - National: Full US view
+  - Open Territory: Highlights MI, NV (no MLS affiliate)
+- Division filter dropdown
+- Add Club: Saves directly to Supabase (permanent)
+- Delete Club: Removes from Supabase via popup button
+- Drive distance calculation from NYRB HQ
 
 **team.html features:**
 - Age group tabs (U13-U19)
@@ -70,12 +75,13 @@ Password `NYRBScout@26` unlocks:
 - "Add to Watchlist" button links to scouts.html
 - Global compare cart button
 
-**index.html features:**
-- Leaflet.js map centered on NYRB (40.82, -74.4)
-- Club markers with custom icons (logos or initials)
-- Sidebar with search, division/distance filters
-- "Add Club" with geocoding, CSV validation, logo upload
-- Drive distance calculation from NYRB HQ
+**scouts.html features:**
+- Scout CRUD with localStorage persistence
+- Player watchlist per scout
+- Scouting reports with custom fields (Match, Build, Next Action, Priority)
+- Video links per player
+- Share players between scouts
+- Global compare cart (syncs with team.html via localStorage)
 
 **rules.html + rules_server.py:**
 - Loads 4 MLS NEXT documents as semantic HTML
@@ -92,10 +98,10 @@ Mappings in parent directory: `scraper3.py` and `import_to_scouting.py`
 
 ## Deployment
 
-This is a separate git repo deployed to Vercel:
+Git repo deployed to Vercel (auto-deploys on push):
 ```bash
+gh auth switch --user stephenchase7  # if needed
 git add . && git commit -m "message" && git push
-vercel --prod  # if needed
 ```
 
 Live URLs:
@@ -104,7 +110,8 @@ Live URLs:
 
 ## Supabase Integration
 
-Player data loads from Supabase first, falls back to embedded data:
-- API key in `SUPABASE_ANON_KEY` constant (index.html, team.html)
-- Tables: `clubs`, `squad_data`, `club_directors`
-- Upload via `import_to_scouting.py --upload-db` (parent directory)
+Data loads from Supabase first, falls back to embedded data:
+- Project: `pjorqdzlzgwqpivoibyx.supabase.co`
+- Tables: `clubs`, `squad_data`
+- Add Club and Delete Club write directly to Supabase
+- Upload player data via `import_to_scouting.py --upload-db` (parent directory)
