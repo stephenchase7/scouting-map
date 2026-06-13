@@ -14,8 +14,6 @@ Static web application for MLS NEXT youth soccer scouting. Displays club locatio
 | `team.html` | Team rosters by age group (U13-U19), player stats tables |
 | `scouts.html` | Scout database, player watchlists, scouting reports, player comparison |
 | `rules.html` | MLS NEXT rules viewer with AI Q&A (requires rules_server.py) |
-| `playersData.js` | Embedded player statistics loaded by team.html |
-| `live.html` | Live match tracking |
 
 ## Running Locally
 
@@ -32,14 +30,15 @@ python3 rules_server.py
 
 ## Data Storage
 
-**Supabase (primary, permanent):**
+**Supabase (primary, no fallback):**
 - `clubs` table - Club metadata, coordinates, logos (Add/Delete Club uses this)
 - `squad_data` table - Player rosters and statistics
 - API key in `SUPABASE_ANON_KEY` constant (index.html, team.html, scouts.html)
+- All player data loads from Supabase; if unavailable, pages show error state
 
-**Embedded in HTML/JS (fallback):**
-- `index.html`: `clubs` array with coordinates, logos, divisions
-- `team.html`: `clubsData` (metadata) and `playersData` (player stats)
+**Embedded in HTML/JS (static reference data only):**
+- `index.html`: `clubs` array for map display, `csvTeamData` for division validation
+- `team.html`: `clubsData` (club metadata like logos, directors)
 
 **localStorage (browser-only):**
 - `scouts` - Scout profiles

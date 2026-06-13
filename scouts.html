@@ -1745,6 +1745,71 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
+
+        /* Mobile responsive styles */
+        @media (max-width: 1024px) {
+            .main-container { flex-direction: column; height: auto; min-height: calc(100vh - 58px); }
+            .scout-panel, .player-panel, .detail-panel {
+                width: 100%;
+                min-width: 100%;
+                max-width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .scout-panel { max-height: 200px; }
+            .player-panel { max-height: 300px; flex: none; }
+            .detail-panel { flex: 1; min-height: 400px; }
+            .scout-list { max-height: 140px; }
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 12px 16px; }
+            .header h1 { font-size: 14px; }
+            .header-nav { gap: 12px; }
+            .header-nav a { font-size: 11px; }
+
+            .panel-header { padding: 12px; }
+            .panel-title { font-size: 13px; }
+            .btn-add { padding: 6px 10px; font-size: 11px; }
+
+            .scout-item { padding: 10px 12px; gap: 10px; }
+            .scout-avatar { width: 32px; height: 32px; font-size: 12px; }
+            .scout-name { font-size: 13px; }
+            .scout-region { font-size: 10px; }
+
+            .player-item { padding: 10px 12px; }
+            .player-avatar { width: 32px; height: 32px; font-size: 11px; }
+            .player-name { font-size: 13px; }
+            .player-meta { font-size: 10px; }
+
+            .detail-section { padding: 12px; }
+            .section-title { font-size: 13px; }
+
+            /* Modals */
+            .modal { padding: 20px; max-width: 95%; margin: 10px; }
+            .modal h2 { font-size: 18px; }
+            .form-group input, .form-group select, .form-group textarea { font-size: 14px; padding: 10px; }
+
+            /* Compare modal mobile */
+            .compare-modal { width: 95%; max-height: 90vh; }
+            .compare-table { font-size: 11px; }
+            .compare-table th, .compare-table td { padding: 8px 6px; }
+
+            /* Share modal */
+            .share-modal { width: 95%; }
+        }
+
+        @media (max-width: 480px) {
+            .scout-panel { max-height: 180px; }
+            .player-panel { max-height: 250px; }
+            .scout-list { max-height: 120px; }
+
+            .header-nav a { font-size: 10px; }
+            .admin-btn { padding: 4px 8px; font-size: 10px; }
+
+            .rating-group { flex-direction: column; gap: 8px; }
+            .rating-item { width: 100%; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1753,7 +1818,6 @@
         <h1>Scout Database</h1>
         <div class="header-nav">
             <a href="index.html">Map</a>
-            <a href="live.html">Live Scouting</a>
             <a href="rules.html">Rules</a>
             <button class="admin-btn" id="adminBtn" onclick="toggleAdminMode()">🔒</button>
         </div>

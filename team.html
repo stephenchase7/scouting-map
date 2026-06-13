@@ -855,6 +855,54 @@ td.editable:hover::after {
   font-size: 13px;
   background: #fff;
 }
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .header { padding: 15px; flex-wrap: wrap; gap: 12px; }
+  .header img, .header-initials { width: 50px; height: 50px; }
+  .header-info h1 { font-size: 18px; }
+  .header-info p { font-size: 12px; }
+  .back-btn { padding: 8px 14px; font-size: 12px; }
+
+  .club-info { padding: 15px; gap: 20px; }
+  .info-block h3 { font-size: 9px; }
+  .info-block p { font-size: 13px; }
+
+  .tabs { padding: 0 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab { padding: 12px 16px; font-size: 13px; white-space: nowrap; }
+
+  .content { padding: 15px; }
+  .roster-header { flex-direction: column; gap: 12px; align-items: stretch; }
+  .roster-controls { flex-wrap: wrap; }
+
+  .filter-bar { flex-direction: column; gap: 10px; }
+  .filter-group { width: 100%; }
+  .filter-group select, .filter-group input { font-size: 14px; padding: 10px 12px; }
+
+  .roster-table { font-size: 12px; }
+  .roster-table th, .roster-table td { padding: 10px 8px; }
+  .player-name-cell { min-width: 120px; }
+
+  /* Hide less important columns on mobile */
+  .roster-table th:nth-child(2), .roster-table td:nth-child(2) { display: none; } /* Jersey */
+  .roster-table th:nth-child(6), .roster-table td:nth-child(6) { display: none; } /* Games */
+
+  /* Player detail modal mobile */
+  .player-detail-modal .modal-content { width: 95%; margin: 10px auto; padding: 15px; max-height: 90vh; }
+  .detail-header h2 { font-size: 20px; }
+  .stat-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 12px; }
+  .stat-value { font-size: 24px; }
+  .opponent-grid { grid-template-columns: 1fr; }
+  .goal-log { max-height: 200px; }
+}
+
+@media (max-width: 480px) {
+  .header { text-align: center; justify-content: center; }
+  .back-btn { width: 100%; text-align: center; }
+  .stat-cards { grid-template-columns: 1fr 1fr; }
+  .tabs { justify-content: flex-start; }
+}
 </style>
 </head>
 <body>
@@ -1435,12 +1483,14 @@ var clubsData = {
     "director": { "name": "", "email": "", "phone": "" }
   }
 };
+
+// Initialize empty playersData - populated from Supabase only
+var playersData = {};
 </script>
-<script src="playersData.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ══════════════════════════════════════════════════════════════
-// SUPABASE INTEGRATION
+// SUPABASE INTEGRATION (Primary data source - no fallback)
 // ══════════════════════════════════════════════════════════════
 
 const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
@@ -1456,11 +1506,11 @@ try {
   console.warn('[Supabase] Failed to initialize client:', e);
 }
 
-// Load data from Supabase and merge with embedded data
+// Load data from Supabase (primary data source)
 async function loadSupabaseData() {
   if (!supabaseClient) {
-    console.log('[Supabase] Client not available, using embedded data only');
-    return;
+    console.error('[Supabase] Client not available - data cannot be loaded');
+    return false;
   }
 
   try {
@@ -1529,11 +1579,14 @@ async function loadSupabaseData() {
         };
       });
 
-      console.log('[Supabase] Successfully merged data from Supabase');
+      console.log('[Supabase] Successfully loaded data from Supabase');
       supabaseDataLoaded = true;
     }
+
+    return true;
   } catch (error) {
-    console.warn('[Supabase] Error loading data:', error);
+    console.error('[Supabase] Error loading data:', error);
+    return false;
   }
 }
 
@@ -1600,8 +1653,12 @@ async function init() {
     return;
   }
 
-  // Load Supabase data first (will merge with embedded data)
-  await loadSupabaseData();
+  // Load data from Supabase (primary data source)
+  var loaded = await loadSupabaseData();
+  if (!loaded && !supabaseClient) {
+    showError('Connection Error', 'Unable to connect to the database. Please check your internet connection and refresh.');
+    return;
+  }
 
   currentClub = clubsData[clubId];
 

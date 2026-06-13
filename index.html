@@ -746,16 +746,37 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
     transition: transform 0.3s ease;
     z-index: 1000;
     margin-left: 0 !important;
+    padding-top: 60px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   #sidebar.mobile-open { transform: translateX(0); }
   #sidebar-toggle { display: none; }
   #sidebar-open { display: none !important; }
   #map { left: 0 !important; }
-  .catchment-legend { left: 10px; bottom: 60px; }
+  .catchment-legend { left: 10px; bottom: 60px; font-size: 11px; padding: 8px 12px; }
   .offline-banner { bottom: 70px; }
+  .sidebar-header { padding-top: 0; }
+  .filter-group label { font-size: 12px; }
+  .dropdown-checkbox-btn { padding: 10px 12px; font-size: 14px; }
+  .dropdown-checkbox-menu label { padding: 12px 14px; font-size: 14px; }
+  .quick-filter-btn { padding: 10px 14px; font-size: 13px; }
+  .filter-chip { padding: 6px 10px; font-size: 12px; }
+  #club-list li { padding: 14px 16px; }
+  .club-name { font-size: 14px; }
+  .club-info { font-size: 12px; }
+  .section-header { padding: 14px 16px; }
+  .section-header h3 { font-size: 13px; }
+  .add-club-btn { padding: 12px; font-size: 14px; }
+  /* Modal mobile fixes */
+  .modal-content, .search-modal-content { width: 95%; max-width: none; margin: 10px; max-height: 90vh; }
+  .search-modal-content { width: 95%; margin: 20px auto; }
 }
 </style>
-<script src="playersData.js"></script>
+<script>
+// Initialize empty playersData - populated from Supabase
+var playersData = {};
+</script>
 </head>
 <body>
 
@@ -1401,10 +1422,31 @@ async function loadSupabaseClubs() {
       });
 
       console.log('[Supabase] Successfully merged clubs. Total clubs:', clubs.length);
-      supabaseDataLoaded = true;
     }
+
+    // Also load squad data for data freshness indicators
+    const { data: squads, error: squadsError } = await supabaseClient
+      .from('squad_data')
+      .select('club_id, squad, last_scraped, players');
+
+    if (squadsError) {
+      console.warn('[Supabase] Failed to load squad data:', squadsError);
+    } else if (squads && squads.length > 0) {
+      console.log('[Supabase] Loaded ' + squads.length + ' squads for data freshness');
+      squads.forEach(function(squad) {
+        if (!playersData[squad.club_id]) {
+          playersData[squad.club_id] = {};
+        }
+        playersData[squad.club_id][squad.squad] = {
+          lastUpdated: squad.last_scraped || '',
+          players: squad.players || []
+        };
+      });
+    }
+
+    supabaseDataLoaded = true;
   } catch (error) {
-    console.warn('[Supabase] Error loading clubs:', error);
+    console.warn('[Supabase] Error loading data:', error);
   }
 }
 
