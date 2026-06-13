@@ -92,6 +92,16 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .roster-header h2 { font-size:18px; font-weight:600; margin:0; }
 .player-count { font-size:13px; color:#666; }
+.roster-controls { display: flex; align-items: center; gap: 12px; }
+.season-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+.season-select:hover { border-color: #cc0000; }
 
 .no-data {
   background:#fff;
@@ -166,57 +176,6 @@ tr:hover { background:#fafafa; }
 }
 .link-btn:hover { background:#eee; color:#1a1a2e; }
 .link-btn.empty { color:#ccc; cursor:default; }
-
-.add-watchlist-btn {
-  width:28px;
-  height:28px;
-  background:#cc0000;
-  border:none;
-  border-radius:50%;
-  font-size:16px;
-  font-weight:bold;
-  color:#fff;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:all 0.15s;
-}
-.add-watchlist-btn:hover { background:#8B0000; transform:scale(1.1); }
-
-.scout-select-btn {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  width:100%;
-  padding:12px 15px;
-  margin-bottom:8px;
-  background:#f5f5f5;
-  border:1px solid #ddd;
-  border-radius:6px;
-  cursor:pointer;
-  transition:all 0.15s;
-}
-.scout-select-btn:hover { background:#e8e8e8; border-color:#cc0000; }
-.scout-select-btn .scout-name { font-weight:500; color:#1a1a2e; }
-.scout-select-btn .scout-add { font-size:12px; color:#cc0000; font-weight:600; }
-.scout-select-btn:hover .scout-add { color:#8B0000; }
-
-.watchlist-toast {
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%) translateY(100px);
-  background:#1a1a2e;
-  color:#fff;
-  padding:12px 24px;
-  border-radius:8px;
-  font-size:14px;
-  z-index:2000;
-  opacity:0;
-  transition:all 0.3s ease;
-}
-.watchlist-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
 .updated {
   margin-top:20px;
@@ -682,229 +641,6 @@ td.editable:hover::after {
   word-break:break-all;
 }
 
-/* Player Comparison Bar */
-.compare-bar {
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#1a1a2e;
-  color:#fff;
-  padding:15px 20px;
-  display:none;
-  box-shadow:0 -4px 20px rgba(0,0,0,0.3);
-  z-index:1000;
-}
-.compare-bar.active { display:block; }
-.compare-bar-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-.compare-bar-title { font-weight:600; }
-.compare-bar-close {
-  background:none;
-  border:none;
-  color:#888;
-  cursor:pointer;
-  font-size:18px;
-}
-.compare-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
-  gap:15px;
-}
-.compare-player {
-  background:rgba(255,255,255,0.1);
-  border-radius:8px;
-  padding:12px;
-  text-align:center;
-}
-.compare-player-name { font-weight:600; margin-bottom:8px; }
-.compare-stats { font-size:12px; color:#aaa; }
-.compare-stat { margin:4px 0; }
-.compare-stat-value { color:#fff; font-weight:600; }
-.compare-checkbox { width:18px; height:18px; cursor:pointer; }
-
-/* Global Compare Cart */
-.compare-float-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: linear-gradient(135deg, #1976d2, #1565c0);
-  color: #fff;
-  border: none;
-  padding: 14px 24px;
-  border-radius: 30px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4);
-  z-index: 1000;
-  display: none;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-.compare-float-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5);
-}
-.compare-float-btn.visible { display: flex; }
-.compare-count-badge {
-  background: #fff;
-  color: #1976d2;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.add-compare-btn {
-  width: 24px;
-  height: 24px;
-  background: #f0f0f0;
-  border: 1px solid #1976d2;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #1976d2;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-.add-compare-btn:hover {
-  background: #1976d2;
-  color: #fff;
-}
-.add-compare-btn.in-cart {
-  background: #1976d2;
-  color: #fff;
-}
-
-/* Compare Modal */
-.compare-modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  z-index: 2000;
-  align-items: center;
-  justify-content: center;
-}
-.compare-modal-overlay.active { display: flex; }
-.compare-modal {
-  background: #fff;
-  border-radius: 12px;
-  max-width: 95vw;
-  width: 1200px;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-}
-.compare-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #fafafa;
-}
-.compare-modal-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a2e;
-}
-.compare-modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #999;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-.compare-modal-close:hover { color: #cc0000; }
-.compare-grid-modal {
-  display: grid;
-  gap: 16px;
-  overflow-x: auto;
-  padding: 20px;
-  flex: 1;
-  overflow-y: auto;
-}
-.compare-card-modal {
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 16px;
-  min-width: 250px;
-}
-.compare-card-header-modal {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #cc0000;
-}
-.compare-card-name { font-size: 16px; font-weight: 700; color: #1a1a2e; }
-.compare-card-club { font-size: 12px; color: #666; }
-.compare-remove-btn {
-  background: none;
-  border: none;
-  color: #999;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-.compare-remove-btn:hover { color: #cc0000; }
-.compare-row-modal {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 13px;
-}
-.compare-row-modal:last-of-type { border-bottom: none; }
-.compare-label-modal {
-  color: #888;
-  font-size: 11px;
-  text-transform: uppercase;
-}
-.compare-value-modal {
-  font-weight: 600;
-  color: #1a1a2e;
-}
-.compare-empty-modal {
-  text-align: center;
-  padding: 40px;
-  color: #888;
-}
-.compare-actions-modal {
-  padding: 16px 20px;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  background: #fafafa;
-}
-.btn-clear-compare {
-  background: none;
-  border: 1px solid #ddd;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  color: #666;
-}
-.btn-clear-compare:hover { background: #f5f5f5; }
-
 /* Save Bar */
 .save-bar {
   position: fixed;
@@ -954,6 +690,171 @@ td.editable:hover::after {
 }
 .btn-save:hover { background: #218838; }
 .edited-cell { background: #fff3cd !important; }
+
+/* Player Detail Modal */
+.player-detail-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+.player-detail-overlay.active { display: flex; }
+.player-detail-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.player-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #8B0000 0%, #cc0000 100%);
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+}
+.player-detail-title h2 { font-size: 20px; margin: 0 0 4px 0; }
+.player-detail-title p { font-size: 13px; opacity: 0.9; margin: 0; }
+.player-detail-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+}
+.player-detail-close:hover { background: rgba(255,255,255,0.3); }
+.player-detail-body { padding: 20px; }
+.player-stats-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.player-stat-box {
+  flex: 1;
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+.player-stat-box .value { font-size: 24px; font-weight: 700; color: #cc0000; }
+.player-stat-box .label { font-size: 11px; text-transform: uppercase; color: #666; margin-top: 4px; }
+.player-detail-section {
+  margin-bottom: 20px;
+}
+.player-detail-section h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.goals-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 80px;
+  padding: 10px 0;
+}
+.goals-chart-bar {
+  flex: 1;
+  background: #cc0000;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  position: relative;
+}
+.goals-chart-bar .bar-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #888;
+}
+.goals-chart-bar .bar-value {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+.peak-month {
+  background: #fff3cd;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #856404;
+  margin-bottom: 15px;
+}
+.opponent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.opponent-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+.opponent-name { font-size: 13px; color: #1a1a2e; }
+.opponent-goals { font-weight: 600; color: #cc0000; }
+.goal-log {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.goal-log-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+.goal-log-date { color: #888; }
+.goal-log-opponent { color: #1a1a2e; }
+.goal-log-goals { font-weight: 600; color: #cc0000; }
+.player-name-cell { cursor: pointer; }
+.player-name-cell:hover { background: #f0f0f0; }
+.player-name-cell .player-name { color: #1976d2; }
+.no-goals-data {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-size: 13px;
+}
+.season-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+.season-selector label { font-size: 12px; color: #666; }
+.season-selector select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+}
 </style>
 </head>
 <body>
@@ -987,6 +888,58 @@ td.editable:hover::after {
   </div>
 </div>
 
+<!-- Player Detail Modal -->
+<div id="player-detail-modal" class="player-detail-overlay" onclick="if(event.target===this)closePlayerDetail()">
+  <div class="player-detail-modal">
+    <div class="player-detail-header">
+      <div class="player-detail-title">
+        <h2 id="player-detail-name">Player Name</h2>
+        <p id="player-detail-meta">#00 • POS • YOB 0000</p>
+      </div>
+      <button class="player-detail-close" onclick="closePlayerDetail()">&times;</button>
+    </div>
+    <div class="player-detail-body">
+      <div class="season-selector">
+        <label>Season:</label>
+        <select id="player-detail-season" onchange="updatePlayerDetailSeason()">
+          <option value="2025-2026">2025-2026</option>
+        </select>
+      </div>
+
+      <div class="player-stats-row">
+        <div class="player-stat-box">
+          <div class="value" id="player-detail-games">0</div>
+          <div class="label">Games</div>
+        </div>
+        <div class="player-stat-box">
+          <div class="value" id="player-detail-goals">0</div>
+          <div class="label">Goals</div>
+        </div>
+        <div class="player-stat-box">
+          <div class="value" id="player-detail-ratio">0.00</div>
+          <div class="label">Goals/Game</div>
+        </div>
+      </div>
+
+      <div class="player-detail-section">
+        <h3>Goals by Month</h3>
+        <div id="player-detail-peak" class="peak-month" style="display:none;"></div>
+        <div id="player-goals-chart" class="goals-chart"></div>
+      </div>
+
+      <div class="player-detail-section">
+        <h3>Top Opponents</h3>
+        <div id="player-opponents" class="opponent-list"></div>
+      </div>
+
+      <div class="player-detail-section">
+        <h3>Goal Log</h3>
+        <div id="player-goal-log" class="goal-log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Save Bar -->
 <div id="save-bar" class="save-bar">
   <div class="save-bar-left">
@@ -996,25 +949,6 @@ td.editable:hover::after {
   <div class="save-bar-right">
     <button class="btn-discard" onclick="discardChanges()">Discard</button>
     <button class="btn-save" onclick="confirmSave()">Save Changes</button>
-  </div>
-</div>
-
-<!-- Watchlist Modal -->
-<div id="watchlist-modal" class="modal-overlay">
-  <div class="modal">
-    <h3>Add to Watchlist</h3>
-    <p class="field-label">Player: <strong id="watchlist-player-name"></strong></p>
-    <p class="field-label" style="margin-top:10px;">Select a scout:</p>
-    <div id="watchlist-scout-list" style="margin:15px 0;max-height:200px;overflow-y:auto;">
-      <!-- Scout list will be populated here -->
-    </div>
-    <div id="watchlist-no-scouts" style="display:none;color:#666;text-align:center;padding:20px;">
-      No scouts added yet.<br>
-      <a href="scouts.html" style="color:#cc0000;">Go to Scout Database</a> to add scouts.
-    </div>
-    <div class="modal-buttons">
-      <button class="modal-btn secondary" onclick="closeWatchlistModal()">Cancel</button>
-    </div>
   </div>
 </div>
 
@@ -1660,146 +1594,6 @@ var CLUB_ID_TO_SCRAPER_NAME = {
   'springfield_syc': 'springfield_syc'
 };
 
-// ══════════════════════════════════════════════════════════════
-// GLOBAL COMPARE CART (syncs with scouts.html)
-// ══════════════════════════════════════════════════════════════
-
-var globalCompareCart = JSON.parse(localStorage.getItem('compareCart') || '[]');
-
-function updateGlobalCompareButton() {
-  var btn = document.getElementById('compareFloatBtn');
-  var count = document.getElementById('compareCountBadge');
-  if (!btn || !count) return;
-  count.textContent = globalCompareCart.length;
-  if (globalCompareCart.length > 0) {
-    btn.classList.add('visible');
-  } else {
-    btn.classList.remove('visible');
-  }
-}
-
-function isInGlobalCompareCart(playerId) {
-  return globalCompareCart.some(function(p) { return p.id === playerId; });
-}
-
-function toggleGlobalCompare(playerData) {
-  // Create a unique ID based on name + club + squad
-  var playerId = (playerData.name + '_' + (playerData.club || (currentClub ? currentClub.name : '')) + '_' + (playerData.squad || currentTeam || '')).replace(/\s+/g, '_');
-
-  // Check if already in cart
-  var existingIdx = globalCompareCart.findIndex(function(p) { return p.id === playerId; });
-
-  if (existingIdx !== -1) {
-    // Remove from cart
-    globalCompareCart.splice(existingIdx, 1);
-    localStorage.setItem('compareCart', JSON.stringify(globalCompareCart));
-    updateGlobalCompareButton();
-    renderRoster();
-    showWatchlistToast('Removed from compare');
-    return;
-  }
-
-  // Max 4 players
-  if (globalCompareCart.length >= 4) {
-    alert('Maximum 4 players can be compared at once.');
-    return;
-  }
-
-  // Add to cart with ID
-  var playerToAdd = {
-    id: playerId,
-    name: playerData.name,
-    club: playerData.club || (currentClub ? currentClub.name : ''),
-    squad: playerData.squad || currentTeam || '',
-    position: playerData.position || '',
-    yob: playerData.yob || '',
-    jersey: playerData.jersey || '',
-    goals: playerData.goals || 0,
-    games: playerData.games || 0,
-    source: 'team'
-  };
-
-  globalCompareCart.push(playerToAdd);
-  localStorage.setItem('compareCart', JSON.stringify(globalCompareCart));
-  updateGlobalCompareButton();
-  renderRoster();
-  showWatchlistToast('Added to compare');
-}
-
-function removeFromGlobalCompare(playerId) {
-  globalCompareCart = globalCompareCart.filter(function(p) { return p.id !== playerId; });
-  localStorage.setItem('compareCart', JSON.stringify(globalCompareCart));
-  updateGlobalCompareButton();
-  renderGlobalCompareGrid();
-}
-
-function clearGlobalCompareCart() {
-  globalCompareCart = [];
-  localStorage.setItem('compareCart', JSON.stringify(globalCompareCart));
-  updateGlobalCompareButton();
-  renderRoster();
-  closeGlobalCompareModal();
-  showWatchlistToast('Compare cart cleared');
-}
-
-function openGlobalCompareModal() {
-  renderGlobalCompareGrid();
-  document.getElementById('globalCompareModal').classList.add('active');
-}
-
-function closeGlobalCompareModal() {
-  document.getElementById('globalCompareModal').classList.remove('active');
-}
-
-function renderGlobalCompareGrid() {
-  var grid = document.getElementById('globalCompareGrid');
-  if (!grid) return;
-
-  if (globalCompareCart.length === 0) {
-    grid.innerHTML = '<div class="compare-empty-modal">No players selected for comparison.<br>Add players using the Compare button on each row.</div>';
-    return;
-  }
-
-  // Set grid columns based on player count
-  grid.style.gridTemplateColumns = 'repeat(' + globalCompareCart.length + ', 1fr)';
-
-  var html = '';
-  globalCompareCart.forEach(function(player) {
-    html += '<div class="compare-card-modal">';
-    html += '<div class="compare-card-header-modal">';
-    html += '<div>';
-    html += '<div class="compare-card-name">' + player.name + '</div>';
-    html += '<div class="compare-card-club">' + (player.club || 'Unknown Club') + '</div>';
-    html += '</div>';
-    html += '<button class="compare-remove-btn" onclick="removeFromGlobalCompare(\'' + player.id + '\')">&times;</button>';
-    html += '</div>';
-
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">Position</span><span class="compare-value-modal">' + (player.primaryPosition || player.position || '-') + '</span></div>';
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">YOB</span><span class="compare-value-modal">' + (player.yob || '-') + '</span></div>';
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">Squad</span><span class="compare-value-modal">' + (player.squad || '-') + '</span></div>';
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">Games</span><span class="compare-value-modal">' + (player.games || 0) + '</span></div>';
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">Goals</span><span class="compare-value-modal">' + (player.goals || 0) + '</span></div>';
-    html += '<div class="compare-row-modal"><span class="compare-label-modal">Source</span><span class="compare-value-modal">' + (player.source === 'team' ? 'Roster' : 'Scout') + '</span></div>';
-
-    html += '</div>';
-  });
-
-  grid.innerHTML = html;
-}
-
-function showWatchlistToast(message) {
-  var toast = document.createElement('div');
-  toast.className = 'watchlist-toast';
-  toast.innerHTML = message;
-  document.body.appendChild(toast);
-
-  setTimeout(function() { toast.classList.add('show'); }, 10);
-  setTimeout(function() {
-    toast.classList.remove('show');
-    setTimeout(function() { toast.remove(); }, 300);
-  }, 2000);
-}
-
 async function init() {
   if (!clubId) {
     showError('No club specified', 'Please select a club from the map.');
@@ -2038,11 +1832,16 @@ function renderRoster() {
 
   var html = '<div class="roster-header">' +
     '<div class="roster-title">' +
-    '<h2>' + currentTeam.toUpperCase() + ' Roster – ' + data.season + '</h2>' +
+    '<h2>' + currentTeam.toUpperCase() + ' Roster</h2>' +
     '<span class="player-count">' + playersWithIndex.length + ' of ' + data.players.length + ' players</span>' +
     '</div>' +
+    '<div class="roster-controls">' +
+    '<select id="season-select" class="season-select" onchange="changeSeason(this.value)">' +
+    '<option value="2025-2026"' + (data.season === '2025-2026' ? ' selected' : '') + '>2025-2026</option>' +
+    '</select>' +
     '<button id="auth-status" class="auth-status ' + (isAuthenticated ? 'unlocked' : 'locked') + '" onclick="toggleAuth()">' +
     (isAuthenticated ? 'Unlocked' : 'Locked') + '</button>' +
+    '</div>' +
     '</div>';
 
   // Stats bar with date range and team goals
@@ -2118,7 +1917,6 @@ function renderRoster() {
   html += '<table>' +
     '<thead>' +
     '<tr>' +
-    '<th style="width:30px;">Cmp</th>' +
     '<th>#</th>' +
     '<th>Player</th>' +
     '<th>YOB</th>' +
@@ -2126,10 +1924,8 @@ function renderRoster() {
     '<th>Games</th>' +
     '<th>Goals</th>' +
     '<th>Link</th>' +
-    '<th style="width:40px;"></th>' +
     '</tr>' +
     '<tr class="filter-row">' +
-    '<th></th>' +
     '<th></th>' +
     '<th><input type="text" class="filter-input" placeholder="Filter..." oninput="setFilter(\'name\', this.value)" value="' + (activeFilters.name || '') + '"></th>' +
     '<th><select class="filter-select" onchange="setFilter(\'yob\', this.value)">' +
@@ -2140,7 +1936,6 @@ function renderRoster() {
     '<option value="">All</option>' +
     positions.map(function(pos) { return '<option value="' + pos + '"' + (activeFilters.position === pos.toLowerCase() ? ' selected' : '') + '>' + pos + '</option>'; }).join('') +
     '</select></th>' +
-    '<th></th>' +
     '<th></th>' +
     '<th></th>' +
     '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
@@ -2166,22 +1961,21 @@ function renderRoster() {
       return hasPendingChange(originalPlayer, field) ? ' edited-cell' : '';
     };
 
-    var playerJson = JSON.stringify({name: p.name, jersey: p.jersey, position: p.position, games: p.games, goals: displayGoals, yob: p.yob}).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    var playerId = (p.name + '_' + (currentClub ? currentClub.name : '') + '_' + (currentTeam || '')).replace(/\s+/g, '_');
-    var isInCart = isInGlobalCompareCart(playerId);
-    var compareBtnClass = 'add-compare-btn' + (isInCart ? ' in-cart' : '');
-    var compareBtnText = isInCart ? '✓' : '+';
+    // Store full player data for detail modal
+    var fullPlayerData = JSON.stringify({
+      name: p.name, jersey: p.jersey, position: p.position, games: p.games,
+      goals: displayGoals, yob: p.yob, goalsByMatch: p.goalsByMatch || [],
+      club: currentClub ? currentClub.name : '', squad: currentTeam
+    }).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-    html += '<tr data-player="' + playerJson + '">' +
-      '<td><button class="' + compareBtnClass + '" onclick="toggleGlobalCompare(JSON.parse(this.closest(\'tr\').dataset.player))" title="' + (isInCart ? 'Remove from Compare' : 'Add to Compare') + '">' + compareBtnText + '</button></td>' +
+    html += '<tr class="player-row" data-player="' + fullPlayerData + '" data-idx="' + idx + '">' +
       '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
-      '<td class="editable' + editedClass('name') + '" onclick="handleCellClick(' + idx + ', \'name\')"><span class="player-name">' + p.name + '</span></td>' +
+      '<td class="player-name-cell"><span class="player-name">' + p.name + '</span></td>' +
       '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
       '<td class="editable' + editedClass('position') + '" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
       '<td class="editable' + editedClass('games') + '" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
       '<td class="editable' + editedClass('goals') + '" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
       '<td class="editable' + editedClass('link') + '" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
-      '<td><button class="add-watchlist-btn" onclick="openWatchlistModal(this)" title="Add to Watchlist">+</button></td>' +
       '</tr>';
   });
 
@@ -2486,6 +2280,152 @@ function handleCellClick(playerIndex, field) {
   } else {
     showPasswordModal(playerIndex, field);
   }
+}
+
+// ========== Player Detail Modal ==========
+var currentPlayerData = null;
+
+function openPlayerDetail(row) {
+  try {
+    var playerData = JSON.parse(row.dataset.player.replace(/&quot;/g, '"'));
+    currentPlayerData = playerData;
+    renderPlayerDetail(playerData);
+    document.getElementById('player-detail-modal').classList.add('active');
+  } catch (e) {
+    console.error('Error opening player detail:', e);
+  }
+}
+
+function closePlayerDetail() {
+  document.getElementById('player-detail-modal').classList.remove('active');
+  currentPlayerData = null;
+}
+
+function renderPlayerDetail(player) {
+  // Header info
+  document.getElementById('player-detail-name').textContent = player.name;
+  document.getElementById('player-detail-meta').textContent =
+    '#' + player.jersey + ' • ' + (player.position || '—') + ' • YOB ' + (player.yob || '—');
+
+  // Stats
+  var games = player.games || 0;
+  var goals = player.goals || 0;
+  var ratio = games > 0 ? (goals / games).toFixed(2) : '0.00';
+  document.getElementById('player-detail-games').textContent = games;
+  document.getElementById('player-detail-goals').textContent = goals;
+  document.getElementById('player-detail-ratio').textContent = ratio;
+
+  // Goals by match data
+  var goalsByMatch = player.goalsByMatch || [];
+
+  if (goalsByMatch.length === 0) {
+    document.getElementById('player-goals-chart').innerHTML = '<div class="no-goals-data">No detailed goal data available</div>';
+    document.getElementById('player-detail-peak').style.display = 'none';
+    document.getElementById('player-opponents').innerHTML = '<div class="no-goals-data">No opponent data available</div>';
+    document.getElementById('player-goal-log').innerHTML = '<div class="no-goals-data">No goal log available</div>';
+    return;
+  }
+
+  // Calculate goals by month
+  var goalsByMonth = {};
+  var goalsByOpponent = {};
+  var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  goalsByMatch.forEach(function(match) {
+    var date = new Date(match.date);
+    var monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+    var monthLabel = monthNames[date.getMonth()];
+    var matchGoals = match.goals || 1;
+
+    if (!goalsByMonth[monthKey]) {
+      goalsByMonth[monthKey] = { label: monthLabel, goals: 0 };
+    }
+    goalsByMonth[monthKey].goals += matchGoals;
+
+    var opponent = match.opponent || 'Unknown';
+    goalsByOpponent[opponent] = (goalsByOpponent[opponent] || 0) + matchGoals;
+  });
+
+  // Render goals chart
+  var sortedMonths = Object.keys(goalsByMonth).sort();
+  var maxGoals = Math.max.apply(null, sortedMonths.map(function(k) { return goalsByMonth[k].goals; }));
+  var peakMonth = null;
+  var peakGoals = 0;
+
+  var chartHtml = '';
+  sortedMonths.forEach(function(key) {
+    var data = goalsByMonth[key];
+    var height = maxGoals > 0 ? Math.round((data.goals / maxGoals) * 60) + 4 : 4;
+    if (data.goals > peakGoals) {
+      peakGoals = data.goals;
+      peakMonth = data.label;
+    }
+    chartHtml += '<div class="goals-chart-bar" style="height:' + height + 'px;">' +
+      '<span class="bar-value">' + data.goals + '</span>' +
+      '<span class="bar-label">' + data.label + '</span>' +
+      '</div>';
+  });
+  document.getElementById('player-goals-chart').innerHTML = chartHtml || '<div class="no-goals-data">No monthly data</div>';
+
+  // Peak month
+  if (peakMonth && peakGoals > 0) {
+    document.getElementById('player-detail-peak').textContent = 'Peak: ' + peakMonth + ' (' + peakGoals + ' goal' + (peakGoals > 1 ? 's' : '') + ')';
+    document.getElementById('player-detail-peak').style.display = 'block';
+  } else {
+    document.getElementById('player-detail-peak').style.display = 'none';
+  }
+
+  // Top opponents
+  var opponentsSorted = Object.keys(goalsByOpponent).sort(function(a, b) {
+    return goalsByOpponent[b] - goalsByOpponent[a];
+  }).slice(0, 5);
+
+  var opponentsHtml = '';
+  opponentsSorted.forEach(function(opp) {
+    opponentsHtml += '<div class="opponent-row">' +
+      '<span class="opponent-name">' + opp + '</span>' +
+      '<span class="opponent-goals">' + goalsByOpponent[opp] + ' goal' + (goalsByOpponent[opp] > 1 ? 's' : '') + '</span>' +
+      '</div>';
+  });
+  document.getElementById('player-opponents').innerHTML = opponentsHtml || '<div class="no-goals-data">No opponent data</div>';
+
+  // Goal log
+  var logHtml = '';
+  var sortedMatches = goalsByMatch.slice().sort(function(a, b) {
+    return new Date(b.date) - new Date(a.date);
+  });
+  sortedMatches.forEach(function(match) {
+    var date = new Date(match.date);
+    var dateStr = monthNames[date.getMonth()] + ' ' + date.getDate();
+    var goalsCount = match.goals || 1;
+    var goalsIcons = '';
+    for (var i = 0; i < goalsCount; i++) goalsIcons += '⚽';
+    logHtml += '<div class="goal-log-item">' +
+      '<span class="goal-log-date">' + dateStr + '</span>' +
+      '<span class="goal-log-opponent">vs ' + (match.opponent || 'Unknown') + '</span>' +
+      '<span class="goal-log-goals">' + goalsIcons + '</span>' +
+      '</div>';
+  });
+  document.getElementById('player-goal-log').innerHTML = logHtml || '<div class="no-goals-data">No goals recorded</div>';
+}
+
+function updatePlayerDetailSeason() {
+  // Placeholder for multi-season support
+  // Will reload player data for selected season when implemented
+  console.log('Season changed to:', document.getElementById('player-detail-season').value);
+}
+
+// Global season change
+var currentSeason = '2025-2026';
+
+function changeSeason(season) {
+  currentSeason = season;
+  console.log('Season changed to:', season);
+  // Placeholder: In multi-season implementation, this will:
+  // 1. Load data for the selected season from Supabase
+  // 2. Re-render the roster with new season data
+  // For now, just show a message that this will be implemented
+  alert('Multi-season support coming soon!\\n\\nThis will load ' + season + ' season data.');
 }
 
 // ========== Director Management Functions ==========
@@ -2825,214 +2765,6 @@ init();
     </div>
   </div>
 </div>
-
-<!-- Player Comparison Bar -->
-<div id="compare-bar" class="compare-bar">
-  <div class="compare-bar-header">
-    <span class="compare-bar-title">Compare Players (<span id="compare-count">0</span> selected)</span>
-    <button class="compare-bar-close" onclick="clearComparison()">Clear</button>
-  </div>
-  <div id="compare-grid" class="compare-grid"></div>
-</div>
-
-<script>
-// Player comparison functionality
-var selectedForCompare = [];
-
-function toggleCompare(playerIndex, playerData) {
-  var existingIdx = selectedForCompare.findIndex(function(p) { return p.index === playerIndex; });
-
-  if (existingIdx !== -1) {
-    selectedForCompare.splice(existingIdx, 1);
-  } else if (selectedForCompare.length < 4) {
-    selectedForCompare.push({ index: playerIndex, data: playerData });
-  } else {
-    alert('Maximum 4 players can be compared');
-    return;
-  }
-
-  updateCompareBar();
-  updateCheckboxes();
-}
-
-function updateCheckboxes() {
-  document.querySelectorAll('.compare-checkbox').forEach(function(cb) {
-    var idx = parseInt(cb.dataset.index);
-    cb.checked = selectedForCompare.some(function(p) { return p.index === idx; });
-  });
-}
-
-function updateCompareBar() {
-  var bar = document.getElementById('compare-bar');
-  var grid = document.getElementById('compare-grid');
-  var count = document.getElementById('compare-count');
-
-  count.textContent = selectedForCompare.length;
-
-  if (selectedForCompare.length < 2) {
-    bar.classList.remove('active');
-    return;
-  }
-
-  bar.classList.add('active');
-
-  grid.innerHTML = selectedForCompare.map(function(item) {
-    var p = item.data;
-    return '<div class="compare-player">' +
-      '<div class="compare-player-name">' + p.name + '</div>' +
-      '<div class="compare-stats">' +
-        '<div class="compare-stat">#' + p.jersey + ' | ' + (p.position || '—') + '</div>' +
-        '<div class="compare-stat">Games: <span class="compare-stat-value">' + p.games + '</span></div>' +
-        '<div class="compare-stat">Goals: <span class="compare-stat-value">' + p.goals + '</span></div>' +
-        '<div class="compare-stat">YOB: <span class="compare-stat-value">' + (p.yob || '—') + '</span></div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function clearComparison() {
-  selectedForCompare = [];
-  updateCompareBar();
-  updateCheckboxes();
-}
-
-// ══════════════════════════════════════════════════════════════
-// WATCHLIST FUNCTIONS
-// ══════════════════════════════════════════════════════════════
-
-var pendingWatchlistPlayer = null;
-
-function openWatchlistModal(btn) {
-  var tr = btn.closest('tr');
-  var playerData = JSON.parse(tr.dataset.player.replace(/&quot;/g, '"'));
-
-  // Add club info from current page
-  playerData.club = currentClub ? currentClub.name : '';
-  playerData.squad = currentTeam || '';
-
-  pendingWatchlistPlayer = playerData;
-
-  document.getElementById('watchlist-player-name').textContent = playerData.name;
-
-  // Load scouts from localStorage
-  var scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
-  var listContainer = document.getElementById('watchlist-scout-list');
-  var noScoutsDiv = document.getElementById('watchlist-no-scouts');
-
-  if (scouts.length === 0) {
-    listContainer.style.display = 'none';
-    noScoutsDiv.style.display = 'block';
-  } else {
-    listContainer.style.display = 'block';
-    noScoutsDiv.style.display = 'none';
-
-    listContainer.innerHTML = scouts.map(function(scout) {
-      return '<button class="scout-select-btn" onclick="addToScoutWatchlist(\'' + scout.id + '\', \'' + scout.name.replace(/'/g, "\\'") + '\')">' +
-        '<span class="scout-name">' + scout.name + '</span>' +
-        '<span class="scout-add">Add</span>' +
-      '</button>';
-    }).join('');
-  }
-
-  document.getElementById('watchlist-modal').classList.add('active');
-}
-
-function closeWatchlistModal() {
-  document.getElementById('watchlist-modal').classList.remove('active');
-  pendingWatchlistPlayer = null;
-}
-
-function addToScoutWatchlist(scoutId, scoutName) {
-  if (!pendingWatchlistPlayer) return;
-
-  var players = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
-
-  // Check if player already exists for this scout
-  var exists = players.some(function(p) {
-    return p.scoutId === scoutId && p.name === pendingWatchlistPlayer.name && p.club === pendingWatchlistPlayer.club;
-  });
-
-  if (exists) {
-    alert(pendingWatchlistPlayer.name + ' is already in ' + scoutName + "'s watchlist.");
-    return;
-  }
-
-  // Add new player with full data for key matching
-  var newPlayer = {
-    id: Date.now().toString(),
-    scoutId: scoutId,
-    name: pendingWatchlistPlayer.name,
-    club: pendingWatchlistPlayer.club,
-    clubId: clubId,  // Store clubId for playerOverrides key matching
-    squad: pendingWatchlistPlayer.squad || currentTeam || '',
-    jersey: pendingWatchlistPlayer.jersey || '',
-    position: pendingWatchlistPlayer.position || '',
-    yob: pendingWatchlistPlayer.yob || '',
-    notes: '',
-    dateAdded: new Date().toISOString().split('T')[0]
-  };
-
-  players.push(newPlayer);
-  localStorage.setItem('scoutPlayers', JSON.stringify(players));
-
-  closeWatchlistModal();
-
-  // Show success message
-  showWatchlistSuccess(pendingWatchlistPlayer.name, scoutName);
-}
-
-function showWatchlistSuccess(playerName, scoutName) {
-  var toast = document.createElement('div');
-  toast.className = 'watchlist-toast';
-  toast.innerHTML = '<strong>' + playerName + '</strong> added to ' + scoutName + "'s watchlist";
-  document.body.appendChild(toast);
-
-  setTimeout(function() { toast.classList.add('show'); }, 10);
-  setTimeout(function() {
-    toast.classList.remove('show');
-    setTimeout(function() { toast.remove(); }, 300);
-  }, 3000);
-}
-</script>
-
-<!-- Floating Compare Button -->
-<button class="compare-float-btn" id="compareFloatBtn" onclick="openGlobalCompareModal()">
-    Compare <span class="compare-count-badge" id="compareCountBadge">0</span>
-</button>
-
-<!-- Global Compare Modal -->
-<div class="compare-modal-overlay" id="globalCompareModal">
-  <div class="compare-modal">
-    <div class="compare-modal-header">
-      <span class="compare-modal-title">Compare Players</span>
-      <button class="compare-modal-close" onclick="closeGlobalCompareModal()">&times;</button>
-    </div>
-    <div class="compare-grid-modal" id="globalCompareGrid">
-      <!-- Player cards inserted here -->
-    </div>
-    <div class="compare-actions-modal">
-      <button class="btn-clear-compare" onclick="clearGlobalCompareCart()">Clear All</button>
-      <button style="background:#1976d2;color:#fff;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;" onclick="closeGlobalCompareModal()">Done</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// Initialize compare button and modal handlers
-document.addEventListener('DOMContentLoaded', function() {
-  updateGlobalCompareButton();
-
-  // Close compare modal on overlay click
-  var compareModal = document.getElementById('globalCompareModal');
-  if (compareModal) {
-    compareModal.addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeGlobalCompareModal();
-      }
-    });
-  }
-});
-</script>
 
 <div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>

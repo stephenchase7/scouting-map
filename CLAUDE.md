@@ -115,3 +115,43 @@ Data loads from Supabase first, falls back to embedded data:
 - Tables: `clubs`, `squad_data`
 - Add Club and Delete Club write directly to Supabase
 - Upload player data via `import_to_scouting.py --upload-db` (parent directory)
+
+### Multi-Season Support (Planned)
+
+**Schema Changes Required for `squad_data` table:**
+```sql
+-- Add season column (primary key change)
+ALTER TABLE squad_data ADD COLUMN season TEXT DEFAULT '2025-2026';
+ALTER TABLE squad_data DROP CONSTRAINT squad_data_pkey;
+ALTER TABLE squad_data ADD PRIMARY KEY (club_id, squad, season);
+
+-- Add division column (divisions change per season)
+ALTER TABLE squad_data ADD COLUMN division TEXT;
+```
+
+**New Table Structure:**
+| Column | Type | Description |
+|--------|------|-------------|
+| club_id | text | Club identifier |
+| squad | text | Age group (u13, u14, etc.) |
+| season | text | Season identifier (2025-2026, 2026-2027) |
+| division | text | Division for this season |
+| players | jsonb | Player data including goalsByMatch |
+| last_updated | timestamp | When data was last scraped |
+
+**Query Changes:**
+```javascript
+// Load specific season
+const { data } = await supabase
+  .from('squad_data')
+  .select('*')
+  .eq('club_id', clubId)
+  .eq('season', '2025-2026');
+
+// Load all seasons for comparison
+const { data } = await supabase
+  .from('squad_data')
+  .select('*')
+  .eq('club_id', clubId)
+  .order('season', { ascending: false });
+```
