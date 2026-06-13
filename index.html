@@ -171,7 +171,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .filter-chip {
   display:inline-flex; align-items:center; gap:4px; padding:4px 8px;
-  background:#fff5f5; border:1px solid:#cc0000; border-radius:12px;
+  background:#fff5f5; border:1px solid #cc0000; border-radius:12px;
   font-size:10px; color:#cc0000; font-weight:600;
 }
 .filter-chip-close {
@@ -629,7 +629,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 
   <!-- Search at top - always visible -->
   <div id="search-box">
-    <input type="text" id="search-input" placeholder="Search clubs..." oninput="applyFilters()">
+    <input type="text" id="search-input" placeholder="Search clubs..." oninput="debouncedApplyFilters()">
   </div>
 
   <!-- Tools section - collapsed by default -->
@@ -675,7 +675,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
       <div class="filter-row">
         <div class="filter-group">
           <label>Division</label>
-          <select class="filter-dropdown" id="division-filter" onchange="updateAgeDropdown(); applyFilters();">
+          <select class="filter-dropdown" id="division-filter" onchange="applyFilters();">
             <option value="">All</option>
           </select>
         </div>
@@ -750,6 +750,49 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+// Debounce function to limit rapid function calls
+function debounce(func, wait) {
+  var timeout;
+  return function() {
+    var context = this, args = arguments;
+    clearTimeout(timeout);
+    timeout = setTimeout(function() {
+      func.apply(context, args);
+    }, wait);
+  };
+}
+
+// Sanitize string to prevent XSS
+function sanitizeString(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[<>"'&]/g, function(char) {
+    var entities = { '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;' };
+    return entities[char] || char;
+  });
+}
+
+// Validate that a value is a finite number
+function isValidNumber(val) {
+  return typeof val === 'number' && isFinite(val) && !isNaN(val);
+}
+
+// Cached DOM elements (populated on DOMContentLoaded)
+var DOM = {};
+function cacheDOMElements() {
+  DOM.searchInput = document.getElementById('search-input');
+  DOM.clubList = document.getElementById('club-list');
+  DOM.divisionFilter = document.getElementById('division-filter');
+  DOM.countNum = document.getElementById('count-num');
+  DOM.countTotal = document.getElementById('count-total');
+  DOM.selectedCard = document.getElementById('selected-card');
+  DOM.activeChips = document.getElementById('active-chips');
+  DOM.activeFilters = document.getElementById('active-filters');
+}
+
 // ── COLOR CONFIG ──
 var DIVISION_COLORS = {
   // MLS Next Divisions
@@ -838,28 +881,53 @@ var US_STATE_NAMES = {
 
 // State to Division mapping for auto-assigning divisions
 var STATE_TO_DIVISION = {
-  'NJ': 'Tri-State',
-  'NY': 'Tri-State',
-  'CT': 'New England',
-  'MA': 'New England',
-  'NH': 'New England',
-  'VT': 'New England',
-  'ME': 'New England',
-  'RI': 'New England',
-  'PA': 'Mid-Atlantic',
-  'DE': 'Mid-Atlantic',
-  'MD': 'Mid-Atlantic',
-  'DC': 'Mid-Atlantic',
-  'VA': 'Virginia',
-  'WV': 'Virginia',
-  'NC': 'Virginia',
-  'OH': 'Great Lakes',
-  'MI': 'Great Lakes',
-  'IN': 'Great Lakes',
-  'IL': 'Great Lakes',
-  'WI': 'Great Lakes',
-  'ON': 'Northeast',
-  'QC': 'Northeast'
+  'NJ': 'Northeast Division',
+  'NY': 'Northeast Division',
+  'CT': 'Northeast Division',
+  'MA': 'Northeast Division',
+  'NH': 'Northeast Division',
+  'VT': 'Northeast Division',
+  'ME': 'Northeast Division',
+  'RI': 'Northeast Division',
+  'ON': 'Northeast Division',
+  'QC': 'Northeast Division',
+  'PA': 'Mid-Atlantic Division',
+  'DE': 'Mid-Atlantic Division',
+  'MD': 'Mid-Atlantic Division',
+  'DC': 'Mid-Atlantic Division',
+  'VA': 'Mid-Atlantic Division',
+  'WV': 'Mid-Atlantic Division',
+  'NC': 'Southeast Division',
+  'SC': 'Southeast Division',
+  'GA': 'Southeast Division',
+  'TN': 'Southeast Division',
+  'AL': 'Southeast Division',
+  'KY': 'Southeast Division',
+  'FL': 'Florida Division',
+  'OH': 'Mid-America Division',
+  'MI': 'Mid-America Division',
+  'IN': 'Mid-America Division',
+  'IL': 'Mid-America Division',
+  'WI': 'Mid-America Division',
+  'MN': 'Mid-America Division',
+  'MO': 'Mid-America Division',
+  'IA': 'Mid-America Division',
+  'TX': 'Frontier Division',
+  'OK': 'Frontier Division',
+  'CO': 'Frontier Division',
+  'KS': 'Frontier Division',
+  'NE': 'Frontier Division',
+  'AR': 'Frontier Division',
+  'LA': 'Frontier Division',
+  'NM': 'Frontier Division',
+  'CA': 'Southwest Division',
+  'AZ': 'Southwest Division',
+  'NV': 'Southwest Division',
+  'UT': 'Southwest Division',
+  'WA': 'Northwest Division',
+  'OR': 'Northwest Division',
+  'ID': 'Northwest Division',
+  'MT': 'Northwest Division'
 };
 
 // ── CLUBS DATA ──
@@ -1088,8 +1156,10 @@ loadSupabaseClubs().then(function() {
     console.log('[Supabase] Refreshing map with new club data...');
     refreshMap();
   }
+}).catch(function(error) {
+  console.error('[Supabase] Failed to load clubs:', error);
+  // Continue with hardcoded clubs only - app still works
 });
-console.log('[VERSION] index.html v2026.05.30.2 - Hardcoded coords protected');
 
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {
@@ -1268,9 +1338,7 @@ function getClubDivisionsByAge(clubName) {
 
 // ── FILTER STATE ──
 var filters = {
-  division: '',
-  age: '',
-  distance: ''
+  division: ''
 };
 
 // ── MAP INIT ──
@@ -1446,6 +1514,24 @@ function isInCatchment(club, catchmentNum) {
     return true;
   }
   return false;
+}
+
+// Check if club matches current catchment/open territory filters
+function matchesCatchmentFilters(club) {
+  // If only Catchment 1 is active
+  if (catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
+    return isInCatchment(club, 1);
+  }
+  // If Catchment 2 is active (includes Catchment 1)
+  if (catchmentState.catchment2 && !catchmentState.catchment3) {
+    return isInCatchment(club, 2);
+  }
+  // If only Open Territory is active (no catchment filters)
+  if (catchmentState.openTerritory && !catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
+    return OPEN_TERRITORY_STATES.includes(club.state);
+  }
+  // Catchment 3 (national) or no catchment filters - show all
+  return true;
 }
 
 // Toggle catchment area visibility
@@ -1629,6 +1715,12 @@ function makeClubIcon(club, size) {
 
 // ── DISTANCE CALCULATION (FALLBACK) ──
 function calculateDistance(lat1, lng1, lat2, lng2) {
+  // Validate inputs are valid numbers
+  if (!isValidNumber(lat1) || !isValidNumber(lng1) ||
+      !isValidNumber(lat2) || !isValidNumber(lng2)) {
+    return 0;
+  }
+
   // Haversine formula for great-circle distance
   var R = 3958.8; // Earth's radius in miles
   var dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1637,10 +1729,14 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
           Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
           Math.sin(dLng/2) * Math.sin(dLng/2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return Math.round(R * c);
+  var distance = Math.round(R * c);
+
+  // Final NaN check
+  return isValidNumber(distance) ? distance : 0;
 }
 
 function formatDriveTime(miles) {
+  if (!isValidNumber(miles) || miles <= 0) return '0m';
   var minutes = Math.round(miles * 2); // Assume 30 mph average
   if (minutes < 60) return minutes + 'm';
   var hours = Math.floor(minutes / 60);
@@ -1649,8 +1745,8 @@ function formatDriveTime(miles) {
 }
 
 function ensureDistanceData(club) {
-  // If club already has distance data, return as-is
-  if (club.driveMiles !== undefined && club.driveTime !== undefined) {
+  // If club already has valid distance data, return as-is
+  if (isValidNumber(club.driveMiles) && club.driveMiles > 0 && club.driveTime) {
     return club;
   }
 
@@ -1658,11 +1754,11 @@ function ensureDistanceData(club) {
   var NYRB_LAT = 40.8167;
   var NYRB_LNG = -74.4028;
 
-  if (club.lat && club.lng) {
+  if (isValidNumber(club.lat) && isValidNumber(club.lng)) {
     club.driveMiles = calculateDistance(NYRB_LAT, NYRB_LNG, club.lat, club.lng);
     club.driveTime = formatDriveTime(club.driveMiles);
   } else {
-    // Fallback if no coordinates
+    // Fallback if no valid coordinates
     club.driveMiles = 0;
     club.driveTime = '0m';
   }
@@ -1726,7 +1822,8 @@ async function deleteClub(clubId) {
   try {
     // Delete from Supabase
     if (!supabaseClient) {
-      initSupabase();
+      alert('Database connection not available. Please refresh the page.');
+      return;
     }
 
     const { error } = await supabaseClient
@@ -1885,36 +1982,28 @@ function matchesFilters(club) {
   // If not found in CSV, use club's own division property for filtering
   if (!clubDivisions) {
     // If no filters applied, show the club
-    if (!filters.division && !filters.age) {
+    if (!filters.division) {
       return true;
     }
     // Check against the club's own division property
-    return !filters.division || club.division === filters.division;
+    return club.division === filters.division;
   }
 
   // If no filters selected, show all clubs
-  if (!filters.division && !filters.age) {
+  if (!filters.division) {
     return true;
   }
 
-  // Check if club matches selected division and/or age
+  // Check if club matches selected division
   var matches = false;
 
   clubDivisions.forEach(function(entry) {
-    var divisionMatch = !filters.division || entry.division === filters.division;
-    var ageMatch = !filters.age || entry.age === filters.age;
-
-    if (divisionMatch && ageMatch) {
+    if (entry.division === filters.division) {
       matches = true;
     }
   });
 
   return matches;
-}
-
-// Alias for backward compatibility
-function matchesPathway(club) {
-  return matchesFilters(club);
 }
 
 // ── SIDEBAR LIST ──
@@ -1932,25 +2021,11 @@ function buildList() {
 
     // Search filter
     if (searchVal && club.name.toLowerCase().indexOf(searchVal) === -1 && club.division.toLowerCase().indexOf(searchVal) === -1) return;
-    // Division/Age filter
+    // Division filter
     if (!matchesFilters(club)) return;
-    // Distance filter
-    if (filters.distance && club.driveMiles > parseInt(filters.distance)) return;
 
-    // Catchment area filter - if any catchment is active, filter by it
-    if (catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
-      // Only Catchment 1 active - show only clubs within 75mi
-      if (!isInCatchment(club, 1)) return;
-    } else if (catchmentState.catchment2 && !catchmentState.catchment3) {
-      // Catchment 2 active - show clubs in catchment 2 states + catchment 1
-      if (!isInCatchment(club, 2)) return;
-    }
-    // Catchment 3 (national) shows all clubs - no filter
-
-    // Open territory filter - if active alone, show only open territory clubs
-    if (catchmentState.openTerritory && !catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
-      if (!OPEN_TERRITORY_STATES.includes(club.state)) return;
-    }
+    // Catchment area filter
+    if (!matchesCatchmentFilters(club)) return;
 
     count++;
 
@@ -2039,22 +2114,9 @@ function updateMarkerVisibility() {
 
     var matchesSearch = !searchVal || club.name.toLowerCase().indexOf(searchVal) !== -1 || club.division.toLowerCase().indexOf(searchVal) !== -1;
     var filterMatch = matchesFilters(club);
-    var matchesDistance = !filters.distance || club.driveMiles <= parseInt(filters.distance);
+    var matchesCatchment = matchesCatchmentFilters(club);
 
-    // Catchment area filter
-    var matchesCatchment = true;
-    if (catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
-      matchesCatchment = isInCatchment(club, 1);
-    } else if (catchmentState.catchment2 && !catchmentState.catchment3) {
-      matchesCatchment = isInCatchment(club, 2);
-    }
-
-    // Open territory filter
-    if (catchmentState.openTerritory && !catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
-      matchesCatchment = OPEN_TERRITORY_STATES.includes(club.state);
-    }
-
-    if (matchesSearch && filterMatch && matchesDistance && matchesCatchment) {
+    if (matchesSearch && filterMatch && matchesCatchment) {
       markers[idx].addTo(map);
     } else {
       map.removeLayer(markers[idx]);
@@ -2064,9 +2126,7 @@ function updateMarkerVisibility() {
 
 function applyFilters() {
   // Read filter values from dropdowns
-  filters.division = document.getElementById('division-filter').value;
-  filters.age = '';  // Age filter removed
-  filters.distance = '';  // Distance filter removed - using catchment areas instead
+  filters.division = (DOM.divisionFilter || document.getElementById('division-filter')).value;
 
   // Update active filter chips
   updateActiveFilters();
@@ -2075,6 +2135,9 @@ function applyFilters() {
   buildList();
   updateMarkerVisibility();
 }
+
+// Debounced version for search input (300ms delay)
+var debouncedApplyFilters = debounce(applyFilters, 300);
 
 function updateActiveFilters() {
   var chips = document.getElementById('active-chips');
@@ -2125,57 +2188,8 @@ function populateDivisionDropdown() {
   });
 }
 
-// ── GET AVAILABLE AGES FOR DIVISION ──
-function getAvailableAgesForDivision(division) {
-  var ageSet = new Set();
-
-  if (!division) {
-    // No division selected, show all ages
-    return ['U13', 'U14', 'U15', 'U16', 'U17', 'U19'];
-  }
-
-  // Extract ages available in this division
-  for (var teamName in csvTeamData) {
-    csvTeamData[teamName].forEach(function(entry) {
-      if (entry.division === division) {
-        ageSet.add(entry.age);
-      }
-    });
-  }
-
-  var ages = Array.from(ageSet).sort(function(a, b) {
-    return parseInt(a.replace('U', '')) - parseInt(b.replace('U', ''));
-  });
-
-  return ages;
-}
-
-// ── UPDATE AGE DROPDOWN BASED ON DIVISION ──
-function updateAgeDropdown() {
-  var selectedDivision = document.getElementById('division-filter').value;
-  var ageSelect = document.getElementById('age-filter');
-  var currentAge = ageSelect.value;
-
-  // Get available ages for selected division
-  var availableAges = getAvailableAgesForDivision(selectedDivision);
-
-  // Clear and rebuild age dropdown
-  ageSelect.innerHTML = '<option value="">All Age Groups</option>';
-
-  availableAges.forEach(function(age) {
-    var option = document.createElement('option');
-    option.value = age;
-    option.textContent = age;
-    ageSelect.appendChild(option);
-  });
-
-  // Restore previous selection if still valid
-  if (currentAge && availableAges.indexOf(currentAge) !== -1) {
-    ageSelect.value = currentAge;
-  }
-}
-
 // ── INIT ──
+cacheDOMElements();
 populateDivisionDropdown();
 buildList();
 applyFilters();
@@ -2269,27 +2283,35 @@ document.addEventListener('click', function(event) {
 // MODAL RESIZE FUNCTIONALITY
 // ══════════════════════════════════════════════════════════════
 
+var modalResizeInitialized = false;
+var modalResizeState = {
+  isResizing: false,
+  startX: 0,
+  startY: 0,
+  startWidth: 0,
+  startHeight: 0,
+  currentHandle: null
+};
+
 function initModalResize() {
+  // Only initialize once to prevent memory leaks
+  if (modalResizeInitialized) return;
+
   var modal = document.getElementById('search-modal-container');
   if (!modal) return;
 
   var handles = modal.querySelectorAll('.resize-handle');
-  var startX, startY, startWidth, startHeight, startLeft, startTop;
-  var isResizing = false;
-  var currentHandle;
 
   handles.forEach(function(handle) {
     handle.addEventListener('mousedown', function(e) {
-      isResizing = true;
-      currentHandle = handle.classList[1]; // n, s, e, w, ne, nw, se, sw
-      startX = e.clientX;
-      startY = e.clientY;
+      modalResizeState.isResizing = true;
+      modalResizeState.currentHandle = handle.classList[1];
+      modalResizeState.startX = e.clientX;
+      modalResizeState.startY = e.clientY;
 
       var rect = modal.getBoundingClientRect();
-      startWidth = rect.width;
-      startHeight = rect.height;
-      startLeft = rect.left;
-      startTop = rect.top;
+      modalResizeState.startWidth = rect.width;
+      modalResizeState.startHeight = rect.height;
 
       e.preventDefault();
       e.stopPropagation();
@@ -2297,28 +2319,22 @@ function initModalResize() {
   });
 
   document.addEventListener('mousemove', function(e) {
-    if (!isResizing) return;
+    if (!modalResizeState.isResizing) return;
 
-    var dx = e.clientX - startX;
-    var dy = e.clientY - startY;
-    var newWidth = startWidth;
-    var newHeight = startHeight;
+    var modal = document.getElementById('search-modal-container');
+    if (!modal) return;
 
-    // Calculate new dimensions based on handle
-    if (currentHandle.includes('e')) {
-      newWidth = startWidth + dx;
-    }
-    if (currentHandle.includes('w')) {
-      newWidth = startWidth - dx;
-    }
-    if (currentHandle.includes('s')) {
-      newHeight = startHeight + dy;
-    }
-    if (currentHandle.includes('n')) {
-      newHeight = startHeight - dy;
-    }
+    var dx = e.clientX - modalResizeState.startX;
+    var dy = e.clientY - modalResizeState.startY;
+    var newWidth = modalResizeState.startWidth;
+    var newHeight = modalResizeState.startHeight;
+    var handle = modalResizeState.currentHandle || '';
 
-    // Apply min/max constraints
+    if (handle.includes('e')) newWidth = modalResizeState.startWidth + dx;
+    if (handle.includes('w')) newWidth = modalResizeState.startWidth - dx;
+    if (handle.includes('s')) newHeight = modalResizeState.startHeight + dy;
+    if (handle.includes('n')) newHeight = modalResizeState.startHeight - dy;
+
     newWidth = Math.max(500, Math.min(newWidth, window.innerWidth * 0.95));
     newHeight = Math.max(400, Math.min(newHeight, window.innerHeight * 0.9));
 
@@ -2329,16 +2345,18 @@ function initModalResize() {
   });
 
   document.addEventListener('mouseup', function() {
-    isResizing = false;
+    modalResizeState.isResizing = false;
   });
+
+  modalResizeInitialized = true;
 }
 
-// Initialize resize on modal open
-var originalOpenSearchModal = openSearchModal;
-openSearchModal = function() {
-  originalOpenSearchModal();
-  setTimeout(initModalResize, 100);
-};
+// Initialize resize immediately when DOM is ready (not on modal open)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initModalResize);
+} else {
+  initModalResize();
+}
 
 function clearSearchFilters() {
   // Uncheck all checkboxes
@@ -2638,36 +2656,50 @@ function exportSearchResultsToCSV() {
     return;
   }
 
-  // CSV headers
-  var csv = '#,Club,Name,YOB,Position,Games,Goals,G/G,Link\n';
+  var url = null;
+  var link = null;
 
-  // Add each row
-  currentSearchResults.forEach(function(player) {
-    var row = [
-      player.jersey,
-      '"' + player.club + '"', // Quoted in case club name has commas
-      '"' + player.name + '"',
-      player.yob === '-' ? '' : player.yob,
-      player.position === '-' ? '' : player.position,
-      player.games,
-      player.goals,
-      player.ratio.toFixed(2),
-      player.link || ''
-    ];
-    csv += row.join(',') + '\n';
-  });
+  try {
+    // CSV headers
+    var csv = '#,Club,Name,YOB,Position,Games,Goals,G/G,Link\n';
 
-  // Create download link
-  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  var url = URL.createObjectURL(blob);
-  var link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'search-results-' + new Date().toISOString().split('T')[0] + '.csv');
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+    // Add each row
+    currentSearchResults.forEach(function(player) {
+      var row = [
+        player.jersey,
+        '"' + (player.club || '').replace(/"/g, '""') + '"',
+        '"' + (player.name || '').replace(/"/g, '""') + '"',
+        player.yob === '-' ? '' : player.yob,
+        player.position === '-' ? '' : player.position,
+        player.games,
+        player.goals,
+        player.ratio.toFixed(2),
+        player.link || ''
+      ];
+      csv += row.join(',') + '\n';
+    });
+
+    // Create download link
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    url = URL.createObjectURL(blob);
+    link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'search-results-' + new Date().toISOString().split('T')[0] + '.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+  } catch (err) {
+    console.error('CSV export failed:', err);
+    alert('Failed to export CSV: ' + err.message);
+  } finally {
+    // Cleanup: always revoke URL and remove link element
+    if (link && link.parentNode) {
+      document.body.removeChild(link);
+    }
+    if (url) {
+      URL.revokeObjectURL(url);
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2719,33 +2751,55 @@ function loadSearchFromURL() {
     return;
   }
 
-  // Load filter values from URL
+  // Whitelist of valid filter values to prevent XSS via CSS selectors
+  var validAges = ['u13', 'u14', 'u15', 'u16', 'u17', 'u19'];
+  var validPositions = ['GK', 'DEF', 'MID', 'FOR'];
+
+  // Load filter values from URL with validation
   if (urlParams.has('age')) {
     var ages = urlParams.get('age').split(',');
     ages.forEach(function(age) {
-      var checkbox = document.querySelector('#filter-age-group input[value="' + age + '"]');
-      if (checkbox) checkbox.checked = true;
+      // Only allow whitelisted age values
+      if (validAges.includes(age.toLowerCase())) {
+        var checkbox = document.querySelector('#filter-age-group input[value="' + age + '"]');
+        if (checkbox) checkbox.checked = true;
+      }
     });
   }
   if (urlParams.has('div')) {
     var divs = urlParams.get('div').split(',');
     divs.forEach(function(div) {
-      var checkbox = document.querySelector('#filter-division input[value="' + div + '"]');
-      if (checkbox) checkbox.checked = true;
+      // Sanitize division value - only allow alphanumeric, spaces, hyphens, parentheses
+      var sanitizedDiv = div.replace(/[^a-zA-Z0-9\s\-()]/g, '');
+      if (sanitizedDiv && sanitizedDiv === div) {
+        var checkbox = document.querySelector('#filter-division input[value="' + sanitizedDiv + '"]');
+        if (checkbox) checkbox.checked = true;
+      }
     });
   }
   if (urlParams.has('pos')) {
     var poss = urlParams.get('pos').split(',');
     poss.forEach(function(pos) {
-      var checkbox = document.querySelector('#filter-position input[value="' + pos + '"]');
-      if (checkbox) checkbox.checked = true;
+      // Only allow whitelisted position values
+      if (validPositions.includes(pos.toUpperCase())) {
+        var checkbox = document.querySelector('#filter-position input[value="' + pos + '"]');
+        if (checkbox) checkbox.checked = true;
+      }
     });
   }
   if (urlParams.has('goals')) {
-    document.getElementById('filter-min-goals').value = urlParams.get('goals');
+    // Only allow numeric values
+    var goals = urlParams.get('goals');
+    if (/^\d+$/.test(goals)) {
+      document.getElementById('filter-min-goals').value = goals;
+    }
   }
   if (urlParams.has('ratio')) {
-    document.getElementById('filter-min-ratio').value = urlParams.get('ratio');
+    // Only allow numeric/decimal values
+    var ratio = urlParams.get('ratio');
+    if (/^\d+(\.\d+)?$/.test(ratio)) {
+      document.getElementById('filter-min-ratio').value = ratio;
+    }
   }
   if (urlParams.has('playup')) {
     document.getElementById('filter-playing-up').checked = true;
@@ -3361,78 +3415,6 @@ async function submitAddClub(event) {
       }, 2000);
     }
   }
-}
-
-function extractStateFromAddress(address, displayName) {
-  // First try to extract from the input address
-  var addressMatch = address.match(/,?\s*([A-Z]{2})\s+\d{5}/);
-  if (addressMatch) {
-    return addressMatch[1];
-  }
-
-  // Extract state abbreviation from geocoding display name
-  var parts = displayName.split(',').map(function(p) { return p.trim(); });
-  for (var i = 0; i < parts.length; i++) {
-    var part = parts[i];
-    // Common US state abbreviations
-    if (/^[A-Z]{2}$/.test(part)) {
-      return part;
-    }
-  }
-
-  // Try to extract from full state names
-  var stateMap = {
-    'New York': 'NY', 'New Jersey': 'NJ', 'Pennsylvania': 'PA',
-    'Connecticut': 'CT', 'Massachusetts': 'MA', 'Rhode Island': 'RI',
-    'New Hampshire': 'NH', 'Vermont': 'VT', 'Maine': 'ME',
-    'Delaware': 'DE', 'Maryland': 'MD', 'Virginia': 'VA',
-    'West Virginia': 'WV', 'North Carolina': 'NC', 'South Carolina': 'SC',
-    'Georgia': 'GA', 'Florida': 'FL', 'Ohio': 'OH', 'Michigan': 'MI',
-    'Illinois': 'IL', 'Indiana': 'IN', 'Wisconsin': 'WI',
-    'California': 'CA', 'Texas': 'TX', 'Arizona': 'AZ', 'Nevada': 'NV',
-    'Oregon': 'OR', 'Washington': 'WA', 'Colorado': 'CO', 'Utah': 'UT'
-  };
-
-  for (var i = 0; i < parts.length; i++) {
-    if (stateMap[parts[i]]) {
-      return stateMap[parts[i]];
-    }
-  }
-
-  // Last resort: check if address contains state abbreviation
-  var stateAbbrs = Object.values(stateMap);
-  for (var i = 0; i < stateAbbrs.length; i++) {
-    if (address.toUpperCase().includes(stateAbbrs[i])) {
-      return stateAbbrs[i];
-    }
-  }
-
-  return 'XX';
-}
-
-function determineDivisionFromState(state) {
-  var divisionMap = {
-    'NY': 'Northeast Division', 'NJ': 'Northeast Division', 'CT': 'Northeast Division',
-    'MA': 'Northeast Division', 'RI': 'Northeast Division', 'NH': 'Northeast Division',
-    'VT': 'Northeast Division', 'ME': 'Northeast Division',
-    'PA': 'Mid-Atlantic Division', 'DE': 'Mid-Atlantic Division',
-    'MD': 'Mid-Atlantic Division', 'VA': 'Mid-Atlantic Division',
-    'WV': 'Mid-Atlantic Division', 'DC': 'Mid-Atlantic Division',
-    'NC': 'Southeast Division', 'SC': 'Southeast Division',
-    'GA': 'Southeast Division', 'FL': 'Florida Division',
-    'OH': 'Mid-America Division', 'MI': 'Mid-America Division',
-    'IL': 'Mid-America Division', 'IN': 'Mid-America Division',
-    'WI': 'Mid-America Division'
-  };
-  return divisionMap[state] || 'Other';
-}
-
-function generateInitials(name) {
-  var words = name.split(/\s+/);
-  if (words.length === 1) {
-    return words[0].substring(0, 3).toUpperCase();
-  }
-  return words.map(function(w) { return w[0]; }).join('').toUpperCase().substring(0, 4);
 }
 
 // Close modal on overlay click
