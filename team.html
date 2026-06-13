@@ -1970,7 +1970,7 @@ function renderRoster() {
 
     html += '<tr class="player-row" data-player="' + fullPlayerData + '" data-idx="' + idx + '">' +
       '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
-      '<td class="player-name-cell"><span class="player-name">' + p.name + '</span></td>' +
+      '<td class="player-name-cell" onclick="openPlayerDetail(this.closest(\'tr\'))"><span class="player-name">' + p.name + '</span></td>' +
       '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
       '<td class="editable' + editedClass('position') + '" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
       '<td class="editable' + editedClass('games') + '" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
