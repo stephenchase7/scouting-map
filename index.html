@@ -601,6 +601,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .catchment-1 { background: rgba(204, 0, 0, 0.4); border: 2px solid #cc0000; }
 .catchment-2 { background: rgba(0, 100, 200, 0.4); border: 2px solid #0064c8; }
 .catchment-3 { background: rgba(46, 204, 113, 0.4); border: 2px solid #2ecc71; }
+.open-territory { background: rgba(241, 196, 15, 0.4); border: 2px solid #f1c40f; }
 
 /* Loading spinner */
 .loading-overlay {
@@ -874,6 +875,14 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
           <label for="catchment-3-check">
             National (5-10% focus)
             <small>Full country coverage</small>
+          </label>
+        </div>
+        <div class="catchment-toggle" onclick="toggleOpenTerritory(this)">
+          <input type="checkbox" id="open-territory-check">
+          <div class="catchment-indicator open-territory"></div>
+          <label for="open-territory-check">
+            Open Territory
+            <small>MI, NV - no MLS affiliate</small>
           </label>
         </div>
       </div>
@@ -1683,13 +1692,15 @@ var MILES_TO_METERS = 1609.34;
 var catchmentLayers = {
   circle75: null,  // 75-mile radius circle
   regionalCircle: null,  // Larger regional circle for visualization
+  openTerritoryMarkers: []  // Open territory markers
 };
 
 // Catchment area state
 var catchmentState = {
   catchment1: false,  // 75mi radius
   catchment2: false,  // Regional (includes catchment1 + states)
-  catchment3: false   // National
+  catchment3: false,  // National
+  openTerritory: false  // Open Territory (MI, NV)
 };
 
 // States in Catchment 2 (Regional)
@@ -1821,6 +1832,60 @@ function toggleCatchment(num, element) {
 
   // Refresh the club list/map markers with filtering
   applyFilters();
+}
+
+// Toggle open territory highlighting
+function toggleOpenTerritory(element) {
+  var checkbox = document.getElementById('open-territory-check');
+  checkbox.checked = !checkbox.checked;
+  catchmentState.openTerritory = checkbox.checked;
+
+  if (element) {
+    element.classList.toggle('active', checkbox.checked);
+  }
+
+  // Highlight open territory clubs
+  updateOpenTerritoryMarkers();
+  applyFilters();
+}
+
+// Update open territory markers with special styling
+function updateOpenTerritoryMarkers() {
+  // Clear existing open territory highlights
+  catchmentLayers.openTerritoryMarkers.forEach(function(marker) {
+    map.removeLayer(marker);
+  });
+  catchmentLayers.openTerritoryMarkers = [];
+
+  if (catchmentState.openTerritory) {
+    // Add pulsing highlight to open territory states on the map
+    // Michigan center
+    var miMarker = L.circleMarker([44.3148, -85.6024], {
+      radius: 30,
+      color: '#f1c40f',
+      fillColor: '#f1c40f',
+      fillOpacity: 0.15,
+      weight: 2
+    }).addTo(map);
+    miMarker.bindPopup('<b>Michigan</b><br>Open Territory - No MLS Affiliate');
+    catchmentLayers.openTerritoryMarkers.push(miMarker);
+
+    // Nevada (Las Vegas) center
+    var nvMarker = L.circleMarker([36.1699, -115.1398], {
+      radius: 30,
+      color: '#f1c40f',
+      fillColor: '#f1c40f',
+      fillOpacity: 0.15,
+      weight: 2
+    }).addTo(map);
+    nvMarker.bindPopup('<b>Las Vegas / Nevada</b><br>Open Territory - No MLS Affiliate');
+    catchmentLayers.openTerritoryMarkers.push(nvMarker);
+
+    // Zoom out to show open territories if catchment 3 is not active
+    if (!catchmentState.catchment3) {
+      map.setView([39.8, -98.5], 4);
+    }
+  }
 }
 
 // Zoom map to fit all clubs in catchment area
