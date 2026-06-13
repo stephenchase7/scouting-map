@@ -333,17 +333,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   width:900px; max-width:95vw; min-width:500px; min-height:400px; height:auto;
   position:relative;
 }
-.resize-handle {
-  position:absolute; z-index:10;
-}
-.resize-handle.n { top:0; left:0; right:0; height:5px; cursor:n-resize; }
-.resize-handle.s { bottom:0; left:0; right:0; height:5px; cursor:s-resize; }
-.resize-handle.e { top:0; bottom:0; right:0; width:5px; cursor:e-resize; }
-.resize-handle.w { top:0; bottom:0; left:0; width:5px; cursor:w-resize; }
-.resize-handle.ne { top:0; right:0; width:10px; height:10px; cursor:ne-resize; }
-.resize-handle.nw { top:0; left:0; width:10px; height:10px; cursor:nw-resize; }
-.resize-handle.se { bottom:0; right:0; width:10px; height:10px; cursor:se-resize; }
-.resize-handle.sw { bottom:0; left:0; width:10px; height:10px; cursor:sw-resize; }
 .search-filters {
   background:#f9f9f9; padding:16px; border-radius:8px;
 }
@@ -612,11 +601,183 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .catchment-1 { background: rgba(204, 0, 0, 0.4); border: 2px solid #cc0000; }
 .catchment-2 { background: rgba(0, 100, 200, 0.4); border: 2px solid #0064c8; }
 .catchment-3 { background: rgba(46, 204, 113, 0.4); border: 2px solid #2ecc71; }
-.open-territory { background: rgba(241, 196, 15, 0.4); border: 2px solid #f1c40f; }
+
+/* Loading spinner */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  transition: opacity 0.3s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #cc0000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+.inline-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #cc0000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+/* Offline indicator */
+.offline-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff3cd;
+  color: #856404;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.offline-banner.show { display: flex; }
+.offline-banner .dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #856404;
+  padding: 0 4px;
+}
+
+/* Mobile hamburger menu */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1001;
+  width: 44px;
+  height: 44px;
+  background: #cc0000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.mobile-menu-btn svg { width: 24px; height: 24px; fill: #fff; }
+.mobile-menu-btn:active { transform: scale(0.95); }
+
+/* Mobile overlay */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+.mobile-overlay.show { display: block; }
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: toastIn 0.3s ease;
+  max-width: 300px;
+}
+.toast.success { background: #d4edda; color: #155724; }
+.toast.error { background: #f8d7da; color: #721c24; }
+.toast.info { background: #d1ecf1; color: #0c5460; }
+@keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .mobile-menu-btn { display: flex; }
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 85%;
+    max-width: 320px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    margin-left: 0 !important;
+  }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #sidebar-toggle { display: none; }
+  #sidebar-open { display: none !important; }
+  #map { left: 0 !important; }
+  .catchment-legend { left: 10px; bottom: 60px; }
+  .offline-banner { bottom: 70px; }
+}
 </style>
 <script src="playersData.js"></script>
 </head>
 <body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Loading clubs...</div>
+</div>
+
+<!-- Offline fallback indicator -->
+<div id="offline-banner" class="offline-banner">
+  <span>Using offline data</span>
+  <button class="dismiss" onclick="dismissOfflineBanner()">&times;</button>
+</div>
+
+<!-- Mobile hamburger menu button -->
+<button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()">
+  <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+</button>
+<div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+<!-- Toast notifications container -->
+<div class="toast-container" id="toast-container"></div>
 
 <div id="sidebar">
   <div id="sidebar-header">
@@ -715,14 +876,6 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
             <small>Full country coverage</small>
           </label>
         </div>
-        <div class="catchment-toggle" onclick="toggleOpenTerritory(this)">
-          <input type="checkbox" id="open-territory-check">
-          <div class="catchment-indicator open-territory"></div>
-          <label for="open-territory-check">
-            Open Territory
-            <small>MI, NV - no MLS affiliate</small>
-          </label>
-        </div>
       </div>
     </div>
   </div>
@@ -792,6 +945,95 @@ function cacheDOMElements() {
   DOM.activeChips = document.getElementById('active-chips');
   DOM.activeFilters = document.getElementById('active-filters');
 }
+
+// Loading overlay functions
+function showLoading(message) {
+  var overlay = document.getElementById('loading-overlay');
+  var text = document.getElementById('loading-text');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    if (text && message) text.textContent = message;
+  }
+}
+
+function hideLoading() {
+  var overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+function showOfflineBanner() {
+  var banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.add('show');
+}
+
+function dismissOfflineBanner() {
+  var banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.remove('show');
+}
+
+// Mobile menu functions
+function toggleMobileMenu() {
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('mobile-overlay');
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('mobile-overlay');
+  sidebar.classList.remove('mobile-open');
+  overlay.classList.remove('show');
+}
+
+// Toast notification function
+function showToast(message, type) {
+  type = type || 'info';
+  var container = document.getElementById('toast-container');
+  if (!container) return;
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 3000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  // Ignore if typing in an input field
+  var tag = e.target.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+    if (e.key === 'Escape') {
+      e.target.blur();
+    }
+    return;
+  }
+
+  switch (e.key) {
+    case 'Escape':
+      // Close any open modal or menu
+      closeAddClubModal();
+      closeSearchModal();
+      closeMobileMenu();
+      map.closePopup();
+      break;
+    case '/':
+      // Focus search input (prevent typing /)
+      e.preventDefault();
+      var searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.focus();
+      break;
+    case 's':
+      // Open search modal
+      if (!e.ctrlKey && !e.metaKey) {
+        openSearchModal();
+      }
+      break;
+  }
+});
 
 // ── COLOR CONFIG ──
 var DIVISION_COLORS = {
@@ -1061,6 +1303,7 @@ try {
 async function loadSupabaseClubs() {
   if (!supabaseClient) {
     console.log('[Supabase] Client not available, using embedded data only');
+    showOfflineBanner();
     return;
   }
 
@@ -1152,11 +1395,14 @@ async function loadSupabaseClubs() {
 
 // Load Supabase clubs (only adds NEW clubs, never overwrites hardcoded data)
 loadSupabaseClubs().then(function() {
+  hideLoading();
   if (supabaseDataLoaded && typeof refreshMap === 'function') {
     console.log('[Supabase] Refreshing map with new club data...');
     refreshMap();
   }
 }).catch(function(error) {
+  hideLoading();
+  showOfflineBanner();
   console.error('[Supabase] Failed to load clubs:', error);
   // Continue with hardcoded clubs only - app still works
 });
@@ -1437,22 +1683,17 @@ var MILES_TO_METERS = 1609.34;
 var catchmentLayers = {
   circle75: null,  // 75-mile radius circle
   regionalCircle: null,  // Larger regional circle for visualization
-  openTerritoryMarkers: []
 };
 
 // Catchment area state
 var catchmentState = {
   catchment1: false,  // 75mi radius
   catchment2: false,  // Regional (includes catchment1 + states)
-  catchment3: false,  // National
-  openTerritory: false  // MI, NV highlight
+  catchment3: false   // National
 };
 
 // States in Catchment 2 (Regional)
 var CATCHMENT_2_STATES = ['DC', 'MD', 'VA', 'PA', 'CT', 'MA', 'NH', 'RI', 'NJ', 'NY'];
-
-// Open territory states (no MLS affiliate nearby)
-var OPEN_TERRITORY_STATES = ['MI', 'NV'];
 
 // Draw 75-mile radius circle (Catchment 1)
 function drawCatchment1Circle() {
@@ -1516,7 +1757,7 @@ function isInCatchment(club, catchmentNum) {
   return false;
 }
 
-// Check if club matches current catchment/open territory filters
+// Check if club matches current catchment filters
 function matchesCatchmentFilters(club) {
   // If only Catchment 1 is active
   if (catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
@@ -1525,10 +1766,6 @@ function matchesCatchmentFilters(club) {
   // If Catchment 2 is active (includes Catchment 1)
   if (catchmentState.catchment2 && !catchmentState.catchment3) {
     return isInCatchment(club, 2);
-  }
-  // If only Open Territory is active (no catchment filters)
-  if (catchmentState.openTerritory && !catchmentState.catchment1 && !catchmentState.catchment2 && !catchmentState.catchment3) {
-    return OPEN_TERRITORY_STATES.includes(club.state);
   }
   // Catchment 3 (national) or no catchment filters - show all
   return true;
@@ -1586,60 +1823,6 @@ function toggleCatchment(num, element) {
   applyFilters();
 }
 
-// Toggle open territory highlighting
-function toggleOpenTerritory(element) {
-  var checkbox = document.getElementById('open-territory-check');
-  checkbox.checked = !checkbox.checked;
-  catchmentState.openTerritory = checkbox.checked;
-
-  if (element) {
-    element.classList.toggle('active', checkbox.checked);
-  }
-
-  // Highlight open territory clubs
-  updateOpenTerritoryMarkers();
-  applyFilters();
-}
-
-// Update open territory markers with special styling
-function updateOpenTerritoryMarkers() {
-  // Clear existing open territory highlights
-  catchmentLayers.openTerritoryMarkers.forEach(function(marker) {
-    map.removeLayer(marker);
-  });
-  catchmentLayers.openTerritoryMarkers = [];
-
-  if (catchmentState.openTerritory) {
-    // Add pulsing highlight to open territory states on the map
-    // Michigan center
-    var miMarker = L.circleMarker([44.3148, -85.6024], {
-      radius: 30,
-      color: '#f1c40f',
-      fillColor: '#f1c40f',
-      fillOpacity: 0.15,
-      weight: 2
-    }).addTo(map);
-    miMarker.bindPopup('<b>Michigan</b><br>Open Territory - No MLS Affiliate');
-    catchmentLayers.openTerritoryMarkers.push(miMarker);
-
-    // Nevada (Las Vegas) center
-    var nvMarker = L.circleMarker([36.1699, -115.1398], {
-      radius: 30,
-      color: '#f1c40f',
-      fillColor: '#f1c40f',
-      fillOpacity: 0.15,
-      weight: 2
-    }).addTo(map);
-    nvMarker.bindPopup('<b>Las Vegas / Nevada</b><br>Open Territory - No MLS Affiliate');
-    catchmentLayers.openTerritoryMarkers.push(nvMarker);
-
-    // Zoom out to show open territories if catchment 3 is not active
-    if (!catchmentState.catchment3) {
-      map.setView([39.8, -98.5], 4);
-    }
-  }
-}
-
 // Zoom map to fit all clubs in catchment area
 function zoomToCatchmentBounds(catchmentNum) {
   var boundsClubs = [];
@@ -1659,9 +1842,6 @@ function zoomToCatchmentBounds(catchmentNum) {
 
 // Get catchment badge for club
 function getCatchmentBadge(club) {
-  if (OPEN_TERRITORY_STATES.includes(club.state)) {
-    return '<span style="background:#f1c40f;color:#333;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">OPEN</span>';
-  }
   if (isInCatchment(club, 1)) {
     return '<span style="background:#cc0000;color:#fff;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">C1</span>';
   }
@@ -1766,6 +1946,32 @@ function ensureDistanceData(club) {
   return club;
 }
 
+// Get data freshness for a club (most recent update across squads)
+function getClubDataFreshness(clubId) {
+  if (!playersData || !playersData[clubId]) return null;
+  var clubData = playersData[clubId];
+  var mostRecent = null;
+  Object.keys(clubData).forEach(function(squad) {
+    var squadData = clubData[squad];
+    if (squadData && squadData.lastUpdated) {
+      var date = new Date(squadData.lastUpdated);
+      if (!mostRecent || date > mostRecent) mostRecent = date;
+    }
+  });
+  return mostRecent;
+}
+
+function formatFreshness(date) {
+  if (!date) return 'No data';
+  var now = new Date();
+  var diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Updated today';
+  if (diffDays === 1) return 'Updated yesterday';
+  if (diffDays < 7) return 'Updated ' + diffDays + ' days ago';
+  if (diffDays < 30) return 'Updated ' + Math.floor(diffDays / 7) + ' week' + (diffDays >= 14 ? 's' : '') + ' ago';
+  return 'Updated ' + date.toLocaleDateString();
+}
+
 function makePopupHtml(club) {
   club = ensureDistanceData(club);
   var color = getClubColor(club);
@@ -1775,6 +1981,15 @@ function makePopupHtml(club) {
                '<div class="popup-initials" style="display:none;background:' + color + ';">' + club.initials + '</div>';
   } else {
     logoHtml = '<div class="popup-initials" style="background:' + color + ';">' + club.initials + '</div>';
+  }
+
+  // Get data freshness
+  var freshnessDate = getClubDataFreshness(club.clubId);
+  var freshnessHtml = '';
+  if (freshnessDate) {
+    var diffDays = Math.floor((new Date() - freshnessDate) / (1000 * 60 * 60 * 24));
+    var freshnessColor = diffDays <= 7 ? '#27ae60' : diffDays <= 30 ? '#f39c12' : '#e74c3c';
+    freshnessHtml = '<div class="popup-row"><span class="popup-label">Data</span><span class="popup-value" style="color:' + freshnessColor + ';">' + formatFreshness(freshnessDate) + '</span></div>';
   }
 
   // Build buttons
@@ -1800,9 +2015,28 @@ function makePopupHtml(club) {
     '</div>' +
     '<div class="popup-row"><span class="popup-label">League</span><span class="popup-value" style="color:' + color + '">' + club.league + '</span></div>' +
     '<div class="popup-row"><span class="popup-label">Drive from NYRB</span><span class="popup-value">' + club.driveMiles + ' mi &bull; ' + club.driveTime + '</span></div>' +
+    freshnessHtml +
     buttonsHtml +
     deleteHtml +
     '</div>';
+}
+
+// Admin authentication state
+var isAdminAuthenticated = false;
+var ADMIN_PASSWORD = 'NYRBScout@26';
+
+function requireAdminAuth(callback) {
+  if (isAdminAuthenticated) {
+    callback();
+    return;
+  }
+  var password = prompt('Admin password required:');
+  if (password === ADMIN_PASSWORD) {
+    isAdminAuthenticated = true;
+    callback();
+  } else if (password !== null) {
+    alert('Incorrect password');
+  }
 }
 
 // Delete club from map and database
@@ -1812,10 +2046,21 @@ async function deleteClub(clubId) {
     return;
   }
 
+  // Require admin authentication
+  requireAdminAuth(async function() {
+    await performDeleteClub(clubId);
+  });
+}
+
+async function performDeleteClub(clubId) {
   var club = clubs.find(function(c) { return c.clubId === clubId; });
   var clubName = club ? club.name : clubId;
 
-  if (!confirm('Delete "' + clubName + '" from the map?\n\nThis will remove the club from the database permanently.')) {
+  // Require typing club name to confirm deletion
+  var confirmation = prompt('To permanently delete "' + clubName + '", type the club name below:');
+  if (confirmation === null) return; // cancelled
+  if (confirmation.trim().toLowerCase() !== clubName.trim().toLowerCase()) {
+    alert('Club name did not match. Deletion cancelled.');
     return;
   }
 
@@ -1867,7 +2112,7 @@ async function deleteClub(clubId) {
     // Update sidebar
     buildList();
 
-    alert('"' + clubName + '" has been deleted.');
+    showToast('"' + clubName + '" has been deleted.', 'success');
 
   } catch (err) {
     console.error('Delete error:', err);
@@ -2049,7 +2294,7 @@ function buildList() {
     var distanceText = (club.driveMiles > 0) ? ' &bull; ' + club.driveMiles + ' mi &bull; ' + club.driveTime : '';
 
     // Add catchment badge if any catchment is active
-    var catchmentBadge = (catchmentState.catchment1 || catchmentState.catchment2 || catchmentState.catchment3 || catchmentState.openTerritory) ? getCatchmentBadge(club) : '';
+    var catchmentBadge = (catchmentState.catchment1 || catchmentState.catchment2 || catchmentState.catchment3) ? getCatchmentBadge(club) : '';
 
     div.innerHTML = logoHtml +
       '<div class="club-info">' +
@@ -2231,7 +2476,6 @@ var currentSortDirection = 'desc'; // Default descending
 
 function openSearchModal() {
   document.getElementById('search-modal').style.display = 'flex';
-  renderSavedSearches();
 }
 
 function closeSearchModal() {
@@ -2282,81 +2526,6 @@ document.addEventListener('click', function(event) {
 // ══════════════════════════════════════════════════════════════
 // MODAL RESIZE FUNCTIONALITY
 // ══════════════════════════════════════════════════════════════
-
-var modalResizeInitialized = false;
-var modalResizeState = {
-  isResizing: false,
-  startX: 0,
-  startY: 0,
-  startWidth: 0,
-  startHeight: 0,
-  currentHandle: null
-};
-
-function initModalResize() {
-  // Only initialize once to prevent memory leaks
-  if (modalResizeInitialized) return;
-
-  var modal = document.getElementById('search-modal-container');
-  if (!modal) return;
-
-  var handles = modal.querySelectorAll('.resize-handle');
-
-  handles.forEach(function(handle) {
-    handle.addEventListener('mousedown', function(e) {
-      modalResizeState.isResizing = true;
-      modalResizeState.currentHandle = handle.classList[1];
-      modalResizeState.startX = e.clientX;
-      modalResizeState.startY = e.clientY;
-
-      var rect = modal.getBoundingClientRect();
-      modalResizeState.startWidth = rect.width;
-      modalResizeState.startHeight = rect.height;
-
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
-
-  document.addEventListener('mousemove', function(e) {
-    if (!modalResizeState.isResizing) return;
-
-    var modal = document.getElementById('search-modal-container');
-    if (!modal) return;
-
-    var dx = e.clientX - modalResizeState.startX;
-    var dy = e.clientY - modalResizeState.startY;
-    var newWidth = modalResizeState.startWidth;
-    var newHeight = modalResizeState.startHeight;
-    var handle = modalResizeState.currentHandle || '';
-
-    if (handle.includes('e')) newWidth = modalResizeState.startWidth + dx;
-    if (handle.includes('w')) newWidth = modalResizeState.startWidth - dx;
-    if (handle.includes('s')) newHeight = modalResizeState.startHeight + dy;
-    if (handle.includes('n')) newHeight = modalResizeState.startHeight - dy;
-
-    newWidth = Math.max(500, Math.min(newWidth, window.innerWidth * 0.95));
-    newHeight = Math.max(400, Math.min(newHeight, window.innerHeight * 0.9));
-
-    modal.style.width = newWidth + 'px';
-    modal.style.height = newHeight + 'px';
-    modal.style.maxWidth = 'none';
-    modal.style.maxHeight = 'none';
-  });
-
-  document.addEventListener('mouseup', function() {
-    modalResizeState.isResizing = false;
-  });
-
-  modalResizeInitialized = true;
-}
-
-// Initialize resize immediately when DOM is ready (not on modal open)
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initModalResize);
-} else {
-  initModalResize();
-}
 
 function clearSearchFilters() {
   // Uncheck all checkboxes
@@ -2531,7 +2700,11 @@ function displaySearchResults(results) {
   tbody.innerHTML = '';
 
   if (results.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:#999;">No players match your search criteria</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px; color:#666;">' +
+      '<div style="font-size:32px; margin-bottom:12px;">🔍</div>' +
+      '<div style="font-weight:600; margin-bottom:8px;">No players found</div>' +
+      '<div style="font-size:12px; color:#999;">Try adjusting your filters or search criteria</div>' +
+      '</td></tr>';
     container.style.display = 'block';
     return;
   }
@@ -2736,7 +2909,7 @@ function shareSearchURL() {
 
   // Copy to clipboard
   navigator.clipboard.writeText(shareURL).then(function() {
-    alert('Search URL copied to clipboard!\n\nShare this link:\n' + shareURL);
+    showToast('Search URL copied to clipboard!', 'success');
   }).catch(function(err) {
     // Fallback: show in prompt
     prompt('Copy this URL to share the search:', shareURL);
@@ -2815,176 +2988,6 @@ function loadSearchFromURL() {
     openSearchModal();
     performSearch();
   }, 500);
-}
-
-// ══════════════════════════════════════════════════════════════
-// SAVED SEARCHES
-// ══════════════════════════════════════════════════════════════
-
-function saveCurrentSearch() {
-  // Get current filter values
-  var searchData = {
-    ageGroups: Array.from(document.querySelectorAll('#filter-age-group input:checked')).map(cb => cb.value),
-    divisions: Array.from(document.querySelectorAll('#filter-division input:checked')).map(cb => cb.value),
-    positions: Array.from(document.querySelectorAll('#filter-position input:checked')).map(cb => cb.value),
-    minGoals: document.getElementById('filter-min-goals').value,
-    minRatio: document.getElementById('filter-min-ratio').value,
-    playingUp: document.getElementById('filter-playing-up').checked
-  };
-
-  // Check if any filters are set
-  var hasFilters = searchData.ageGroups.length > 0 || searchData.divisions.length > 0 || searchData.positions.length > 0 ||
-                   searchData.minGoals || searchData.minRatio || searchData.playingUp;
-
-  if (!hasFilters) {
-    alert('Please set some search filters before saving');
-    return;
-  }
-
-  // Prompt for search name
-  var searchName = prompt('Enter a name for this search:', '');
-  if (!searchName || searchName.trim() === '') {
-    return;
-  }
-
-  searchName = searchName.trim();
-
-  // Get existing saved searches
-  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-
-  // Check if name already exists
-  var existingIndex = savedSearches.findIndex(function(s) { return s.name === searchName; });
-  if (existingIndex !== -1) {
-    if (!confirm('A search with this name already exists. Overwrite?')) {
-      return;
-    }
-    savedSearches.splice(existingIndex, 1);
-  }
-
-  // Add new search
-  savedSearches.push({
-    name: searchName,
-    filters: searchData,
-    savedAt: new Date().toISOString()
-  });
-
-  // Save to localStorage
-  localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-
-  // Update UI
-  renderSavedSearches();
-
-  alert('Search "' + searchName + '" saved!');
-}
-
-function loadSavedSearch(searchName) {
-  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-  var search = savedSearches.find(function(s) { return s.name === searchName; });
-
-  if (!search) {
-    alert('Saved search not found');
-    return;
-  }
-
-  // Load filters (handle both old single-value and new multi-value format)
-  var filters = search.filters;
-
-  // Clear all checkboxes first
-  clearSearchFilters();
-
-  // Age groups - handle both old and new format
-  if (filters.ageGroups && Array.isArray(filters.ageGroups)) {
-    filters.ageGroups.forEach(function(age) {
-      var checkbox = document.querySelector('#filter-age-group input[value="' + age + '"]');
-      if (checkbox) checkbox.checked = true;
-    });
-  } else if (filters.ageGroup) {
-    var checkbox = document.querySelector('#filter-age-group input[value="' + filters.ageGroup + '"]');
-    if (checkbox) checkbox.checked = true;
-  }
-
-  // Divisions - handle both old and new format
-  if (filters.divisions && Array.isArray(filters.divisions)) {
-    filters.divisions.forEach(function(div) {
-      var checkbox = document.querySelector('#filter-division input[value="' + div + '"]');
-      if (checkbox) checkbox.checked = true;
-    });
-  } else if (filters.division) {
-    var checkbox = document.querySelector('#filter-division input[value="' + filters.division + '"]');
-    if (checkbox) checkbox.checked = true;
-  }
-
-  // Positions - handle both old and new format
-  if (filters.positions && Array.isArray(filters.positions)) {
-    filters.positions.forEach(function(pos) {
-      var checkbox = document.querySelector('#filter-position input[value="' + pos + '"]');
-      if (checkbox) checkbox.checked = true;
-    });
-  } else if (filters.position) {
-    var checkbox = document.querySelector('#filter-position input[value="' + filters.position + '"]');
-    if (checkbox) checkbox.checked = true;
-  }
-
-  document.getElementById('filter-min-goals').value = filters.minGoals || '';
-  document.getElementById('filter-min-ratio').value = filters.minRatio || '';
-  document.getElementById('filter-playing-up').checked = filters.playingUp || false;
-
-  // Update dropdown labels
-  updateDropdownLabel('filter-age-group');
-  updateDropdownLabel('filter-division');
-  updateDropdownLabel('filter-position');
-
-  // Automatically perform the search
-  performSearch();
-}
-
-function deleteSavedSearch(searchName) {
-  if (!confirm('Delete saved search "' + searchName + '"?')) {
-    return;
-  }
-
-  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-  savedSearches = savedSearches.filter(function(s) { return s.name !== searchName; });
-  localStorage.setItem('savedSearches', JSON.stringify(savedSearches));
-
-  renderSavedSearches();
-}
-
-function renderSavedSearches() {
-  var savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
-  var container = document.getElementById('saved-searches-list');
-  var section = document.getElementById('saved-searches-section');
-
-  if (savedSearches.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
-
-  section.style.display = 'block';
-  container.innerHTML = '';
-
-  savedSearches.forEach(function(search) {
-    var chip = document.createElement('div');
-    chip.style.cssText = 'display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:#f0f0f0; border-radius:16px; font-size:12px; cursor:pointer; transition:background 0.15s;';
-    chip.onmouseover = function() { this.style.background = '#e0e0e0'; };
-    chip.onmouseout = function() { this.style.background = '#f0f0f0'; };
-
-    var nameSpan = document.createElement('span');
-    nameSpan.textContent = search.name;
-    nameSpan.onclick = function() { loadSavedSearch(search.name); };
-
-    var deleteBtn = document.createElement('span');
-    deleteBtn.innerHTML = '&times;';
-    deleteBtn.style.cssText = 'font-size:16px; font-weight:bold; color:#999; cursor:pointer; line-height:1;';
-    deleteBtn.onclick = function(e) {
-      e.stopPropagation();
-      deleteSavedSearch(search.name);
-    };
-
-    chip.appendChild(nameSpan);
-    chip.appendChild(deleteBtn);
-    container.appendChild(chip);
-  });
 }
 
 // Geocode address using OpenStreetMap Nominatim API
@@ -3492,14 +3495,6 @@ loadSearchFromURL();
 <!-- SEARCH MODAL -->
 <div id="search-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeSearchModal()">
   <div class="modal-container search-modal-container" id="search-modal-container" onclick="event.stopPropagation()">
-    <div class="resize-handle n"></div>
-    <div class="resize-handle s"></div>
-    <div class="resize-handle e"></div>
-    <div class="resize-handle w"></div>
-    <div class="resize-handle ne"></div>
-    <div class="resize-handle nw"></div>
-    <div class="resize-handle se"></div>
-    <div class="resize-handle sw"></div>
     <div class="modal-header">
       <h2>🔍 Search Players</h2>
       <button class="modal-close" onclick="closeSearchModal()">×</button>
@@ -3594,15 +3589,6 @@ loadSearchFromURL();
         <div class="filter-actions">
           <button class="modal-btn modal-btn-primary" onclick="performSearch()">Search</button>
           <button class="modal-btn modal-btn-secondary" onclick="clearSearchFilters()">Clear</button>
-          <button class="modal-btn modal-btn-secondary" onclick="saveCurrentSearch()">💾 Save Search</button>
-        </div>
-
-        <!-- SAVED SEARCHES -->
-        <div id="saved-searches-section" style="margin-top:16px; padding-top:16px; border-top:1px solid #e0e0e0; display:none;">
-          <label style="font-size:12px; font-weight:600; color:#666; display:block; margin-bottom:8px;">Saved Searches:</label>
-          <div id="saved-searches-list" style="display:flex; flex-wrap:wrap; gap:8px;">
-            <!-- Populated by JavaScript -->
-          </div>
         </div>
       </div>
 
