@@ -839,6 +839,10 @@ var playersData = {};
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
           MLS NEXT Rules
         </a>
+        <button class="tool-link" onclick="openContactListModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          Contact List
+        </button>
       </div>
     </div>
   </div>
@@ -3768,6 +3772,253 @@ loadSearchFromURL();
     </div>
   </div>
 </div>
+
+<!-- Contact List Modal -->
+<div id="contact-list-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeContactListModal()">
+  <div class="modal-container" style="width:900px; max-width:95vw; max-height:90vh;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Contact List</h2>
+      <button class="modal-close" onclick="closeContactListModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <div style="margin-bottom:16px;">
+        <input type="text" id="contact-search" placeholder="Search contacts..."
+               style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:14px;"
+               oninput="filterContacts()">
+      </div>
+      <div style="overflow-y:auto; max-height:60vh;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f5f5f5; position:sticky; top:0;">
+              <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd; font-size:12px; font-weight:600;">Name</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd; font-size:12px; font-weight:600;">Email</th>
+              <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd; font-size:12px; font-weight:600;">Organization</th>
+            </tr>
+          </thead>
+          <tbody id="contact-list-body">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:16px; text-align:right; font-size:12px; color:#666;">
+        <span id="contact-count"></span> contacts
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Contact List Data
+const contactListData = [
+  { name: "Junro Narita", email: "junro@soccercentralsa.com", org: "Soccer Central SA" },
+  { name: "Sal Caccavale", email: "sal@salsoccer.com", org: "Sal Soccer" },
+  { name: "Steve Muccillo", email: "stevemuccillo@aol.com", org: "Unknown" },
+  { name: "Adriano Morases", email: "Adriano@afclightning.org", org: "AFC Lightning" },
+  { name: "Noah Gins", email: "noah@albionsc.com", org: "Albion SC" },
+  { name: "Dave Carver", email: "dave.carver@albionsccolorado.org", org: "Albion SC Colorado" },
+  { name: "Wayne Attard", email: "wayne@albionsclv.org", org: "Albion SC Las Vegas" },
+  { name: "Chris Riggott", email: "chris.riggott@albionsclv.org", org: "Albion SC Las Vegas" },
+  { name: "Jonas Murillo", email: "jonas.murillo@albionsclosangeles.org", org: "Albion SC Los Angeles" },
+  { name: "Eduardo Lopez", email: "Eduardo.lopez@albionscmerced.org", org: "Albion SC Merced" },
+  { name: "Jorge Garcia", email: "jgarcia@albionscsandiego.org", org: "Albion SC San Diego" },
+  { name: "Adem Gokturk", email: "adem@alexandria-soccer.org", org: "Alexandria Soccer" },
+  { name: "Anthony Hazelwood", email: "anthony.hazelwood@athletumfc.com", org: "Athletum FC" },
+  { name: "Javier Perez", email: "Javier.Perez@atlutd.com", org: "Atlanta United FC" },
+  { name: "Yago Aguilar", email: "YAguilar@austinfc.com", org: "Austin FC" },
+  { name: "Brady Taylor", email: "bradytaylor@busc.org", org: "BUSC" },
+  { name: "Aki Lake", email: "lake.akinola@gmail.com", org: "Baltimore Armour" },
+  { name: "G. Quinn", email: "gquinn@barcaresidencyacademyusa.com", org: "Barca Residency Academy" },
+  { name: "Kevin Gowrie", email: "Kevin.gowrie@bavarianunited.com", org: "Bavarian United" },
+  { name: "Kevin Bacher", email: "kbacher@baysidefc.com", org: "Bayside FC" },
+  { name: "Mickey Kydes", email: "mkydsoccer@aol.com", org: "Beachside Soccer" },
+  { name: "James Thomas", email: "james@beadling.com", org: "Beadling SC" },
+  { name: "Jonathon Colton", email: "jcolton@bethesdasoccer.org", org: "Bethesda Soccer" },
+  { name: "D. Biss", email: "dbiss@bethesdasoccer.org", org: "Bethesda Soccer" },
+  { name: "Miguel Brunngoengo", email: "usauru71@aol.com", org: "BW Gottschee" },
+  { name: "Kai Gockell", email: "kai.gockell@capcitysc.com", org: "Cap City SC" },
+  { name: "David Upchurch", email: "david.upchurch@carolinacorefc.com", org: "Carolina Core FC" },
+  { name: "Phil Swenada", email: "Phil.Swenda@cedarstars.com", org: "Cedar Stars Academy" },
+  { name: "Anthony Nixon", email: "anthony.nixon@cedarstars.com", org: "Cedar Stars Academy" },
+  { name: "Marinos Papageorgopoulos", email: "marinos.papageorgopoulos@cfmontreal.com", org: "CF Montreal" },
+  { name: "Tommy Wilson", email: "Tommy.Wilson@charlottefootballclub.com", org: "Charlotte FC" },
+  { name: "Jeff Bilyk", email: "jeffb@independencesoccer.club", org: "Independence Soccer" },
+  { name: "Sebastian Giraldo", email: "sebastian@chattanoogafc.com", org: "Chattanooga FC" },
+  { name: "Jeff D.", email: "jeff.d@chicagofcunited.com", org: "Chicago FC United" },
+  { name: "Gary Lewis", email: "glewis@chicagofirefc.com", org: "Chicago Fire FC" },
+  { name: "Hector Diaz", email: "hector.diaz@chulavistafc.com", org: "Chula Vista FC" },
+  { name: "Paul Ritchie", email: "paul@ourcitysc.com", org: "City SC" },
+  { name: "Matt", email: "matt@cityscsouthwest.com", org: "City SC Southwest" },
+  { name: "Andrew Kewley", email: "andrew.kewley@coloradorapids.com", org: "Colorado Rapids" },
+  { name: "Chris Cartlidge", email: "Chris.Cartlidge@ColoradoRapids.com", org: "Colorado Rapids" },
+  { name: "Brian Bliss", email: "Bbliss@columbuscrew.com", org: "Columbus Crew" },
+  { name: "Arman Osooli", email: "arman.osooli@ctunited.com", org: "CT United" },
+  { name: "Scott Bower", email: "sbower@cincinnatiunitedsc.com", org: "Cincinnati United SC" },
+  { name: "Blake Decker", email: "bdecker@cincinnatiunitedsc.com", org: "Cincinnati United SC" },
+  { name: "Kevin Flanagan", email: "kflanagan@dcunited.com", org: "DC United" },
+  { name: "Cody Worden", email: "cody@dallashornets.com", org: "Dallas Hornets" },
+  { name: "Jeff Baicher", email: "jeff.baicher@deanzaforce.org", org: "De Anza Force" },
+  { name: "Kevin McCarthy", email: "kevin.mccarthy@dusc.net", org: "DUSC" },
+  { name: "Marco Balsamo", email: "marco.balsamo@faeuro.com", org: "FA Euro" },
+  { name: "Heath Piper", email: "heath@fcbayarea.com", org: "FC Bay Area" },
+  { name: "Larry Sunderland", email: "sunderland@fccincinnati.com", org: "FC Cincinnati" },
+  { name: "Chris Hayden", email: "Chayden@fcdallas.com", org: "FC Dallas" },
+  { name: "Rob Elliott", email: "rob@fcdelco.org", org: "FC DELCO" },
+  { name: "Marco Koolman", email: "marcokoolman@bostonbolts.com", org: "Boston Bolts" },
+  { name: "Sean Napier", email: "seannapier@bostonbolts.com", org: "Boston Bolts" },
+  { name: "Stephen Carson", email: "stephen.carson@fcwestchester.com", org: "FC Westchester" },
+  { name: "Gareth", email: "gareth@gfiacademy.com", org: "GFI Academy" },
+  { name: "Russ Lawson", email: "russ.lawson@hoosierpremieracademy.org", org: "Hoosier Premier Academy" },
+  { name: "Mike Keeney", email: "mikekeeneyhvs@gmail.com", org: "HVS" },
+  { name: "Scott Howey", email: "showey@houstondynamo.com", org: "Houston Dynamo" },
+  { name: "Josh Gardner", email: "josh@houstonrangers.com", org: "Houston Rangers" },
+  { name: "Babayele Sodade", email: "bsodade@huntsvillecityfc.com", org: "Huntsville City FC" },
+  { name: "Stefano Frisicaro", email: "stefano.frisicaro@idea-sports.com", org: "Idea Sports" },
+  { name: "Simon Collins", email: "simon.collins@imgacademy.com", org: "IMG Academy" },
+  { name: "Joseph Walejko", email: "joseph.walejko@imgacademy.com", org: "IMG Academy" },
+  { name: "Kiki Wallace", email: "cwallace@indianafirejuniors.com", org: "Indiana Fire Academy" },
+  { name: "Jack Curtin", email: "jcurtin@interatlantafc.com", org: "Inter Atlanta FC" },
+  { name: "Victor Pastora", email: "Victor.Pastora@intermiamicf.com", org: "Inter Miami CF" },
+  { name: "Brittany Waterbury", email: "brittany.waterbury@InterMiamiCF.com", org: "Inter Miami CF" },
+  { name: "Guillermo Hoyos", email: "Guillermo.Hoyos@intermiamicf.com", org: "Inter Miami CF" },
+  { name: "Bill Altieri", email: "baltieri@ifanewengland.com", org: "IFA New England" },
+  { name: "Rohit Gautam", email: "rgautam@ifanewengland.com", org: "IFA New England" },
+  { name: "Steven Amorim", email: "samorim@verizon.net", org: "Unknown" },
+  { name: "Tommy Krizanovic", email: "tommyk@jfcsoccer.com", org: "JFC Soccer" },
+  { name: "Jason Brockman", email: "jbrockman@keystonefc.com", org: "Keystone FC" },
+  { name: "Bruno Kalonji", email: "bruno@kalonjisoccer.com", org: "Kalonji Soccer" },
+  { name: "K. Parker", email: "Kparker@labulls.org", org: "LA Bulls" },
+  { name: "Michael Munoz", email: "mmunoz@lagalaxy.com", org: "LA Galaxy" },
+  { name: "Tyson Wahl", email: "twahl@lagalaxy.com", org: "LA Galaxy" },
+  { name: "Mohamed Mohamed", email: "doc@lamorindasc.com", org: "Lamorinda SC" },
+  { name: "H. Rohde", email: "hrohde@laniersoccer.org", org: "Lanier Soccer" },
+  { name: "Jim Rasmussen", email: "jim.lvsa@gmail.com", org: "Las Vegas SA" },
+  { name: "Stuart Newman", email: "stuart.newman@longislandsc.com", org: "Long Island SC" },
+  { name: "Toni Hernandez", email: "toni.hernandez@lafc.com", org: "Los Angeles FC" },
+  { name: "B. Wright", email: "Bwright@lasoccerclub.org", org: "LA Soccer Club" },
+  { name: "Rod LaFaurie", email: "ROD@WEARELASURF.COM", org: "LA Surf" },
+  { name: "Matt Mueller", email: "matt.mueller@loufuszathletic.com", org: "Loufusz Athletic" },
+  { name: "Jeffrey Saunders", email: "jeff.saunders@metropolitanoval.org", org: "Metropolitan Oval" },
+  { name: "Yannick S", email: "yannick.metoval@gmail.com", org: "Metropolitan Oval" },
+  { name: "Raul Soriano", email: "renatto9@hotmail.com", org: "Miami Rush Kendall" },
+  { name: "Brett B.", email: "brettb@michigansportsacademies.com", org: "Michigan Sports Academies" },
+  { name: "Peter Pososki", email: "ppososki@yahoo.com", org: "Michigan" },
+  { name: "Lars Richters", email: "lars.wolves@gmail.com", org: "Michigan Wolves" },
+  { name: "L. Ruff", email: "lruff@midwestunitedfc.com", org: "Midwest United FC" },
+  { name: "Amos Magee", email: "Amos.M@mnufc.com", org: "Minnesota United FC" },
+  { name: "M. Raposas", email: "mraposas@mysa-ajax.org", org: "MYSA Ajax" },
+  { name: "Darren Powell", email: "dpowell@nashvillesc.com", org: "Nashville SC" },
+  { name: "Valentina Galvis", email: "vgalvis@nashvillesc.com", org: "Nashville SC" },
+  { name: "Christian Battaglia", email: "christian@nefc.us", org: "NEFC" },
+  { name: "Rob Becerra", email: "rbecerra@revolutionsoccer.net", org: "New England Revolution" },
+  { name: "Brendan Smith", email: "brendan.smith@nycfc.com", org: "New York City FC" },
+  { name: "Christian Gonzalez", email: "christian.gonzalez@newyorksoccerclub.org", org: "New York Soccer Club" },
+  { name: "Maurice Hughes", email: "maurice.hughes@nvasoccer.com", org: "NVA Soccer" },
+  { name: "Alan O'Connor", email: "alan.oconnor@nashusa.org", org: "NASH USA" },
+  { name: "Bob Jeffrey", email: "bob.jeffrey@nashusa.org", org: "NASH USA" },
+  { name: "Jose Campos", email: "jcampos@orlandocitysoccer.com", org: "Orlando City" },
+  { name: "Esteban Pareja", email: "estebanpareja@ocss-south.com", org: "OCSS South" },
+  { name: "Petrut Bumbanac", email: "petrut.bumbanac@ocyouthsoccer.com", org: "OC Youth Soccer" },
+  { name: "Steve Klein", email: "steve@paclassics.org", org: "PA Classics" },
+  { name: "Jon Scheer", email: "jscheer@philadelphiaunion.com", org: "Philadelphia Union" },
+  { name: "Andy Chapman", email: "andyc@prfcyouthsoccer.com", org: "PRFC Youth Soccer" },
+  { name: "Tyler Stakwicz", email: "stakiwiczt@gmail.com", org: "Players Development Academy" },
+  { name: "Nick Mansueto", email: "nmansueto@timbers.com", org: "Portland Timbers" },
+  { name: "Jordan Keegan", email: "jkeegan@timbers.com", org: "Portland Timbers" },
+  { name: "Rani Ghaziri", email: "rghaziri@qcmutiny.com", org: "QC Mutiny" },
+  { name: "Mike Winters", email: "mwinters@realfutbolacademy.com", org: "Real Futbol Academy" },
+  { name: "Anthony Beltran", email: "anthony.beltran@rsl.com", org: "Real Salt Lake" },
+  { name: "Colton Atkin", email: "colton.atkin@rsl.com", org: "Real Salt Lake" },
+  { name: "Ryan Brooks", email: "Ryan.Brooks@newyorkredbulls.com", org: "New York Red Bulls" },
+  { name: "Sean McCafferty", email: "Sean.McCafferty@newyorkredbulls.com", org: "New York Red Bulls" },
+  { name: "T. Durkin", email: "tdurkin@rslaz.org", org: "RSL AZ" },
+  { name: "Jose Hernandez", email: "jahernandez@rslaz.org", org: "RSL AZ" },
+  { name: "Eder Quintanilla", email: "equintanilla@sacrepublicfc.com", org: "Sacramento Republic" },
+  { name: "J. Fresquez", email: "j.fresquez@sacunited.com", org: "Sac United" },
+  { name: "Rafa Calderon", email: "Rafa.Calderon@sandiegofc.com", org: "San Diego FC" },
+  { name: "Steven Sosa", email: "stevensosa@sfglenssc.org", org: "SF Glens SC" },
+  { name: "Luchi Gonzalez", email: "lgonzalez@sjearthquakes.com", org: "San Jose Earthquakes" },
+  { name: "Tommy", email: "tommy@santabarbarasc.org", org: "Santa Barbara SC" },
+  { name: "Greg Wilson", email: "sbscdoc@gmail.com", org: "SBS" },
+  { name: "Keith Jones", email: "keithjones@scdelsol.com", org: "SC del Sol" },
+  { name: "Marcio Leite", email: "marcioleite7@hotmail.com", org: "SC Wave" },
+  { name: "Peter Decker", email: "pdecker@seacoastunited.com", org: "Seacoast United" },
+  { name: "Wade Webber", email: "wadew@soundersfc.com", org: "Seattle Sounders FC" },
+  { name: "Sean Bushey", email: "Sean.Bushey@s-sm.org", org: "S-SM" },
+  { name: "Savio Carrijo", email: "savio.carrijo@pasoccerclub.org", org: "Silicon Valley/PA Soccer" },
+  { name: "Artur Jozkowicz", email: "artur.jozkowicz@socalredsfc.com", org: "SoCal Reds FC" },
+  { name: "David Richardson", email: "david@sockersfcchicago.com", org: "Sockers FC Chicago" },
+  { name: "Alfonzo", email: "alfonzo@solsportsclub.org", org: "Sol Sports Club" },
+  { name: "Eric Eichmann", email: "eichmann88@yahoo.com", org: "South Florida Football" },
+  { name: "Roberto Sibaja", email: "robertos@ssaelite.com", org: "Southern Soccer Academy" },
+  { name: "Steve Cavalier", email: "scavalier@bpgsports.com", org: "BPG Sports" },
+  { name: "Declan Jogi", email: "Declan.Jogi@sportingkc.com", org: "Sporting Kansas City" },
+  { name: "Stephen Tupy", email: "Stephentupy@sycva.com", org: "Springfield SYC" },
+  { name: "Esteban Maldonado", email: "estemaldonado@sycva.com", org: "Springfield SYC" },
+  { name: "Dale Schilly", email: "dale@stlcitysc.com", org: "St. Louis City SC" },
+  { name: "Steve Trittschuh", email: "strittschuh@slsgsoccer.com", org: "St. Louis Scott Gallagher" },
+  { name: "Willie", email: "williestrikersfc@gmail.com", org: "Strikers FC" },
+  { name: "Brian Johnson", email: "bjohnson@tbusc.com", org: "Tampa Bay United" },
+  { name: "Jorge Zavala", email: "jzavala@tbusc.com", org: "Tampa Bay United" },
+  { name: "Mark Cassidy", email: "mark@thefootballacademynj.com", org: "The Football Academy NJ" },
+  { name: "Jon Scoles", email: "jonscoles@ymail.com", org: "Unknown" },
+  { name: "Anthony Capotosto", email: "acapotosto@torontofc.ca", org: "Toronto FC" },
+  { name: "Mario Gonzalez", email: "mgonzalez729@yahoo.com", org: "Unknown" },
+  { name: "John Cirillo", email: "jcirillo@triangleunited.org", org: "Triangle United" },
+  { name: "P. O'Donnell", email: "podonnell@tsfacademy.com", org: "TSF Academy" },
+  { name: "Miguel", email: "miguel@tulsagreenwoodsc.com", org: "Tulsa Greenwood SC" },
+  { name: "Corlton Simmonds", email: "corlton@valeofc.com", org: "Valeo FC" },
+  { name: "Dave Irvine", email: "dirvine@whitecapsfc.com", org: "Vancouver Whitecaps FC" },
+  { name: "Maxwell Corcoran", email: "mcorcoran@whitecapsfc.com", org: "Vancouver Whitecaps FC" },
+  { name: "Rich Fagan", email: "rfagan@whitecapsfc.com", org: "Vancouver Whitecaps FC" },
+  { name: "Morris Lupenec", email: "molupenec@vardarsoccer.com", org: "Vardar Soccer" },
+  { name: "Keith Costigan", email: "keith@vcfusion.com", org: "Ventura County Fusion" },
+  { name: "Amo Dhillon", email: "amo@vcfusion.com", org: "Ventura County Fusion" },
+  { name: "Jason Schmieg", email: "Jason.schmieg@wakefc.com", org: "Wake FC" },
+  { name: "E. Sutherland", email: "esutherland@fcflames.com", org: "FC Flames" },
+  { name: "Luis Mendoza", email: "luis.mendoza@westonfc.org", org: "Weston FC" },
+  { name: "Zak Ibsen", email: "zibsen@gmail.com", org: "WSC Crush" }
+];
+
+function openContactListModal() {
+  const modal = document.getElementById('contact-list-modal');
+  modal.style.display = 'flex';
+  document.getElementById('contact-search').value = '';
+  renderContacts(contactListData);
+}
+
+function closeContactListModal() {
+  document.getElementById('contact-list-modal').style.display = 'none';
+}
+
+function renderContacts(contacts) {
+  const tbody = document.getElementById('contact-list-body');
+  tbody.innerHTML = contacts.map(c => `
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:10px 12px; font-size:13px;">${c.name}</td>
+      <td style="padding:10px 12px; font-size:13px;"><a href="mailto:${c.email}" style="color:#1a73e8; text-decoration:none;">${c.email}</a></td>
+      <td style="padding:10px 12px; font-size:13px; color:#666;">${c.org}</td>
+    </tr>
+  `).join('');
+  document.getElementById('contact-count').textContent = contacts.length;
+}
+
+function filterContacts() {
+  const query = document.getElementById('contact-search').value.toLowerCase();
+  const filtered = contactListData.filter(c =>
+    c.name.toLowerCase().includes(query) ||
+    c.email.toLowerCase().includes(query) ||
+    c.org.toLowerCase().includes(query)
+  );
+  renderContacts(filtered);
+}
+
+// Close contact list modal on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeContactListModal();
+  }
+});
+</script>
 
 <div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
