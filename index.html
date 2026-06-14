@@ -1845,7 +1845,12 @@ var markerClusterGroup = L.markerClusterGroup({
   showCoverageOnHover: false,
   maxClusterRadius: 50,
   spiderfyOnMaxZoom: true,
-  disableClusteringAtZoom: 14
+  disableClusteringAtZoom: 14,
+  animate: false,
+  animateAddingMarkers: false,
+  chunkedLoading: true,
+  chunkInterval: 100,
+  chunkDelay: 25
 });
 map.addLayer(markerClusterGroup);
 
