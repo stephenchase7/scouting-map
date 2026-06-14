@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Academy Scout Hub</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2e; display:flex; height:100vh; overflow:hidden; }
@@ -1840,19 +1837,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
   subdomains: 'abcd', maxZoom: 19
 }).addTo(map);
 
-// ── MARKER CLUSTER GROUP ──
-var markerClusterGroup = L.markerClusterGroup({
-  showCoverageOnHover: false,
-  maxClusterRadius: 50,
-  spiderfyOnMaxZoom: true,
-  disableClusteringAtZoom: 14,
-  animate: false,
-  animateAddingMarkers: false,
-  chunkedLoading: true,
-  chunkInterval: 100,
-  chunkDelay: 25
-});
-map.addLayer(markerClusterGroup);
+// ── MARKERS LAYER ──
+var markersLayer = L.layerGroup().addTo(map);
 
 // ── ZOOM CONTROLS ──
 function zoomIn() { map.zoomIn(0.5); }
@@ -2539,7 +2525,7 @@ async function performDeleteClub(clubId, csrfToken) {
 // Rebuild all markers (after delete)
 function rebuildMarkers() {
   // Clear all existing markers from cluster group
-  markerClusterGroup.clearLayers();
+  markersLayer.clearLayers();
   markers = [];
 
   // Recreate markers for all clubs
@@ -2553,7 +2539,7 @@ function rebuildMarkers() {
     marker.bindPopup(makePopupHtml(club), {maxWidth: 250});
     marker.on('click', function() { selectClub(idx); });
     markers.push(marker);
-    markerClusterGroup.addLayer(marker);
+    markersLayer.addLayer(marker);
   });
 }
 
@@ -2592,7 +2578,7 @@ clubs.forEach(function(club, idx) {
   m.bindPopup(makePopupHtml(club), {maxWidth:250});
   m.on('click', function() { selectClub(idx); });
   markers.push(m);
-  markerClusterGroup.addLayer(m);
+  markersLayer.addLayer(m);
 });
 
 // ── HIERARCHICAL DIVISION FUNCTIONS ──
@@ -2773,11 +2759,11 @@ function updateMarkerVisibility() {
     var matchesCatchment = matchesCatchmentFilters(club);
 
     if (matchesSearch && filterMatch && matchesCatchment) {
-      if (!markerClusterGroup.hasLayer(markers[idx])) {
-        markerClusterGroup.addLayer(markers[idx]);
+      if (!markersLayer.hasLayer(markers[idx])) {
+        markersLayer.addLayer(markers[idx]);
       }
     } else {
-      markerClusterGroup.removeLayer(markers[idx]);
+      markersLayer.removeLayer(markers[idx]);
     }
   });
 }
@@ -3879,7 +3865,7 @@ async function submitAddClub(event) {
     var clubIndex = clubs.length - 1;
     marker.on('click', function() { selectClub(clubIndex); });
     markers.push(marker);
-    markerClusterGroup.addLayer(marker);
+    markersLayer.addLayer(marker);
 
     // Step 9: Update the sidebar list and zoom to marker
     buildList();
