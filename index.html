@@ -1291,7 +1291,7 @@ try {
     // Save cleaned list back to localStorage
     if (filteredCustomClubs.length !== customClubs.length) {
       localStorage.setItem('customClubs', JSON.stringify(filteredCustomClubs));
-      console.log('Removed ' + (customClubs.length - filteredCustomClubs.length) + ' duplicate custom club(s)');
+      // Removed duplicate custom clubs
     }
 
     // Ensure custom clubs have distance data (for backwards compatibility)
@@ -1319,7 +1319,7 @@ try {
     });
 
     clubs = clubs.concat(filteredCustomClubs);
-    console.log('Loaded ' + filteredCustomClubs.length + ' custom club(s) from localStorage');
+    // Custom clubs loaded from localStorage
   }
 } catch (e) {
   console.error('Error loading custom clubs:', e);
@@ -1342,13 +1342,13 @@ try {
 // Load clubs from Supabase and merge with existing clubs
 async function loadSupabaseClubs() {
   if (!supabaseClient) {
-    console.log('[Supabase] Client not available, using embedded data only');
+    // Supabase unavailable - using embedded data
     showOfflineBanner();
     return;
   }
 
   try {
-    console.log('[Supabase] Loading clubs from database...');
+    // Loading clubs from Supabase...
 
     // Load all clubs from Supabase
     const { data: supabaseClubs, error } = await supabaseClient
@@ -1361,7 +1361,7 @@ async function loadSupabaseClubs() {
     }
 
     if (supabaseClubs && supabaseClubs.length > 0) {
-      console.log(`[Supabase] Loaded ${supabaseClubs.length} clubs`);
+      // Supabase clubs loaded
 
       // Merge Supabase clubs with existing clubs
       supabaseClubs.forEach(function(sbClub) {
@@ -1425,7 +1425,7 @@ async function loadSupabaseClubs() {
         }
       });
 
-      console.log('[Supabase] Successfully merged clubs. Total clubs:', clubs.length);
+      // Supabase merge complete
     }
 
     // Also load squad data for data freshness indicators
@@ -1436,7 +1436,7 @@ async function loadSupabaseClubs() {
     if (squadsError) {
       console.warn('[Supabase] Failed to load squad data:', squadsError);
     } else if (squads && squads.length > 0) {
-      console.log('[Supabase] Loaded ' + squads.length + ' squads for data freshness');
+      // Squad data loaded for freshness indicators
       squads.forEach(function(squad) {
         if (!playersData[squad.club_id]) {
           playersData[squad.club_id] = {};
@@ -1454,17 +1454,16 @@ async function loadSupabaseClubs() {
   }
 }
 
-// Load Supabase clubs (only adds NEW clubs, never overwrites hardcoded data)
+// Hide loading immediately - map renders with embedded data first
+hideLoading();
+
+// Load Supabase clubs in background (only adds NEW clubs, never overwrites hardcoded data)
 loadSupabaseClubs().then(function() {
-  hideLoading();
   if (supabaseDataLoaded && typeof refreshMap === 'function') {
-    console.log('[Supabase] Refreshing map with new club data...');
     refreshMap();
   }
 }).catch(function(error) {
-  hideLoading();
   showOfflineBanner();
-  console.error('[Supabase] Failed to load clubs:', error);
   // Continue with hardcoded clubs only - app still works
 });
 
@@ -3351,9 +3350,7 @@ async function submitAddClub(event) {
         csvLeague = 'HD'; // Default to MLS Next (HD)
       }
 
-      console.log('✓ Found "' + clubName + '" in league database');
-      console.log('  League: ' + csvLeague);
-      console.log('  Division: ' + csvDivision);
+      // Found club in league database
 
       // Override the form league selection with CSV data
       league = csvLeague;
@@ -3396,7 +3393,7 @@ async function submitAddClub(event) {
     if (csvDivision) {
       // Use division from CSV database
       division = csvDivision;
-      console.log('✓ Using division from league database: ' + division);
+      // Using division from league database
     } else {
       // Fallback to state-based division
       division = STATE_TO_DIVISION[geocodeResult.state] || 'Other';
@@ -3500,7 +3497,7 @@ async function submitAddClub(event) {
         throw new Error('Database save failed: ' + error.message + '. Saved locally instead.');
       }
 
-      console.log('[Supabase] Club saved:', data);
+      // Club saved to Supabase
     } catch (supabaseError) {
       console.error('Supabase error:', supabaseError);
     }
