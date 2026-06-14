@@ -1463,7 +1463,6 @@ async function loadSupabaseData(targetClubId) {
   }
 
   try {
-    console.log(`[Supabase] Loading data for club: ${targetClubId}`);
     const startTime = performance.now();
 
     // Load only the specific club from Supabase (parallel requests)
@@ -1499,7 +1498,6 @@ async function loadSupabaseData(targetClubId) {
     if (squadsError) {
       console.warn('[Supabase] Failed to load squad data:', squadsError);
     } else if (squads && squads.length > 0) {
-      console.log(`[Supabase] Loaded ${squads.length} squads for ${targetClubId}`);
 
       // Initialize club in playersData if needed
       if (!playersData[targetClubId]) {
@@ -1524,8 +1522,6 @@ async function loadSupabaseData(targetClubId) {
       supabaseDataLoaded = true;
     }
 
-    const loadTime = (performance.now() - startTime).toFixed(0);
-    console.log(`[Supabase] Data loaded in ${loadTime}ms`);
     return true;
   } catch (error) {
     console.error('[Supabase] Error loading data:', error);
@@ -1627,6 +1623,20 @@ async function init() {
   }
 
   showTeam(squadToShow);
+}
+
+// XSS prevention helpers
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function escapeAttr(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
 }
 
 function showError(title, message) {
@@ -2204,7 +2214,7 @@ function showEditModal(playerIndex, field) {
   // Apply overrides to get current value
   var player = applyOverrides(originalPlayer, clubId, currentTeam);
 
-  document.getElementById('edit-field-label').innerHTML = 'Player: <strong id="edit-player-name">' + player.name + '</strong>';
+  document.getElementById('edit-field-label').innerHTML = 'Player: <strong id="edit-player-name">' + escapeHtml(player.name) + '</strong>';
   document.getElementById('edit-field-name').textContent = field.charAt(0).toUpperCase() + field.slice(1);
 
   var container = document.getElementById('edit-input-container');
@@ -2220,9 +2230,9 @@ function showEditModal(playerIndex, field) {
         return '<option value="' + pos + '"' + selected + '>' + label + '</option>';
       }).join('') + '</select>';
   } else if (field === 'yob' || field === 'goals' || field === 'games' || field === 'jersey') {
-    container.innerHTML = '<input type="number" id="edit-value" value="' + currentValue + '">';
+    container.innerHTML = '<input type="number" id="edit-value" value="' + escapeAttr(currentValue) + '">';
   } else {
-    container.innerHTML = '<input type="text" id="edit-value" value="' + currentValue + '">';
+    container.innerHTML = '<input type="text" id="edit-value" value="' + escapeAttr(currentValue) + '">';
   }
 
   pendingEdit = {playerIndex: playerIndex, field: field};
@@ -2412,7 +2422,6 @@ function renderPlayerDetail(player) {
 function updatePlayerDetailSeason() {
   // Placeholder for multi-season support
   // Will reload player data for selected season when implemented
-  console.log('Season changed to:', document.getElementById('player-detail-season').value);
 }
 
 // Global season change
@@ -2420,7 +2429,6 @@ var currentSeason = '2025-2026';
 
 function changeSeason(season) {
   currentSeason = season;
-  console.log('Season changed to:', season);
   // Placeholder: In multi-season implementation, this will:
   // 1. Load data for the selected season from Supabase
   // 2. Re-render the roster with new season data
@@ -2497,7 +2505,7 @@ function editDirectorField(directorIndex, field) {
   var container = document.getElementById('edit-input-container');
   var inputType = field === 'email' ? 'email' : 'text';
   var placeholder = field === 'phone' ? '555-555-5555' : (field === 'email' ? 'email@example.com' : '');
-  container.innerHTML = '<input type="' + inputType + '" id="edit-value" value="' + (currentValue || '') + '" placeholder="' + placeholder + '">';
+  container.innerHTML = '<input type="' + inputType + '" id="edit-value" value="' + escapeAttr(currentValue || '') + '" placeholder="' + placeholder + '">';
 
   // Store pending edit info
   pendingEdit = {

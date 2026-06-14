@@ -2608,7 +2608,6 @@
         // Initialize Supabase client
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('[Supabase] Client initialized');
         } catch (e) {
             console.warn('[Supabase] Failed to initialize client:', e);
         }
@@ -2620,11 +2619,25 @@
         var isAdminMode = false;
         var ADMIN_PASSWORD = 'NYRBScout@26';
 
+        // Helper function to escape strings for HTML attributes (prevents XSS)
+        function escapeAttr(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+            });
+        }
+        // Helper function to escape strings for HTML content
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+            });
+        }
+
         // Load data from Supabase
         async function loadFromSupabase() {
             if (!supabaseClient) return false;
             try {
-                console.log('[Supabase] Loading scouts data...');
 
                 // Load scouts
                 const { data: scoutsData, error: scoutsError } = await supabaseClient
@@ -2642,7 +2655,6 @@
                         id: s.id,
                         name: s.name
                     }));
-                    console.log('[Supabase] Loaded', scouts.length, 'scouts');
                 }
 
                 // Load players
@@ -2673,7 +2685,6 @@
                         sharedWith: p.shared_with || [],
                         dateAdded: p.date_added
                     }));
-                    console.log('[Supabase] Loaded', players.length, 'players');
                 }
 
                 // Load reports
@@ -2701,7 +2712,6 @@
                         priority: r.priority,
                         notes: r.notes
                     }));
-                    console.log('[Supabase] Loaded', reports.length, 'reports');
                 }
 
                 supabaseConnected = true;
@@ -2850,7 +2860,7 @@
                 // Re-render to show updated data
                 renderPlayers();
                 if (currentPlayerId) {
-                    showPlayerDetails(currentPlayerId);
+                    viewPlayer(currentPlayerId);
                 }
             }
         });
@@ -2923,12 +2933,12 @@
                 var isActive = selectedScoutId === scout.id ? ' active' : '';
                 var playerCount = players.filter(function(p) { return p.scoutId === scout.id; }).length;
 
-                html += '<div class="scout-item' + isActive + '" onclick="selectScout(\'' + scout.id + '\')">';
-                html += '<div class="scout-avatar">' + initials + '</div>';
-                html += '<span class="scout-name">' + scout.name + '</span>';
+                html += '<div class="scout-item' + isActive + '" onclick="selectScout(\'' + escapeAttr(scout.id) + '\')">';
+                html += '<div class="scout-avatar">' + escapeHtml(initials) + '</div>';
+                html += '<span class="scout-name">' + escapeHtml(scout.name) + '</span>';
                 html += '<div class="scout-actions">';
-                html += '<button class="scout-action-btn" onclick="event.stopPropagation(); editScout(\'' + scout.id + '\')">&#9998;</button>';
-                html += '<button class="scout-action-btn delete" onclick="event.stopPropagation(); deleteScout(\'' + scout.id + '\')">&#10005;</button>';
+                html += '<button class="scout-action-btn" onclick="event.stopPropagation(); editScout(\'' + escapeAttr(scout.id) + '\')">&#9998;</button>';
+                html += '<button class="scout-action-btn delete" onclick="event.stopPropagation(); deleteScout(\'' + escapeAttr(scout.id) + '\')">&#10005;</button>';
                 html += '</div>';
                 html += '</div>';
             });
@@ -3067,7 +3077,12 @@
             document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
             document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
 
-            event.target.classList.add('active');
+            // Find and activate the clicked tab button by matching its onclick content
+            document.querySelectorAll('.tab').forEach(function(t) {
+                if (t.getAttribute('onclick') && t.getAttribute('onclick').indexOf("'" + tab + "'") !== -1) {
+                    t.classList.add('active');
+                }
+            });
             document.getElementById(tab + '-tab').style.display = 'block';
         }
 
@@ -3562,21 +3577,21 @@
                 html += '<div class="report-header-right">';
                 html += '<span class="report-date">' + dateStr + '</span>';
                 if (canDelete) {
-                    html += '<button class="report-edit-btn" onclick="editReport(\'' + report.id + '\')" title="Edit Report">✎</button>';
-                    html += '<button class="report-delete-btn" onclick="deleteReport(\'' + report.id + '\')" title="Delete Report">×</button>';
+                    html += '<button class="report-edit-btn" onclick="editReport(\'' + escapeAttr(report.id) + '\')" title="Edit Report">✎</button>';
+                    html += '<button class="report-delete-btn" onclick="deleteReport(\'' + escapeAttr(report.id) + '\')" title="Delete Report">×</button>';
                 }
                 html += '</div>';
                 html += '</div>';
                 html += '<div class="report-meta">';
-                if (report.source) html += '<span class="report-tag">' + report.source + '</span>';
-                if (report.build) html += '<span class="report-tag">' + report.build + '</span>';
-                if (report.weakerFoot) html += '<span class="report-tag">Weak Foot: ' + report.weakerFoot + '</span>';
+                if (report.source) html += '<span class="report-tag">' + escapeHtml(report.source) + '</span>';
+                if (report.build) html += '<span class="report-tag">' + escapeHtml(report.build) + '</span>';
+                if (report.weakerFoot) html += '<span class="report-tag">Weak Foot: ' + escapeHtml(report.weakerFoot) + '</span>';
                 html += '</div>';
                 if (report.withBall) {
-                    html += '<div class="report-section"><strong>With Ball:</strong> ' + report.withBall.replace(/\n/g, '<br>') + '</div>';
+                    html += '<div class="report-section"><strong>With Ball:</strong> ' + escapeHtml(report.withBall).replace(/\n/g, '<br>') + '</div>';
                 }
                 if (report.againstBall) {
-                    html += '<div class="report-section"><strong>Against Ball:</strong> ' + report.againstBall.replace(/\n/g, '<br>') + '</div>';
+                    html += '<div class="report-section"><strong>Against Ball:</strong> ' + escapeHtml(report.againstBall).replace(/\n/g, '<br>') + '</div>';
                 }
                 if (report.notes) {
                     html += '<div class="report-section"><strong>Notes:</strong> ' + report.notes.replace(/\n/g, '<br>') + '</div>';
@@ -3757,14 +3772,14 @@
                 });
 
                 html += '<tr>';
-                html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + player.name + '</div></td>';
-                html += '<td>' + (player.club || '-') + '</td>';
-                html += '<td>' + (player.position || '-') + '</td>';
-                html += '<td>' + (ownerScout ? ownerScout.name : 'Unknown') + '</td>';
+                html += '<td><div class="player-name-cell"><div class="player-avatar">' + escapeHtml(initials) + '</div>' + escapeHtml(player.name) + '</div></td>';
+                html += '<td>' + escapeHtml(player.club || '-') + '</td>';
+                html += '<td>' + escapeHtml(player.position || '-') + '</td>';
+                html += '<td>' + escapeHtml(ownerScout ? ownerScout.name : 'Unknown') + '</td>';
                 html += '<td>';
-                html += '<button class="action-btn" onclick="viewPlayer(\'' + player.id + '\')">View</button>';
+                html += '<button class="action-btn" onclick="viewPlayer(\'' + escapeAttr(player.id) + '\')">View</button>';
                 if (!alreadyAdded) {
-                    html += '<button class="action-btn add-to-list" onclick="addSharedToMyList(\'' + player.id + '\')">+ My List</button>';
+                    html += '<button class="action-btn add-to-list" onclick="addSharedToMyList(\'' + escapeAttr(player.id) + '\')">+ My List</button>';
                 } else {
                     html += '<span class="already-added">Added</span>';
                 }
@@ -3900,17 +3915,17 @@
                 html += '<div class="compare-card">';
                 html += '<div class="compare-card-header">';
                 html += '<div>';
-                html += '<div class="compare-card-name">' + player.name + '</div>';
-                html += '<div class="compare-card-club">' + (player.club || 'Unknown Club') + '</div>';
+                html += '<div class="compare-card-name">' + escapeHtml(player.name) + '</div>';
+                html += '<div class="compare-card-club">' + escapeHtml(player.club || 'Unknown Club') + '</div>';
                 html += '</div>';
-                html += '<button class="compare-remove" onclick="removeFromCompare(\'' + player.id + '\')">&times;</button>';
+                html += '<button class="compare-remove" onclick="removeFromCompare(\'' + escapeAttr(player.id) + '\')">&times;</button>';
                 html += '</div>';
 
-                html += '<div class="compare-row"><span class="compare-label">Position</span><span class="compare-value">' + (player.position || '-') + '</span></div>';
-                html += '<div class="compare-row"><span class="compare-label">YOB</span><span class="compare-value">' + (player.yob || '-') + '</span></div>';
-                html += '<div class="compare-row"><span class="compare-label">Squad</span><span class="compare-value">' + (player.squad || '-') + '</span></div>';
-                html += '<div class="compare-row"><span class="compare-label">Foot</span><span class="compare-value">' + (player.foot || '-') + '</span></div>';
-                html += '<div class="compare-row"><span class="compare-label">Status</span><span class="compare-value">' + (player.status || 'watching') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Position</span><span class="compare-value">' + escapeHtml(player.position || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">YOB</span><span class="compare-value">' + escapeHtml(player.yob || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Squad</span><span class="compare-value">' + escapeHtml(player.squad || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Foot</span><span class="compare-value">' + escapeHtml(player.foot || '-') + '</span></div>';
+                html += '<div class="compare-row"><span class="compare-label">Status</span><span class="compare-value">' + escapeHtml(player.status || 'watching') + '</span></div>';
                 html += '<div class="compare-row"><span class="compare-label">Videos</span><span class="compare-value">' + (player.videoLinks ? player.videoLinks.length : 0) + '</span></div>';
                 html += '<div class="compare-row"><span class="compare-label">Reports</span><span class="compare-value">' + playerReports.length + '</span></div>';
 
@@ -4407,8 +4422,6 @@
             if (pendingSyncQueue.length === 0) return;
             if (!navigator.onLine) return;
 
-            console.log('[Sync] Processing ' + pendingSyncQueue.length + ' pending items...');
-
             var processed = 0;
             var failed = [];
 
@@ -4442,21 +4455,18 @@
             // Register service worker
             if ('serviceWorker' in navigator) {
                 try {
-                    const reg = await navigator.serviceWorker.register('/sw.js');
-                    console.log('[SW] Service worker registered:', reg.scope);
+                    await navigator.serviceWorker.register('/sw.js');
                 } catch (e) {
-                    console.log('[SW] Registration failed:', e);
+                    // Service worker registration failed - continue without it
                 }
             }
 
             // Set up online/offline listeners
             window.addEventListener('online', function() {
-                console.log('[Network] Back online');
                 updateSyncStatus();
                 processSyncQueue();
             });
             window.addEventListener('offline', function() {
-                console.log('[Network] Went offline');
                 updateSyncStatus();
             });
             updateSyncStatus();
@@ -4474,7 +4484,6 @@
 
             if (!loaded) {
                 // Fallback to localStorage
-                console.log('[Scouts] Falling back to localStorage');
                 scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
                 players = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
                 reports = JSON.parse(localStorage.getItem('scoutReports') || '[]');
