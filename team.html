@@ -1498,67 +1498,65 @@ try {
   console.warn('[Supabase] Failed to initialize client:', e);
 }
 
-// Load data from Supabase (primary data source)
-async function loadSupabaseData() {
+// Load data from Supabase for a specific club (optimized)
+async function loadSupabaseData(targetClubId) {
   if (!supabaseClient) {
     console.error('[Supabase] Client not available - data cannot be loaded');
     return false;
   }
 
+  if (!targetClubId) {
+    console.error('[Supabase] No club ID provided');
+    return false;
+  }
+
   try {
-    console.log('[Supabase] Loading club and squad data...');
+    console.log(`[Supabase] Loading data for club: ${targetClubId}`);
+    const startTime = performance.now();
 
-    // Load all clubs from Supabase
-    const { data: clubs, error: clubsError } = await supabaseClient
-      .from('clubs')
-      .select('*');
+    // Load only the specific club from Supabase (parallel requests)
+    const [clubResult, squadsResult] = await Promise.all([
+      supabaseClient.from('clubs').select('*').eq('club_id', targetClubId).single(),
+      supabaseClient.from('squad_data').select('*').eq('club_id', targetClubId)
+    ]);
 
-    if (clubsError) {
-      console.warn('[Supabase] Failed to load clubs:', clubsError);
-    } else if (clubs && clubs.length > 0) {
-      console.log(`[Supabase] Loaded ${clubs.length} clubs`);
+    const { data: club, error: clubsError } = clubResult;
+    const { data: squads, error: squadsError } = squadsResult;
 
-      // Merge clubs into clubsData (Supabase wins on conflicts)
-      clubs.forEach(club => {
-        if (!clubsData[club.club_id]) {
-          clubsData[club.club_id] = {};
-        }
-
-        // Merge club metadata
-        clubsData[club.club_id] = {
-          id: club.club_id,
-          name: club.name || clubsData[club.club_id].name || '',
-          logo: club.logo_path || clubsData[club.club_id].logo || '',
-          website: club.website || clubsData[club.club_id].website || '',
-          isPro: club.is_pro !== null ? club.is_pro : clubsData[club.club_id].isPro || false,
-          director: clubsData[club.club_id].director || { name: '', email: '', phone: '' },
-          // Store additional metadata for reference
-          state: club.state,
-          division: club.division,
-          latitude: club.latitude,
-          longitude: club.longitude
-        };
-      });
+    if (clubsError && clubsError.code !== 'PGRST116') {
+      console.warn('[Supabase] Failed to load club:', clubsError);
+    } else if (club) {
+      // Merge club metadata (Supabase wins on conflicts)
+      if (!clubsData[club.club_id]) {
+        clubsData[club.club_id] = {};
+      }
+      clubsData[club.club_id] = {
+        id: club.club_id,
+        name: club.name || clubsData[club.club_id].name || '',
+        logo: club.logo_path || clubsData[club.club_id].logo || '',
+        website: club.website || clubsData[club.club_id].website || '',
+        isPro: club.is_pro !== null ? club.is_pro : clubsData[club.club_id].isPro || false,
+        director: clubsData[club.club_id].director || { name: '', email: '', phone: '' },
+        state: club.state,
+        division: club.division,
+        latitude: club.latitude,
+        longitude: club.longitude
+      };
     }
-
-    // Load all squad data from Supabase
-    const { data: squads, error: squadsError } = await supabaseClient
-      .from('squad_data')
-      .select('*');
 
     if (squadsError) {
       console.warn('[Supabase] Failed to load squad data:', squadsError);
     } else if (squads && squads.length > 0) {
-      console.log(`[Supabase] Loaded ${squads.length} squads`);
+      console.log(`[Supabase] Loaded ${squads.length} squads for ${targetClubId}`);
 
-      // Merge squads into playersData (Supabase wins on conflicts)
+      // Initialize club in playersData if needed
+      if (!playersData[targetClubId]) {
+        playersData[targetClubId] = {};
+      }
+
+      // Merge squads into playersData
       squads.forEach(squad => {
-        if (!playersData[squad.club_id]) {
-          playersData[squad.club_id] = {};
-        }
-
-        // Merge squad data
-        playersData[squad.club_id][squad.squad] = {
+        playersData[targetClubId][squad.squad] = {
           season: squad.season || '',
           lastUpdated: squad.last_scraped || squad.updated_at || '',
           lastScraped: squad.last_scraped || '',
@@ -1571,10 +1569,11 @@ async function loadSupabaseData() {
         };
       });
 
-      console.log('[Supabase] Successfully loaded data from Supabase');
       supabaseDataLoaded = true;
     }
 
+    const loadTime = (performance.now() - startTime).toFixed(0);
+    console.log(`[Supabase] Data loaded in ${loadTime}ms`);
     return true;
   } catch (error) {
     console.error('[Supabase] Error loading data:', error);
@@ -1645,8 +1644,8 @@ async function init() {
     return;
   }
 
-  // Load data from Supabase (primary data source)
-  var loaded = await loadSupabaseData();
+  // Load data from Supabase for this specific club (optimized query)
+  var loaded = await loadSupabaseData(clubId);
   if (!loaded && !supabaseClient) {
     showError('Connection Error', 'Unable to connect to the database. Please check your internet connection and refresh.');
     return;
