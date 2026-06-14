@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Academy Scout Hub</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDczB1GNwTXdkO9kKk5zqj8B3w20dg9Dd4&libraries=geometry,marker"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2e; display:flex; height:100vh; overflow:hidden; }
@@ -1063,7 +1062,7 @@ document.addEventListener('keydown', function(e) {
       closeSearchModal();
       closeContactListModal();
       closeMobileMenu();
-      map.closePopup();
+      infoWindow.close();
       break;
     case '/':
       // Focus search input (prevent typing /)
@@ -1809,40 +1808,35 @@ var filters = {
   division: ''
 };
 
-// ── MAP INIT ──
-var map = L.map('map', {
-  center: [40.82, -74.4],
-  zoom: 7,
+// ── MAP INIT (Google Maps) ──
+var map = new google.maps.Map(document.getElementById('map'), {
+  center: {lat: 40.82, lng: -74.4},
+  zoom: 8,
   zoomControl: false,
-  zoomSnap: 0.25,
-  zoomDelta: 0.25,
-  wheelPxPerZoomLevel: 120,
-  zoomAnimation: true,
-  zoomAnimationThreshold: 8,
-  fadeAnimation: true,
-  markerZoomAnimation: true,
-  preferCanvas: true,
-  inertia: true,
-  inertiaDeceleration: 3000,
-  inertiaMaxSpeed: 1500,
-  easeLinearity: 0.2,
-  worldCopyJump: false,
-  bounceAtZoomLimits: false,
-  wheelDebounceTime: 40,
-  tapTolerance: 15
+  mapTypeControl: false,
+  streetViewControl: false,
+  fullscreenControl: false,
+  styles: [
+    {featureType: 'poi', stylers: [{visibility: 'off'}]},
+    {featureType: 'transit', stylers: [{visibility: 'off'}]}
+  ]
 });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-  subdomains: 'abcd', maxZoom: 19
-}).addTo(map);
+// Global InfoWindow (reused for all markers)
+var infoWindow = new google.maps.InfoWindow();
 
-// ── MARKERS LAYER ──
-var markersLayer = L.layerGroup().addTo(map);
+// Store all markers for management
+var allMarkers = [];
 
 // ── ZOOM CONTROLS ──
-function zoomIn() { map.zoomIn(0.5); }
-function zoomOut() { map.zoomOut(0.5); }
+function zoomIn() { map.setZoom(map.getZoom() + 1); }
+function zoomOut() { map.setZoom(map.getZoom() - 1); }
+
+// Helper to clear all club markers
+function clearAllMarkers() {
+  allMarkers.forEach(function(m) { if (m) m.setMap(null); });
+  allMarkers = [];
+}
 
 // ── SIDEBAR TOGGLE ──
 var sidebarVisible = true;
@@ -1857,7 +1851,7 @@ function toggleSidebar() {
     sidebar.classList.add('collapsed');
     openBtn.classList.add('visible');
   }
-  setTimeout(function() { map.invalidateSize(); }, 350);
+  // Google Maps auto-resizes, no action needed
 }
 
 // ── SECTION TOGGLE ──
@@ -1873,31 +1867,31 @@ function toggleSection(sectionName) {
   }
 }
 
-// ── RB MARKER ──
-function makeRBHtml() {
-  return '<div style="width:52px;height:52px;filter:drop-shadow(0 0 10px rgba(220,0,0,0.9));">' +
-    '<img src="MLS Logos/NY Red Bulls.png" style="width:100%;height:100%;object-fit:contain;border-radius:50%;border:3px solid #cc0000;background:#fff;box-shadow:0 0 12px rgba(220,0,0,0.8);" />' +
-    '</div>';
-}
-
-var rbIcon = L.divIcon({
-  html: makeRBHtml(),
-  className: '',
-  iconSize: [52, 52],
-  iconAnchor: [26, 26],
-  popupAnchor: [0, -30]
+// ── RB MARKER (Google Maps) ──
+var rbMarker = new google.maps.Marker({
+  position: {lat: 40.8167, lng: -74.4028},
+  map: map,
+  icon: {
+    url: 'MLS Logos/NY Red Bulls.png',
+    scaledSize: new google.maps.Size(52, 52),
+    anchor: new google.maps.Point(26, 26)
+  },
+  title: 'NY Red Bulls Training Facility',
+  zIndex: 1000
 });
 
-var rbMarker = L.marker([40.8167, -74.4028], {icon: rbIcon}).addTo(map);
-rbMarker.bindPopup(
-  '<div class="popup-inner">' +
-  '<div class="popup-header">' +
-  '<div class="popup-initials" style="background:#cc0000;font-size:14px;">RB</div>' +
-  '<div class="popup-title"><h3>NY Red Bulls Training Facility</h3><small>Whippany, NJ — HQ</small></div>' +
-  '</div>' +
-  '<div class="popup-row"><span class="popup-label">Facility</span><span class="popup-value">MLS HQ</span></div>' +
-  '</div>'
-);
+rbMarker.addListener('click', function() {
+  infoWindow.setContent(
+    '<div class="popup-inner">' +
+    '<div class="popup-header">' +
+    '<div class="popup-initials" style="background:#cc0000;font-size:14px;">RB</div>' +
+    '<div class="popup-title"><h3>NY Red Bulls Training Facility</h3><small>Whippany, NJ — HQ</small></div>' +
+    '</div>' +
+    '<div class="popup-row"><span class="popup-label">Facility</span><span class="popup-value">MLS HQ</span></div>' +
+    '</div>'
+  );
+  infoWindow.open(map, rbMarker);
+});
 
 // ── CATCHMENT AREAS ──
 var NYRB_LAT = 40.8167;
@@ -1922,37 +1916,38 @@ var catchmentState = {
 // States in Catchment 2 (Regional)
 var CATCHMENT_2_STATES = ['DC', 'MD', 'VA', 'PA', 'CT', 'MA', 'NH', 'RI', 'NJ', 'NY'];
 
-// Draw 75-mile radius circle (Catchment 1)
+// Draw 75-mile radius circle (Catchment 1) - Google Maps
 function drawCatchment1Circle() {
   if (!catchmentLayers.circle75) {
-    catchmentLayers.circle75 = L.circle([NYRB_LAT, NYRB_LNG], {
+    catchmentLayers.circle75 = new google.maps.Circle({
+      center: {lat: NYRB_LAT, lng: NYRB_LNG},
       radius: 75 * MILES_TO_METERS,
-      color: '#cc0000',
+      strokeColor: '#cc0000',
+      strokeWeight: 2,
       fillColor: '#cc0000',
       fillOpacity: 0.08,
-      weight: 2,
-      dashArray: '8, 4'
-    }).addTo(map);
+      map: map
+    });
 
-    // Add label at edge
-    var labelLat = NYRB_LAT + 0.9;  // Slightly north
-    catchmentLayers.circle75Label = L.marker([labelLat, NYRB_LNG], {
-      icon: L.divIcon({
-        className: '',
-        html: '<div style="background:#cc0000;color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;white-space:nowrap;">75 mi radius</div>',
-        iconAnchor: [35, 10]
-      })
-    }).addTo(map);
+    // Add label marker
+    catchmentLayers.circle75Label = new google.maps.Marker({
+      position: {lat: NYRB_LAT + 0.9, lng: NYRB_LNG},
+      map: map,
+      icon: {
+        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="70" height="20"><rect fill="#cc0000" width="70" height="20" rx="3"/><text x="35" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="600" font-family="sans-serif">75 mi radius</text></svg>'),
+        anchor: new google.maps.Point(35, 10)
+      }
+    });
   }
 }
 
 function removeCatchment1Circle() {
   if (catchmentLayers.circle75) {
-    map.removeLayer(catchmentLayers.circle75);
+    catchmentLayers.circle75.setMap(null);
     catchmentLayers.circle75 = null;
   }
   if (catchmentLayers.circle75Label) {
-    map.removeLayer(catchmentLayers.circle75Label);
+    catchmentLayers.circle75Label.setMap(null);
     catchmentLayers.circle75Label = null;
   }
 }
@@ -2034,15 +2029,15 @@ function toggleCatchment(num, element) {
     setTimeout(function() { zoomToCatchmentBounds(num); }, 100);
   } else if (!checkbox.checked && num !== 3) {
     // Reset to default view when unchecking
-    map.setView([40.82, -74.4], 7);
+    map.setCenter({lat: 40.82, lng: -74.4}); map.setZoom(8);
   }
 
   if (num === 3) {
     // National view - zoom out to show US
     if (checkbox.checked) {
-      map.setView([39.8, -98.5], 4);  // Center of US
+      map.setCenter({lat: 39.8, lng: -98.5}); map.setZoom(4);  // Center of US
     } else {
-      map.setView([40.82, -74.4], 7);  // Back to Northeast
+      map.setCenter({lat: 40.82, lng: -74.4}); map.setZoom(8);  // Back to Northeast
     }
   }
 
@@ -2069,55 +2064,73 @@ function toggleOpenTerritory(element) {
 function updateOpenTerritoryMarkers() {
   // Clear existing open territory highlights
   catchmentLayers.openTerritoryMarkers.forEach(function(marker) {
-    map.removeLayer(marker);
+    marker.setMap(null);
   });
   catchmentLayers.openTerritoryMarkers = [];
 
   if (catchmentState.openTerritory) {
-    // Add pulsing highlight to open territory states on the map
+    // Add highlight circles to open territory states - Google Maps
     // Michigan center
-    var miMarker = L.circleMarker([44.3148, -85.6024], {
-      radius: 30,
-      color: '#f1c40f',
+    var miCircle = new google.maps.Circle({
+      center: {lat: 44.3148, lng: -85.6024},
+      radius: 150000, // ~150km
+      strokeColor: '#f1c40f',
+      strokeWeight: 2,
       fillColor: '#f1c40f',
       fillOpacity: 0.15,
-      weight: 2
-    }).addTo(map);
-    miMarker.bindPopup('<b>Michigan</b><br>Open Territory - No MLS Affiliate');
-    catchmentLayers.openTerritoryMarkers.push(miMarker);
+      map: map
+    });
+    google.maps.event.addListener(miCircle, 'click', function() {
+      infoWindow.setContent('<b>Michigan</b><br>Open Territory - No MLS Affiliate');
+      infoWindow.setPosition({lat: 44.3148, lng: -85.6024});
+      infoWindow.open(map);
+    });
+    catchmentLayers.openTerritoryMarkers.push(miCircle);
 
     // Nevada (Las Vegas) center
-    var nvMarker = L.circleMarker([36.1699, -115.1398], {
-      radius: 30,
-      color: '#f1c40f',
+    var nvCircle = new google.maps.Circle({
+      center: {lat: 36.1699, lng: -115.1398},
+      radius: 150000,
+      strokeColor: '#f1c40f',
+      strokeWeight: 2,
       fillColor: '#f1c40f',
       fillOpacity: 0.15,
-      weight: 2
-    }).addTo(map);
-    nvMarker.bindPopup('<b>Las Vegas / Nevada</b><br>Open Territory - No MLS Affiliate');
-    catchmentLayers.openTerritoryMarkers.push(nvMarker);
+      map: map
+    });
+    google.maps.event.addListener(nvCircle, 'click', function() {
+      infoWindow.setContent('<b>Las Vegas / Nevada</b><br>Open Territory - No MLS Affiliate');
+      infoWindow.setPosition({lat: 36.1699, lng: -115.1398});
+      infoWindow.open(map);
+    });
+    catchmentLayers.openTerritoryMarkers.push(nvCircle);
 
     // Zoom out to show open territories if catchment 3 is not active
     if (!catchmentState.catchment3) {
-      map.setView([39.8, -98.5], 4);
+      map.setCenter({lat: 39.8, lng: -98.5}); map.setZoom(4);
     }
   }
 }
 
-// Zoom map to fit all clubs in catchment area
+// Zoom map to fit all clubs in catchment area - Google Maps
 function zoomToCatchmentBounds(catchmentNum) {
-  var boundsClubs = [];
+  var bounds = new google.maps.LatLngBounds();
+  var hasClubs = false;
 
   clubs.forEach(function(club) {
     if (!isValidCoordinate(club)) return;
     if (isInCatchment(club, catchmentNum)) {
-      boundsClubs.push([club.lat, club.lng]);
+      bounds.extend({lat: club.lat, lng: club.lng});
+      hasClubs = true;
     }
   });
 
-  if (boundsClubs.length > 0) {
-    var bounds = L.latLngBounds(boundsClubs);
-    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+  if (hasClubs) {
+    map.fitBounds(bounds, 50); // 50px padding
+    // Limit max zoom
+    var listener = google.maps.event.addListener(map, 'idle', function() {
+      if (map.getZoom() > 10) map.setZoom(10);
+      google.maps.event.removeListener(listener);
+    });
   }
 }
 
@@ -2146,32 +2159,6 @@ function getFontSize(txt) {
 
 function getClubColor(club) {
   return DIVISION_COLORS[club.division] || LEAGUE_COLORS[club.league] || '#555';
-}
-
-function makeClubIcon(club, size) {
-  size = size || 38;
-  var color = getClubColor(club);
-  // Use slightly larger size for MLS Pro clubs to fit logos better
-  var displaySize = club.isPro ? 42 : size;
-  var innerSize = displaySize - 6; // Account for border and padding
-  var inner = '';
-  if (club.logo) {
-    inner = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">' +
-            '<img src="' + club.logo + '" style="width:' + innerSize + 'px;height:' + innerSize + 'px;object-fit:contain;border-radius:50%;" ' +
-            'onerror="this.parentElement.style.display=\'none\';this.parentElement.nextSibling.style.display=\'flex\';" />' +
-            '</div>' +
-            '<div style="display:none;width:100%;height:100%;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
-  } else {
-    inner = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:' + getFontSize(club.initials) + ';letter-spacing:0.5px;">' + club.initials + '</div>';
-  }
-  var html = '<div style="position:relative;width:' + displaySize + 'px;height:' + displaySize + 'px;border-radius:50%;border:2.5px solid ' + color + ';box-shadow:0 2px 8px rgba(0,0,0,0.2);overflow:hidden;background:#ffffff;display:flex;align-items:center;justify-content:center;">' + inner + '</div>';
-  return L.divIcon({
-    html: html,
-    className: '',
-    iconSize: [displaySize, displaySize],
-    iconAnchor: [displaySize/2, displaySize/2],
-    popupAnchor: [0, -(displaySize/2 + 5)]
-  });
 }
 
 // ── DISTANCE CALCULATION (FALLBACK) ──
@@ -2487,7 +2474,7 @@ async function performDeleteClub(clubId, csrfToken) {
     if (clubIndex !== -1) {
       // Remove marker from map
       if (markers[clubIndex]) {
-        map.removeLayer(markers[clubIndex]);
+        markers[clubIndex].setMap(null);
         markers.splice(clubIndex, 1);
       }
       clubs.splice(clubIndex, 1);
@@ -2504,7 +2491,7 @@ async function performDeleteClub(clubId, csrfToken) {
     } catch (e) {}
 
     // Close any open popup
-    map.closePopup();
+    infoWindow.close();
 
     // Rebuild markers array to fix indices
     rebuildMarkers();
@@ -2522,10 +2509,10 @@ async function performDeleteClub(clubId, csrfToken) {
   }
 }
 
-// Rebuild all markers (after delete)
+// Rebuild all markers (after delete) - Google Maps
 function rebuildMarkers() {
-  // Clear all existing markers from cluster group
-  markersLayer.clearLayers();
+  // Clear all existing markers
+  markers.forEach(function(m) { if (m) m.setMap(null); });
   markers = [];
 
   // Recreate markers for all clubs
@@ -2534,13 +2521,80 @@ function rebuildMarkers() {
       markers.push(null);
       return;
     }
-    var icon = makeClubIcon(club, 38);
-    var marker = L.marker([club.lat, club.lng], {icon: icon});
-    marker.bindPopup(makePopupHtml(club), {maxWidth: 250});
-    marker.on('click', function() { selectClub(idx); });
+    var marker = createClubMarker(club, idx);
     markers.push(marker);
-    markersLayer.addLayer(marker);
   });
+}
+
+// Custom HTML Marker Overlay for circular logos with CSS
+function ClubMarkerOverlay(club, idx, mapInstance) {
+  this.club = club;
+  this.idx = idx;
+  this.position = new google.maps.LatLng(club.lat, club.lng);
+  this.div = null;
+  this.setMap(mapInstance);
+}
+
+ClubMarkerOverlay.prototype = new google.maps.OverlayView();
+
+ClubMarkerOverlay.prototype.onAdd = function() {
+  var div = document.createElement('div');
+  div.className = 'club-marker-overlay';
+  var size = 42;
+  var color = getClubColor(this.club);
+
+  div.style.cssText = 'position:absolute;width:' + size + 'px;height:' + size + 'px;cursor:pointer;transform:translate(-50%,-50%);';
+
+  if (this.club.logo) {
+    div.innerHTML = '<img src="' + this.club.logo + '" style="width:100%;height:100%;border-radius:50%;object-fit:contain;background:#fff;border:2px solid ' + color + ';box-shadow:0 2px 6px rgba(0,0,0,0.3);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">' +
+      '<div style="display:none;width:100%;height:100%;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + this.club.initials + '</div>';
+  } else {
+    div.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + this.club.initials + '</div>';
+  }
+
+  this.div = div;
+
+  var self = this;
+  div.addEventListener('click', function(e) {
+    e.stopPropagation();
+    infoWindow.setContent(makePopupHtml(self.club));
+    infoWindow.setPosition(self.position);
+    infoWindow.open(map);
+    selectClub(self.idx);
+  });
+
+  var panes = this.getPanes();
+  panes.overlayMouseTarget.appendChild(div);
+};
+
+ClubMarkerOverlay.prototype.draw = function() {
+  if (!this.div) return;
+  var projection = this.getProjection();
+  var pos = projection.fromLatLngToDivPixel(this.position);
+  this.div.style.left = pos.x + 'px';
+  this.div.style.top = pos.y + 'px';
+};
+
+ClubMarkerOverlay.prototype.onRemove = function() {
+  if (this.div) {
+    this.div.parentNode.removeChild(this.div);
+    this.div = null;
+  }
+};
+
+ClubMarkerOverlay.prototype.setVisible = function(visible) {
+  if (this.div) {
+    this.div.style.display = visible ? 'block' : 'none';
+  }
+};
+
+ClubMarkerOverlay.prototype.getPosition = function() {
+  return this.position;
+};
+
+// Create a club marker using custom overlay
+function createClubMarker(club, idx) {
+  return new ClubMarkerOverlay(club, idx, map);
 }
 
 function makeCardHtml(club) {
@@ -2564,21 +2618,17 @@ function makeCardHtml(club) {
     '</div>';
 }
 
-// ── RENDER CLUBS ──
+// ── RENDER CLUBS (Google Maps) ──
 clubs.forEach(function(club, idx) {
   // Skip clubs with invalid coordinates
   if (!isValidCoordinate(club)) {
     console.warn('Skipping club with invalid coordinates:', club.name, 'lat:', club.lat, 'lng:', club.lng);
-    markers.push(null); // Keep array indices aligned with clubs array
+    markers.push(null);
     return;
   }
 
-  var icon = makeClubIcon(club, 38);
-  var m = L.marker([club.lat, club.lng], {icon: icon});
-  m.bindPopup(makePopupHtml(club), {maxWidth:250});
-  m.on('click', function() { selectClub(idx); });
-  markers.push(m);
-  markersLayer.addLayer(m);
+  var marker = createClubMarker(club, idx);
+  markers.push(marker);
 });
 
 // ── HIERARCHICAL DIVISION FUNCTIONS ──
@@ -2729,12 +2779,15 @@ function selectClub(idx) {
   card.classList.remove('empty');
   card.innerHTML = makeCardHtml(club);
 
-  // Validate coordinates before zooming
+  // Validate coordinates before zooming - Google Maps
   if (isValidCoordinate(club)) {
-    map.setView([club.lat, club.lng], 9, {animate:true});
-    // Check if marker exists before trying to open popup
+    map.setCenter({lat: club.lat, lng: club.lng});
+    map.setZoom(9);
+    // Open info window for this marker
     if (markers[idx]) {
-      markers[idx].openPopup();
+      infoWindow.setContent(makePopupHtml(club));
+      infoWindow.setPosition({lat: club.lat, lng: club.lng});
+      infoWindow.open(map);
     }
   } else {
     console.warn('Invalid coordinates for club:', club.name, 'lat:', club.lat, 'lng:', club.lng);
@@ -2758,12 +2811,11 @@ function updateMarkerVisibility() {
     var filterMatch = matchesFilters(club);
     var matchesCatchment = matchesCatchmentFilters(club);
 
+    // Google Maps: setMap(map) to show, setMap(null) to hide
     if (matchesSearch && filterMatch && matchesCatchment) {
-      if (!markersLayer.hasLayer(markers[idx])) {
-        markersLayer.addLayer(markers[idx]);
-      }
+      markers[idx].setMap(map);
     } else {
-      markersLayer.removeLayer(markers[idx]);
+      markers[idx].setMap(null);
     }
   });
 }
@@ -3857,19 +3909,16 @@ async function submitAddClub(event) {
       console.error('Supabase error:', supabaseError);
     }
 
-    // Step 9: Create marker on map immediately
+    // Step 9: Create marker on map immediately - Google Maps
     submitBtn.textContent = 'Adding to map...';
-    var icon = makeClubIcon(newClub, 38);
-    var marker = L.marker([newClub.lat, newClub.lng], {icon: icon});
-    marker.bindPopup(makePopupHtml(newClub), {maxWidth: 250});
     var clubIndex = clubs.length - 1;
-    marker.on('click', function() { selectClub(clubIndex); });
+    var marker = createClubMarker(newClub, clubIndex);
     markers.push(marker);
-    markersLayer.addLayer(marker);
 
     // Step 9: Update the sidebar list and zoom to marker
     buildList();
-    map.setView([newClub.lat, newClub.lng], 11);
+    map.setCenter({lat: newClub.lat, lng: newClub.lng});
+    map.setZoom(11);
 
     // Step 10: Show success message
     var successMsg = 'SUCCESS! "' + clubName + '" has been added to the map!\n\n';
