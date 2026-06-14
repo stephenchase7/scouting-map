@@ -1065,7 +1065,7 @@ var clubsData = {
     "logo": "MLS Logos/NY Red Bulls.png",
     "website": "https://www.newyorkredbulls.com",
     "isPro": true,
-    "director": { "name": "Ryan Brooks, Sean McCafferty", "email": "Ryan.Brooks@newyorkredbulls.com, Sean.McCafferty@newyorkredbulls.com", "phone": "" }
+    "director": { "name": "Sean McCafferty", "email": "Sean.McCafferty@newyorkredbulls.com", "phone": "" }
   },
   "nycfc": {
     "id": "nycfc",
@@ -1768,7 +1768,22 @@ function getDirectors() {
   if (currentClub.directors) {
     return currentClub.directors;
   } else if (currentClub.director && currentClub.director.name) {
-    // Convert single director to array
+    // Check if comma-separated names - split into multiple directors
+    var names = currentClub.director.name.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+    var emails = (currentClub.director.email || '').split(',').map(function(s) { return s.trim(); });
+    var phones = (currentClub.director.phone || '').split(',').map(function(s) { return s.trim(); });
+
+    if (names.length > 1) {
+      // Multiple directors - create array
+      return names.map(function(name, idx) {
+        return {
+          name: name,
+          email: emails[idx] || '',
+          phone: phones[idx] || ''
+        };
+      });
+    }
+    // Single director
     return [currentClub.director];
   } else if (currentClub.director) {
     // Empty director object
@@ -1933,11 +1948,6 @@ function renderRoster() {
     '<span class="player-count">' + playersWithIndex.length + ' of ' + data.players.length + ' players</span>' +
     '</div>' +
     '<div class="roster-controls">' +
-    '<select id="season-select" class="season-select" onchange="changeSeason(this.value)">' +
-    '<option value="2024-2025"' + (currentSeason === '2024-2025' ? ' selected' : '') + '>2024-2025</option>' +
-    '<option value="2025-2026"' + (currentSeason === '2025-2026' ? ' selected' : '') + '>2025-2026</option>' +
-    '<option value="2026-2027"' + (currentSeason === '2026-2027' ? ' selected' : '') + '>2026-2027</option>' +
-    '</select>' +
     '<button id="auth-status" class="auth-status ' + (isAuthenticated ? 'unlocked' : 'locked') + '" onclick="toggleAuth()">' +
     (isAuthenticated ? 'Unlocked' : 'Locked') + '</button>' +
     '</div>' +

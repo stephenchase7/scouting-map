@@ -1867,32 +1867,6 @@ function toggleSection(sectionName) {
   }
 }
 
-// ── RB MARKER (Google Maps) ──
-var rbMarker = new google.maps.Marker({
-  position: {lat: 40.8167, lng: -74.4028},
-  map: map,
-  icon: {
-    url: 'MLS Logos/NY Red Bulls.png',
-    scaledSize: new google.maps.Size(52, 52),
-    anchor: new google.maps.Point(26, 26)
-  },
-  title: 'NY Red Bulls Training Facility',
-  zIndex: 1000
-});
-
-rbMarker.addListener('click', function() {
-  infoWindow.setContent(
-    '<div class="popup-inner">' +
-    '<div class="popup-header">' +
-    '<div class="popup-initials" style="background:#cc0000;font-size:14px;">RB</div>' +
-    '<div class="popup-title"><h3>NY Red Bulls Training Facility</h3><small>Whippany, NJ — HQ</small></div>' +
-    '</div>' +
-    '<div class="popup-row"><span class="popup-label">Facility</span><span class="popup-value">MLS HQ</span></div>' +
-    '</div>'
-  );
-  infoWindow.open(map, rbMarker);
-});
-
 // ── CATCHMENT AREAS ──
 var NYRB_LAT = 40.8167;
 var NYRB_LNG = -74.4028;
@@ -2266,9 +2240,6 @@ function makePopupHtml(club) {
     buttonsHtml += '<a href="team.html?club=' + club.clubId + '" class="popup-btn popup-btn-primary">View Teams</a>';
   } else {
     buttonsHtml += '<span class="popup-btn popup-btn-secondary" style="cursor:default;opacity:0.5;">No Data</span>';
-  }
-  if (club.website) {
-    buttonsHtml += '<a href="' + club.website + '" target="_blank" class="popup-btn popup-btn-secondary">Website</a>';
   }
   buttonsHtml += '</div>';
 
