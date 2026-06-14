@@ -60,6 +60,22 @@
             background: #ffd700;
             color: #1a1a2e;
         }
+        .data-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.9);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .data-btn:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .import-input { display: none; }
         .admin-badge {
             background: #ffd700;
             color: #1a1a2e;
@@ -1705,6 +1721,94 @@
             padding: 24px;
         }
 
+        /* Audit Log Styles */
+        .audit-log-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            display: none;
+            margin-right: 8px;
+        }
+        .audit-log-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        .audit-log-btn.visible {
+            display: inline-block;
+        }
+        .audit-modal {
+            max-width: 700px;
+            width: 95%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .audit-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        .audit-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+        .audit-time {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .audit-action {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .audit-action.create { color: #2e7d32; }
+        .audit-action.delete { color: #c62828; }
+        .audit-action.edit { color: #1976d2; }
+        .audit-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .audit-user {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .audit-empty {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .audit-footer {
+            padding: 16px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .audit-clear-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #666;
+        }
+        .audit-clear-btn:hover {
+            background: #ffebee;
+            border-color: #c62828;
+            color: #c62828;
+        }
+
         /* Offline Indicator */
         .sync-status {
             position: fixed;
@@ -1819,6 +1923,10 @@
         <div class="header-nav">
             <a href="index.html">Map</a>
             <a href="rules.html">Rules</a>
+            <button class="data-btn" onclick="exportData()">Export</button>
+            <button class="data-btn" onclick="document.getElementById('importInput').click()">Import</button>
+            <input type="file" id="importInput" class="import-input" accept=".json" onchange="importData(event)">
+            <button class="audit-log-btn" id="auditLogBtn" onclick="openAuditLogModal()">Audit Log</button>
             <button class="admin-btn" id="adminBtn" onclick="toggleAdminMode()">🔒</button>
         </div>
     </div>
@@ -2098,6 +2206,23 @@
             <input type="password" id="adminPassword" class="form-input" placeholder="Password" onkeypress="if(event.key==='Enter')verifyAdminPassword()">
             <div id="adminError" style="color:#cc0000;font-size:12px;margin-top:8px;display:none;">Incorrect password</div>
             <button class="btn-submit" onclick="verifyAdminPassword()" style="margin-top:16px;">Unlock</button>
+        </div>
+    </div>
+
+    <!-- Audit Log Modal -->
+    <div class="modal-overlay" id="auditLogModal">
+        <div class="modal audit-modal">
+            <div class="modal-header">
+                <span class="modal-title">Audit Log</span>
+                <button class="modal-close" onclick="closeAuditLogModal()">&times;</button>
+            </div>
+            <div class="audit-list" id="auditLogList">
+                <!-- Audit entries populated here -->
+            </div>
+            <div class="audit-footer">
+                <span id="auditCount" style="font-size:12px;color:#888;"></span>
+                <button class="audit-clear-btn" onclick="clearAuditLog()">Clear Log</button>
+            </div>
         </div>
     </div>
 
@@ -2617,7 +2742,15 @@
         var players = [];
         var selectedScoutId = null;
         var isAdminMode = false;
-        var ADMIN_PASSWORD = 'Madrid@7';
+        var ADMIN_PWD_HASH = '5bd887caace65b71b8056d531a5a7653986a2677f6597053c89aef0e07cb46ea';
+
+        async function hashPassword(password) {
+            var encoder = new TextEncoder();
+            var data = encoder.encode(password);
+            var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            var hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+        }
 
         // Helper function to escape strings for HTML attributes (prevents XSS)
         function escapeAttr(str) {
@@ -2866,6 +2999,186 @@
         });
 
         // ═══════════════════════════════════════════════════
+        // AUDIT LOG
+        // ═══════════════════════════════════════════════════
+
+        var AUDIT_LOG_KEY = 'scoutAuditLog';
+        var MAX_AUDIT_ENTRIES = 500;
+
+        function loadAuditLog() {
+            try {
+                return JSON.parse(localStorage.getItem(AUDIT_LOG_KEY) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveAuditLog(log) {
+            // Keep only most recent entries
+            if (log.length > MAX_AUDIT_ENTRIES) {
+                log = log.slice(-MAX_AUDIT_ENTRIES);
+            }
+            localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(log));
+        }
+
+        function logAuditEntry(action, details, entityType, entityId) {
+            var log = loadAuditLog();
+            var currentScout = scouts.find(function(s) { return s.id === selectedScoutId; });
+
+            var entry = {
+                id: Date.now().toString(),
+                timestamp: new Date().toISOString(),
+                action: action,
+                details: details,
+                entityType: entityType || null,
+                entityId: entityId || null,
+                userId: selectedScoutId || null,
+                userName: currentScout ? currentScout.name : null
+            };
+
+            log.push(entry);
+            saveAuditLog(log);
+        }
+
+        function openAuditLogModal() {
+            renderAuditLog();
+            document.getElementById('auditLogModal').classList.add('active');
+        }
+
+        function closeAuditLogModal() {
+            document.getElementById('auditLogModal').classList.remove('active');
+        }
+
+        function renderAuditLog() {
+            var log = loadAuditLog();
+            var container = document.getElementById('auditLogList');
+            var countEl = document.getElementById('auditCount');
+
+            countEl.textContent = log.length + ' entries';
+
+            if (log.length === 0) {
+                container.innerHTML = '<div class="audit-empty">No audit log entries yet.</div>';
+                return;
+            }
+
+            // Show most recent first
+            var sortedLog = log.slice().reverse();
+            var html = '';
+
+            sortedLog.forEach(function(entry) {
+                var date = new Date(entry.timestamp);
+                var timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+                var actionClass = '';
+                if (entry.action.toLowerCase().indexOf('created') !== -1 || entry.action.toLowerCase().indexOf('added') !== -1) {
+                    actionClass = 'create';
+                } else if (entry.action.toLowerCase().indexOf('deleted') !== -1 || entry.action.toLowerCase().indexOf('removed') !== -1) {
+                    actionClass = 'delete';
+                } else if (entry.action.toLowerCase().indexOf('edited') !== -1 || entry.action.toLowerCase().indexOf('updated') !== -1) {
+                    actionClass = 'edit';
+                }
+
+                html += '<div class="audit-item">';
+                html += '<div class="audit-time">' + escapeHtml(timeStr) + '</div>';
+                html += '<div class="audit-action ' + actionClass + '">' + escapeHtml(entry.action) + '</div>';
+                if (entry.details) {
+                    html += '<div class="audit-details">' + escapeHtml(entry.details) + '</div>';
+                }
+                if (entry.userName) {
+                    html += '<div class="audit-user">by ' + escapeHtml(entry.userName) + '</div>';
+                }
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        function clearAuditLog() {
+            if (confirm('Clear all audit log entries? This cannot be undone.')) {
+                localStorage.removeItem(AUDIT_LOG_KEY);
+                renderAuditLog();
+                showToast('Audit log cleared');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // EXPORT / IMPORT DATA
+        // ═══════════════════════════════════════════════════
+
+        function exportData() {
+            var exportObj = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                scouts: scouts,
+                players: players,
+                reports: reports
+            };
+            var dataStr = JSON.stringify(exportObj, null, 2);
+            var blob = new Blob([dataStr], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            var date = new Date().toISOString().slice(0, 10);
+            a.download = 'scout-data-' + date + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Data exported successfully');
+        }
+
+        function importData(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var data = JSON.parse(e.target.result);
+
+                    // Validate structure
+                    if (!data.scouts || !data.players || !data.reports) {
+                        showToast('Invalid backup file format', 'error');
+                        return;
+                    }
+
+                    // Confirm import
+                    var scoutCount = data.scouts.length;
+                    var playerCount = data.players.length;
+                    var reportCount = data.reports.length;
+                    var msg = 'Import ' + scoutCount + ' scouts, ' + playerCount + ' players, and ' + reportCount + ' reports?\n\nThis will REPLACE all current data.';
+
+                    if (!confirm(msg)) {
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // Import data
+                    scouts = data.scouts;
+                    players = data.players;
+                    reports = data.reports;
+
+                    // Save to localStorage
+                    localStorage.setItem('scouts', JSON.stringify(scouts));
+                    localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                    localStorage.setItem('scoutReports', JSON.stringify(reports));
+
+                    // Re-render
+                    renderScoutList();
+                    selectedScoutId = null;
+                    renderEmptyPlayerPanel();
+
+                    showToast('Data imported: ' + scoutCount + ' scouts, ' + playerCount + ' players, ' + reportCount + ' reports');
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showToast('Failed to parse backup file', 'error');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // ═══════════════════════════════════════════════════
         // ADMIN MODE
         // ═══════════════════════════════════════════════════
 
@@ -2888,9 +3201,10 @@
             document.getElementById('adminModal').classList.remove('active');
         }
 
-        function verifyAdminPassword() {
+        async function verifyAdminPassword() {
             var pwd = document.getElementById('adminPassword').value;
-            if (pwd === ADMIN_PASSWORD) {
+            var hash = await hashPassword(pwd);
+            if (hash === ADMIN_PWD_HASH) {
                 isAdminMode = true;
                 closeAdminModal();
                 updateAdminUI();
@@ -2902,12 +3216,15 @@
 
         function updateAdminUI() {
             var btn = document.getElementById('adminBtn');
+            var auditBtn = document.getElementById('auditLogBtn');
             if (isAdminMode) {
                 btn.textContent = '🔓';
                 btn.classList.add('active');
+                auditBtn.classList.add('visible');
             } else {
                 btn.textContent = '🔒';
                 btn.classList.remove('active');
+                auditBtn.classList.remove('visible');
             }
             // Re-render to show/hide delete buttons
             if (selectedScoutId) {
@@ -3122,6 +3439,7 @@
                 scouts.push(newScout);
                 localStorage.setItem('scouts', JSON.stringify(scouts));
                 saveScoutToSupabase(newScout);
+                logAuditEntry('Scout created', 'Name: ' + name, 'scout', newScout.id);
                 renderScouts();
                 closeAddScoutModal();
             }
@@ -3156,6 +3474,7 @@
 
         // Delete scout
         function deleteScout(id) {
+            var scoutToDelete = scouts.find(function(s) { return s.id === id; });
             if (confirm('Delete this scout and all their tracked players?')) {
                 // Get players to delete from Supabase
                 var playersToDelete = players.filter(function(p) { return p.scoutId === id; });
@@ -3170,6 +3489,8 @@
                     deleteFromSupabase('scout_players', p.id);
                 });
                 deleteFromSupabase('scouts', id);
+
+                logAuditEntry('Scout deleted', 'Name: ' + (scoutToDelete ? scoutToDelete.name : 'Unknown') + ' (' + playersToDelete.length + ' players removed)', 'scout', id);
 
                 if (selectedScoutId === id) {
                     selectedScoutId = null;
@@ -3203,6 +3524,7 @@
 
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
             savePlayerToSupabase(newPlayer);
+            logAuditEntry('Player added', newPlayer.name + ' (' + (newPlayer.club || 'No club') + ', ' + (newPlayer.squad || 'No squad') + ')', 'player', newPlayer.id);
             renderPlayers();
             selectScout(selectedScoutId); // Refresh stats
             closeAddPlayerModal();
@@ -3210,10 +3532,12 @@
 
         // Delete player
         function deletePlayer(id) {
+            var playerToDelete = players.find(function(p) { return p.id === id; });
             if (confirm('Remove this player from watchlist?')) {
                 players = players.filter(function(p) { return p.id !== id; });
                 localStorage.setItem('scoutPlayers', JSON.stringify(players));
                 deleteFromSupabase('scout_players', id);
+                logAuditEntry('Player removed', playerToDelete ? playerToDelete.name + ' (' + (playerToDelete.club || 'No club') + ')' : 'Unknown player', 'player', id);
                 renderPlayers();
                 selectScout(selectedScoutId); // Refresh stats
             }
@@ -3483,6 +3807,10 @@
             var currentScout = scouts.find(function(s) { return s.id === selectedScoutId; });
             if (!currentScout) return;
 
+            // Get player info for audit log
+            var currentPlayer = players.find(function(p) { return p.id === currentPlayerId; });
+            var playerName = currentPlayer ? currentPlayer.name : 'Unknown';
+
             // Check if editing existing report
             if (editingReportId) {
                 var existingReport = reports.find(function(r) { return r.id === editingReportId; });
@@ -3501,6 +3829,7 @@
 
                     localStorage.setItem('scoutReports', JSON.stringify(reports));
                     saveReportToSupabase(existingReport);
+                    logAuditEntry('Report edited', 'Player: ' + playerName + (existingReport.match ? ', Match: ' + existingReport.match : ''), 'report', editingReportId);
                     editingReportId = null;
 
                     // Reset button text
@@ -3536,6 +3865,7 @@
             reports.push(report);
             localStorage.setItem('scoutReports', JSON.stringify(reports));
             saveReportToSupabase(report);
+            logAuditEntry('Report created', 'Player: ' + playerName + (report.match ? ', Match: ' + report.match : ''), 'report', report.id);
 
             // Reset form
             document.getElementById('reportForm').reset();
@@ -3664,9 +3994,14 @@
             }
 
             if (confirm('Delete this scouting report?')) {
+                // Get player info for audit log
+                var player = players.find(function(p) { return p.id === report.playerId; });
+                var playerName = player ? player.name : 'Unknown';
+
                 reports = reports.filter(function(r) { return r.id !== reportId; });
                 localStorage.setItem('scoutReports', JSON.stringify(reports));
                 deleteFromSupabase('scout_reports', reportId);
+                logAuditEntry('Report deleted', 'Player: ' + playerName + (report.match ? ', Match: ' + report.match : '') + ', Author: ' + (report.authorName || 'Unknown'), 'report', reportId);
                 renderReportHistory(currentPlayerId);
                 renderPlayers();
                 showToast('Report deleted');
@@ -3692,7 +4027,7 @@
             var otherScouts = scouts.filter(function(s) { return s.id !== player.scoutId; });
 
             if (otherScouts.length === 0) {
-                listHtml = '<p style="color:#888;text-align:center;padding:20px;">No other scouts to share with.<br>Add more scouts first.</p>';
+                listHtml = '<p style="color:#5a5a5a;text-align:center;padding:20px;">No other scouts to share with.<br>Add more scouts first.</p>';
             } else {
                 otherScouts.forEach(function(scout) {
                     // Check if already shared
@@ -4329,7 +4664,7 @@
             var container = document.getElementById('observationTimeline');
 
             if (matchObservations.length === 0) {
-                container.innerHTML = '<div style="text-align:center;color:#888;font-size:13px;padding:20px;">No observations yet</div>';
+                container.innerHTML = '<div style="text-align:center;color:#5a5a5a;font-size:13px;padding:20px;">No observations yet</div>';
                 return;
             }
 
@@ -4516,6 +4851,6 @@
             });
         });
     </script>
-<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#5a5a5a;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
 </html>

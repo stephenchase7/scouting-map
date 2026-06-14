@@ -51,7 +51,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   gap:40px;
   flex-wrap:wrap;
 }
-.info-block h3 { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#888; margin-bottom:6px; }
+.info-block h3 { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#5a5a5a; margin-bottom:6px; }
 .info-block p { font-size:14px; color:#1a1a2e; }
 .info-block a { color:#cc0000; text-decoration:none; }
 .info-block a:hover { text-decoration:underline; }
@@ -103,6 +103,43 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .season-select:hover { border-color: #cc0000; }
 
+.header-season-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: auto;
+  margin-right: 15px;
+}
+.header-season-selector label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+.header-season-select {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.header-season-select:hover {
+  background: rgba(255,255,255,0.3);
+}
+.header-season-select:focus {
+  outline: none;
+  background: rgba(255,255,255,0.35);
+}
+
 .no-data {
   background:#fff;
   padding:60px 30px;
@@ -110,7 +147,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   border-radius:8px;
   border:1px solid #e0e0e0;
 }
-.no-data h3 { font-size:16px; color:#888; margin-bottom:8px; }
+.no-data h3 { font-size:16px; color:#5a5a5a; margin-bottom:8px; }
 .no-data p { font-size:13px; color:#aaa; }
 
 table {
@@ -180,7 +217,7 @@ tr:hover { background:#fafafa; }
 .updated {
   margin-top:20px;
   font-size:12px;
-  color:#999;
+  color:#666;
   text-align:right;
 }
 
@@ -204,7 +241,7 @@ tr:hover { background:#fafafa; }
   font-size:10px;
   text-transform:uppercase;
   letter-spacing:0.5px;
-  color:#888;
+  color:#5a5a5a;
 }
 .stat-item .value {
   font-size:18px;
@@ -216,7 +253,7 @@ tr:hover { background:#fafafa; }
 }
 .stat-item .sub {
   font-size:11px;
-  color:#888;
+  color:#5a5a5a;
   font-weight:400;
 }
 
@@ -396,7 +433,7 @@ td.editable:hover::after {
 }
 .modal .field-label {
   font-size:12px;
-  color:#888;
+  color:#5a5a5a;
   margin-bottom:5px;
 }
 .modal select {
@@ -421,7 +458,7 @@ td.editable:hover::after {
 }
 .auth-status.locked {
   background:#f0f0f0;
-  color:#888;
+  color:#5a5a5a;
 }
 .auth-status.locked:hover {
   background:#e0e0e0;
@@ -451,7 +488,7 @@ td.editable:hover::after {
   font-size:10px;
   text-transform:uppercase;
   letter-spacing:1px;
-  color:#888;
+  color:#5a5a5a;
   padding:0 15px 8px 0;
   font-weight:600;
 }
@@ -863,6 +900,8 @@ td.editable:hover::after {
   .header-info h1 { font-size: 18px; }
   .header-info p { font-size: 12px; }
   .back-btn { padding: 8px 14px; font-size: 12px; }
+  .header-season-selector { margin-left: 0; margin-right: 0; order: 3; width: 100%; }
+  .header-season-select { width: 100%; }
 
   .club-info { padding: 15px; gap: 20px; }
   .info-block h3 { font-size: 9px; }
@@ -950,7 +989,9 @@ td.editable:hover::after {
       <div class="season-selector">
         <label>Season:</label>
         <select id="player-detail-season" onchange="updatePlayerDetailSeason()">
-          <option value="2025-2026">2025-2026</option>
+          <option value="2024-2025">2024-2025</option>
+          <option value="2025-2026" selected>2025-2026</option>
+          <option value="2026-2027">2026-2027</option>
         </select>
       </div>
 
@@ -1450,6 +1491,34 @@ try {
   console.warn('[Supabase] Failed to initialize client:', e);
 }
 
+// Validate club data from Supabase
+function validateClubData(club) {
+  var errors = [];
+  if (!club.club_id) errors.push('missing club_id');
+  if (!club.name) errors.push('missing name');
+  if (club.latitude === null || club.latitude === undefined) errors.push('missing latitude');
+  if (club.longitude === null || club.longitude === undefined) errors.push('missing longitude');
+
+  if (errors.length > 0) {
+    console.warn('[Supabase] Invalid club data:', club.club_id || 'unknown', '-', errors.join(', '));
+    return false;
+  }
+  return true;
+}
+
+// Validate squad data from Supabase
+function validateSquadData(squad) {
+  var errors = [];
+  if (!squad.squad) errors.push('missing squad');
+  if (!Array.isArray(squad.players)) errors.push('missing or invalid players array');
+
+  if (errors.length > 0) {
+    console.warn('[Supabase] Invalid squad data:', squad.club_id || 'unknown', squad.squad || 'unknown', '-', errors.join(', '));
+    return false;
+  }
+  return true;
+}
+
 // Load data from Supabase for a specific club (optimized)
 async function loadSupabaseData(targetClubId) {
   if (!supabaseClient) {
@@ -1477,11 +1546,15 @@ async function loadSupabaseData(targetClubId) {
     if (clubsError && clubsError.code !== 'PGRST116') {
       console.warn('[Supabase] Failed to load club:', clubsError);
     } else if (club) {
-      // Merge club metadata (Supabase wins on conflicts)
-      if (!clubsData[club.club_id]) {
-        clubsData[club.club_id] = {};
-      }
-      clubsData[club.club_id] = {
+      // Validate club data before processing
+      if (!validateClubData(club)) {
+        console.warn('[Supabase] Skipping invalid club data for:', targetClubId);
+      } else {
+        // Merge club metadata (Supabase wins on conflicts)
+        if (!clubsData[club.club_id]) {
+          clubsData[club.club_id] = {};
+        }
+        clubsData[club.club_id] = {
         id: club.club_id,
         name: club.name || clubsData[club.club_id].name || '',
         logo: club.logo_path || clubsData[club.club_id].logo || '',
@@ -1492,7 +1565,8 @@ async function loadSupabaseData(targetClubId) {
         division: club.division,
         latitude: club.latitude,
         longitude: club.longitude
-      };
+        };
+      }
     }
 
     if (squadsError) {
@@ -1505,7 +1579,12 @@ async function loadSupabaseData(targetClubId) {
       }
 
       // Merge squads into playersData
-      squads.forEach(squad => {
+      squads.forEach(function(squad) {
+        // Validate squad data before processing
+        if (!validateSquadData(squad)) {
+          return; // Skip invalid squads
+        }
+
         playersData[targetClubId][squad.squad] = {
           season: squad.season || '',
           lastUpdated: squad.last_scraped || squad.updated_at || '',
@@ -1775,6 +1854,14 @@ function renderPage() {
         '<h1>' + currentClub.name + '</h1>' +
         '<p>' + websiteHtml + '</p>' +
       '</div>' +
+      '<div class="header-season-selector">' +
+        '<label>Season</label>' +
+        '<select class="header-season-select" onchange="changeSeason(this.value)">' +
+          '<option value="2024-2025"' + (currentSeason === '2024-2025' ? ' selected' : '') + '>2024-2025</option>' +
+          '<option value="2025-2026"' + (currentSeason === '2025-2026' ? ' selected' : '') + '>2025-2026</option>' +
+          '<option value="2026-2027"' + (currentSeason === '2026-2027' ? ' selected' : '') + '>2026-2027</option>' +
+        '</select>' +
+      '</div>' +
       '<a href="index.html" class="back-btn">← Back to Map</a>' +
     '</div>' +
 
@@ -1847,7 +1934,9 @@ function renderRoster() {
     '</div>' +
     '<div class="roster-controls">' +
     '<select id="season-select" class="season-select" onchange="changeSeason(this.value)">' +
-    '<option value="2025-2026"' + (data.season === '2025-2026' ? ' selected' : '') + '>2025-2026</option>' +
+    '<option value="2024-2025"' + (currentSeason === '2024-2025' ? ' selected' : '') + '>2024-2025</option>' +
+    '<option value="2025-2026"' + (currentSeason === '2025-2026' ? ' selected' : '') + '>2025-2026</option>' +
+    '<option value="2026-2027"' + (currentSeason === '2026-2027' ? ' selected' : '') + '>2026-2027</option>' +
     '</select>' +
     '<button id="auth-status" class="auth-status ' + (isAuthenticated ? 'unlocked' : 'locked') + '" onclick="toggleAuth()">' +
     (isAuthenticated ? 'Unlocked' : 'Locked') + '</button>' +
@@ -1962,7 +2051,7 @@ function renderRoster() {
 
     var displayPos = p.primaryPosition || p.position || p.originalPosition || '';
     var secondaryPos = p.secondaryPosition || '';
-    var posHtml = displayPos ? '<span class="position">' + displayPos + (secondaryPos ? ' <span style="color:#888;">(' + secondaryPos + ')</span>' : '') + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
+    var posHtml = displayPos ? '<span class="position">' + displayPos + (secondaryPos ? ' <span style="color:#5a5a5a;">(' + secondaryPos + ')</span>' : '') + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
     var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
     var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
 
@@ -2019,8 +2108,16 @@ function renderRoster() {
 // AUTHENTICATION & EDITING
 // ══════════════════════════════════════════════════════════════
 
-var EDIT_PASSWORD = 'Madrid@7';
+var EDIT_PWD_HASH = '5bd887caace65b71b8056d531a5a7653986a2677f6597053c89aef0e07cb46ea';
 var isAuthenticated = false;
+
+async function hashPassword(password) {
+  var encoder = new TextEncoder();
+  var data = encoder.encode(password);
+  var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  var hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
 var pendingEdit = null; // {playerIndex, field}
 var activeFilters = {};
 var dateFilterStart = null;
@@ -2153,9 +2250,10 @@ function closePasswordModal() {
   pendingEdit = null;
 }
 
-function verifyPassword() {
+async function verifyPassword() {
   var input = document.getElementById('password-input').value;
-  if (input === EDIT_PASSWORD) {
+  var hash = await hashPassword(input);
+  if (hash === EDIT_PWD_HASH) {
     isAuthenticated = true;
     closePasswordModal();
     if (pendingEdit) {
@@ -2428,12 +2526,19 @@ function updatePlayerDetailSeason() {
 var currentSeason = '2025-2026';
 
 function changeSeason(season) {
+  if (season === currentSeason) return;
   currentSeason = season;
+
+  // Sync all season selectors on the page
+  document.querySelectorAll('.header-season-select, #season-select').forEach(function(select) {
+    select.value = season;
+  });
+
   // Placeholder: In multi-season implementation, this will:
   // 1. Load data for the selected season from Supabase
   // 2. Re-render the roster with new season data
   // For now, just show a message that this will be implemented
-  alert('Multi-season support coming soon!\\n\\nThis will load ' + season + ' season data.');
+  alert('Multi-season data loading coming soon!\n\nSeason ' + season + ' data will be available once the database schema is updated.');
 }
 
 // ========== Director Management Functions ==========
@@ -2717,7 +2822,7 @@ function showImportModal() {
   if (missingGroups.length > 0) {
     html += '<hr style="margin:20px 0;border:none;border-top:1px solid #e0e0e0;" />';
     html += '<h3 style="font-size:14px;margin-bottom:12px;color:#666;">Commands to Run:</h3>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Copy and paste these commands into your terminal:</p>';
+    html += '<p style="font-size:12px;color:#5a5a5a;margin-bottom:12px;">Copy and paste these commands into your terminal:</p>';
 
     missingGroups.forEach(function(age) {
       var scraperName = CLUB_ID_TO_SCRAPER_NAME[clubId] || clubId;
@@ -2730,7 +2835,7 @@ function showImportModal() {
       html += '</div>';
     });
 
-    html += '<p style="font-size:11px;color:#888;margin-top:12px;"><strong>Note:</strong> Make sure you\'ve scraped the data first using scraper3.py</p>';
+    html += '<p style="font-size:11px;color:#5a5a5a;margin-top:12px;"><strong>Note:</strong> Make sure you\'ve scraped the data first using scraper3.py</p>';
   }
 
   contentEl.innerHTML = html;
@@ -2774,6 +2879,6 @@ init();
   </div>
 </div>
 
-<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#5a5a5a;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
 </html>

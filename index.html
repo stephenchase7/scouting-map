@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Academy Scout Hub</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2e; display:flex; height:100vh; overflow:hidden; }
@@ -26,7 +29,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   background:#fafafa; border-top:1px solid #e0e0e0; padding:12px 14px; flex-shrink:0;
 }
 #selected-card.empty { display:none; }
-#selected-card.empty p { color:#888; font-size:12px; font-style:italic; }
+#selected-card.empty p { color:#5a5a5a; font-size:12px; font-style:italic; }
 #club-count {
   padding:8px 14px; font-size:11px; color:#666; background:#fafafa; border-bottom:1px solid #e0e0e0;
   font-weight:500;
@@ -105,10 +108,11 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .popup-label { color:#666; }
 .popup-value { color:#1a1a2e; font-weight:600; }
 
-.popup-buttons { display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #e0e0e0; }
+.popup-buttons { display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #e0e0e0; flex-wrap:wrap; }
 .popup-btn {
-  flex:1; padding:8px 12px; border-radius:5px; font-size:11px; font-weight:600;
+  flex:1; padding:12px 16px; border-radius:5px; font-size:12px; font-weight:600;
   text-align:center; text-decoration:none; cursor:pointer; transition:all 0.15s;
+  min-height:44px; display:flex; align-items:center; justify-content:center;
 }
 .popup-btn-primary {
   background:#cc0000; color:#fff; border:none;
@@ -134,14 +138,14 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   width:100%; padding:7px 10px; background:#f5f5f5; border:1px solid #ddd;
   border-radius:5px; color:#1a1a2e; font-size:12px; outline:none;
 }
-#search-input::placeholder { color:#999; }
+#search-input::placeholder { color:#666; }
 #search-input:focus { border-color:#cc0000; background:#fff; }
 
 .filter-section {
   padding:12px 14px; border-bottom:1px solid #e0e0e0; flex-shrink:0; background:#fff;
 }
 .filter-section h3 {
-  font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#888; margin-bottom:8px;
+  font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#5a5a5a; margin-bottom:8px;
   font-weight:600;
 }
 .filter-dropdown {
@@ -167,7 +171,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .active-filters.visible { display:flex; }
 .active-filters-label {
-  font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;
+  font-size:10px; color:#5a5a5a; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;
 }
 .filter-chip {
   display:inline-flex; align-items:center; gap:4px; padding:4px 8px;
@@ -180,7 +184,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .filter-chip-close:hover { color:#a00000; }
 .clear-all-btn {
-  font-size:10px; color:#888; text-decoration:underline; cursor:pointer; font-weight:600;
+  font-size:10px; color:#5a5a5a; text-decoration:underline; cursor:pointer; font-weight:600;
   margin-left:auto; transition:color 0.15s;
 }
 .clear-all-btn:hover { color:#cc0000; }
@@ -220,7 +224,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
   background:#fff5f5; border-color:#cc0000;
 }
 .age-group-chevron {
-  font-size:10px; transition:transform 0.2s; color:#999;
+  font-size:10px; transition:transform 0.2s; color:#666;
 }
 .age-group-header.expanded .age-group-chevron {
   transform:rotate(90deg);
@@ -308,7 +312,7 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 }
 .form-group input:focus, .form-group select:focus { border-color:#cc0000; outline:none; }
 .form-group input[type="file"] { padding:8px; background:#f9f9f9; }
-.form-group small { display:block; margin-top:4px; font-size:10px; color:#888; }
+.form-group small { display:block; margin-top:4px; font-size:10px; color:#5a5a5a; }
 .modal-footer { padding:16px 20px; border-top:1px solid #eee; display:flex; gap:10px; justify-content:flex-end; }
 .modal-btn {
   padding:10px 20px; border-radius:6px; font-size:13px; font-weight:600;
@@ -1060,6 +1064,7 @@ document.addEventListener('keydown', function(e) {
       // Close any open modal or menu
       closeAddClubModal();
       closeSearchModal();
+      closeContactListModal();
       closeMobileMenu();
       map.closePopup();
       break;
@@ -1329,11 +1334,94 @@ try {
 }
 
 // ── SUPABASE INTEGRATION ──
+// NOTE: The anon key is intentionally public (Supabase design pattern).
+// Security is enforced via Row Level Security (RLS) policies on the server.
+// See: https://supabase.com/docs/guides/auth/row-level-security
 const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
 
+var CACHE_KEY = 'supabase_clubs_cache';
+var CACHE_TTL = 60 * 60 * 1000; // 1 hour in milliseconds
+
 let supabaseClient = null;
 let supabaseDataLoaded = false;
+
+// Cache helper functions
+function getCachedClubData() {
+  try {
+    var cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    var parsed = JSON.parse(cached);
+    var now = Date.now();
+    if (now - parsed.timestamp > CACHE_TTL) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    return parsed.data;
+  } catch (e) {
+    console.warn('[Cache] Error reading cache:', e);
+    return null;
+  }
+}
+
+function setCachedClubData(clubsData, squadsData) {
+  try {
+    var cacheObj = {
+      timestamp: Date.now(),
+      data: {
+        clubs: clubsData,
+        squads: squadsData
+      }
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObj));
+  } catch (e) {
+    console.warn('[Cache] Error writing cache:', e);
+  }
+}
+
+function applyClubDataFromCache(cachedData) {
+  // Apply cached clubs
+  if (cachedData.clubs && cachedData.clubs.length > 0) {
+    cachedData.clubs.forEach(function(sbClub) {
+      var existingIdx = clubs.findIndex(function(c) { return c.clubId === sbClub.club_id; });
+      if (existingIdx === -1) {
+        var clubObj = {
+          name: sbClub.name || '',
+          state: sbClub.state || '',
+          league: sbClub.league || 'HD',
+          division: sbClub.division || '',
+          lat: sbClub.latitude || 0,
+          lng: sbClub.longitude || 0,
+          logo: sbClub.logo_path || '',
+          website: sbClub.website || '',
+          driveMiles: sbClub.drive_miles || 0,
+          driveTime: sbClub.drive_time || '0m',
+          initials: sbClub.initials || '',
+          isPro: sbClub.is_pro || false,
+          pathway: sbClub.pathway || 'both',
+          clubId: sbClub.club_id,
+          fromSupabase: true
+        };
+        if (CLUB_NAME_MAP[sbClub.club_id]) {
+          clubObj.name = CLUB_NAME_MAP[sbClub.club_id];
+        }
+        clubs.push(clubObj);
+      }
+    });
+  }
+  // Apply cached squads
+  if (cachedData.squads && cachedData.squads.length > 0) {
+    cachedData.squads.forEach(function(squad) {
+      if (!playersData[squad.club_id]) {
+        playersData[squad.club_id] = {};
+      }
+      playersData[squad.club_id][squad.squad] = {
+        lastUpdated: squad.last_scraped || '',
+        players: squad.players || []
+      };
+    });
+  }
+}
 
 // Initialize Supabase client
 try {
@@ -1342,10 +1430,46 @@ try {
   console.warn('[Supabase] Failed to initialize client:', e);
 }
 
+// Validate club data from Supabase
+function validateClubData(club) {
+  var errors = [];
+  if (!club.club_id) errors.push('missing club_id');
+  if (!club.name) errors.push('missing name');
+  if (club.latitude === null || club.latitude === undefined) errors.push('missing latitude');
+  if (club.longitude === null || club.longitude === undefined) errors.push('missing longitude');
+
+  if (errors.length > 0) {
+    console.warn('[Supabase] Invalid club data:', club.club_id || 'unknown', '-', errors.join(', '));
+    return false;
+  }
+  return true;
+}
+
+// Validate squad data from Supabase
+function validateSquadData(squad) {
+  var errors = [];
+  if (!squad.squad) errors.push('missing squad');
+  if (!Array.isArray(squad.players)) errors.push('missing or invalid players array');
+
+  if (errors.length > 0) {
+    console.warn('[Supabase] Invalid squad data:', squad.club_id || 'unknown', squad.squad || 'unknown', '-', errors.join(', '));
+    return false;
+  }
+  return true;
+}
+
 // Load clubs from Supabase and merge with existing clubs
 async function loadSupabaseClubs() {
   if (!supabaseClient) {
-    // Supabase unavailable - using embedded data
+    // Supabase unavailable - try cache first
+    var cachedData = getCachedClubData();
+    if (cachedData) {
+      console.log('[Cache] Supabase unavailable, using cached data');
+      applyClubDataFromCache(cachedData);
+      supabaseDataLoaded = true;
+      showOfflineBanner();
+      return;
+    }
     showOfflineBanner();
     return;
   }
@@ -1360,6 +1484,14 @@ async function loadSupabaseClubs() {
 
     if (error) {
       console.warn('[Supabase] Failed to load clubs:', error);
+      // Try to load from cache on error
+      var cachedData = getCachedClubData();
+      if (cachedData) {
+        console.log('[Cache] Supabase error, using cached data');
+        applyClubDataFromCache(cachedData);
+        supabaseDataLoaded = true;
+        showOfflineBanner();
+      }
       return;
     }
 
@@ -1368,6 +1500,11 @@ async function loadSupabaseClubs() {
 
       // Merge Supabase clubs with existing clubs
       supabaseClubs.forEach(function(sbClub) {
+        // Validate club data before processing
+        if (!validateClubData(sbClub)) {
+          return; // Skip invalid clubs
+        }
+
         // Find existing club by club_id
         var existingIdx = clubs.findIndex(function(c) { return c.clubId === sbClub.club_id; });
 
@@ -1441,6 +1578,11 @@ async function loadSupabaseClubs() {
     } else if (squads && squads.length > 0) {
       // Squad data loaded for freshness indicators
       squads.forEach(function(squad) {
+        // Validate squad data before processing
+        if (!validateSquadData(squad)) {
+          return; // Skip invalid squads
+        }
+
         if (!playersData[squad.club_id]) {
           playersData[squad.club_id] = {};
         }
@@ -1451,9 +1593,20 @@ async function loadSupabaseClubs() {
       });
     }
 
+    // Update cache with fresh data
+    setCachedClubData(supabaseClubs || [], squads || []);
+
     supabaseDataLoaded = true;
   } catch (error) {
     console.warn('[Supabase] Error loading data:', error);
+    // Try to load from cache on network error
+    var cachedData = getCachedClubData();
+    if (cachedData) {
+      console.log('[Cache] Network error, using cached data');
+      applyClubDataFromCache(cachedData);
+      supabaseDataLoaded = true;
+      showOfflineBanner();
+    }
   }
 }
 
@@ -1466,6 +1619,15 @@ loadSupabaseClubs().then(function() {
     refreshMap();
   }
 }).catch(function(error) {
+  // Try cache on promise rejection
+  var cachedData = getCachedClubData();
+  if (cachedData) {
+    console.log('[Cache] Promise error, using cached data');
+    applyClubDataFromCache(cachedData);
+    if (typeof refreshMap === 'function') {
+      refreshMap();
+    }
+  }
   showOfflineBanner();
   // Continue with hardcoded clubs only - app still works
 });
@@ -1677,6 +1839,15 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
   attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
   subdomains: 'abcd', maxZoom: 19
 }).addTo(map);
+
+// ── MARKER CLUSTER GROUP ──
+var markerClusterGroup = L.markerClusterGroup({
+  showCoverageOnHover: false,
+  maxClusterRadius: 50,
+  spiderfyOnMaxZoom: true,
+  disableClusteringAtZoom: 14
+});
+map.addLayer(markerClusterGroup);
 
 // ── ZOOM CONTROLS ──
 function zoomIn() { map.zoomIn(0.5); }
@@ -2125,7 +2296,7 @@ function makePopupHtml(club) {
 
   // Add delete button
   var deleteHtml = '<div style="margin-top:8px;text-align:center;">' +
-    '<button onclick="deleteClub(\'' + club.clubId + '\')" class="popup-btn" style="background:#fee;color:#c00;border:1px solid #fcc;font-size:10px;padding:4px 8px;">Delete Club</button>' +
+    '<button onclick="deleteClub(\'' + club.clubId + '\')" class="popup-btn" style="background:#fee;color:#c00;border:1px solid #fcc;flex:0 0 auto;min-width:auto;">Delete</button>' +
     '</div>';
 
   return '<div class="popup-inner">' +
@@ -2142,7 +2313,72 @@ function makePopupHtml(club) {
 
 // Admin authentication state
 var isAdminAuthenticated = false;
-var ADMIN_PASSWORD = 'Madrid@7';
+var ADMIN_PWD_HASH = '5bd887caace65b71b8056d531a5a7653986a2677f6597053c89aef0e07cb46ea';
+
+// CSRF-like protection: timestamp-based tokens that expire after 5 minutes
+var CSRF_TOKEN_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+var csrfTokens = {}; // Map of operation -> { token, timestamp }
+
+function generateCsrfToken(operation) {
+  var token = crypto.randomUUID ? crypto.randomUUID() :
+    'csrf_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+  csrfTokens[operation] = {
+    token: token,
+    timestamp: Date.now()
+  };
+  return token;
+}
+
+function validateCsrfToken(operation, token) {
+  var stored = csrfTokens[operation];
+  if (!stored) {
+    return { valid: false, error: 'No token found for this operation' };
+  }
+  if (stored.token !== token) {
+    return { valid: false, error: 'Invalid token' };
+  }
+  var elapsed = Date.now() - stored.timestamp;
+  if (elapsed > CSRF_TOKEN_EXPIRY_MS) {
+    delete csrfTokens[operation];
+    return { valid: false, error: 'Token expired (session timeout after 5 minutes). Please try again.' };
+  }
+  // Token is valid, consume it
+  delete csrfTokens[operation];
+  return { valid: true };
+}
+
+// Track in-progress operations to prevent race conditions
+var pendingOperations = {
+  deleteClub: {}, // Map of clubId -> timestamp
+  addClub: {}     // Map of clubId -> timestamp
+};
+
+function isOperationInProgress(type, id) {
+  var pending = pendingOperations[type][id];
+  if (!pending) return false;
+  // Consider operation stale after 30 seconds
+  if (Date.now() - pending > 30000) {
+    delete pendingOperations[type][id];
+    return false;
+  }
+  return true;
+}
+
+function markOperationStarted(type, id) {
+  pendingOperations[type][id] = Date.now();
+}
+
+function markOperationComplete(type, id) {
+  delete pendingOperations[type][id];
+}
+
+async function hashPassword(password) {
+  var encoder = new TextEncoder();
+  var data = encoder.encode(password);
+  var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  var hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
 
 function requireAdminAuth(callback) {
   if (isAdminAuthenticated) {
@@ -2150,12 +2386,15 @@ function requireAdminAuth(callback) {
     return;
   }
   var password = prompt('Admin password required:');
-  if (password === ADMIN_PASSWORD) {
-    isAdminAuthenticated = true;
-    callback();
-  } else if (password !== null) {
-    alert('Incorrect password');
-  }
+  if (password === null) return;
+  hashPassword(password).then(function(hash) {
+    if (hash === ADMIN_PWD_HASH) {
+      isAdminAuthenticated = true;
+      callback();
+    } else {
+      alert('Incorrect password');
+    }
+  });
 }
 
 // Delete club from map and database
@@ -2165,40 +2404,91 @@ async function deleteClub(clubId) {
     return;
   }
 
-  // Require admin authentication
-  requireAdminAuth(async function() {
-    await performDeleteClub(clubId);
-  });
-}
-
-async function performDeleteClub(clubId) {
-  var club = clubs.find(function(c) { return c.clubId === clubId; });
-  var clubName = club ? club.name : clubId;
-
-  // Require typing club name to confirm deletion
-  var confirmation = prompt('To permanently delete "' + clubName + '", type the club name below:');
-  if (confirmation === null) return; // cancelled
-  if (confirmation.trim().toLowerCase() !== clubName.trim().toLowerCase()) {
-    alert('Club name did not match. Deletion cancelled.');
+  // Check if a delete operation is already in progress for this club
+  if (isOperationInProgress('deleteClub', clubId)) {
+    alert('A delete operation is already in progress for this club. Please wait.');
     return;
   }
 
+  // Generate CSRF token for this delete operation
+  var csrfToken = generateCsrfToken('deleteClub_' + clubId);
+
+  // Require admin authentication
+  requireAdminAuth(async function() {
+    await performDeleteClub(clubId, csrfToken);
+  });
+}
+
+async function performDeleteClub(clubId, csrfToken) {
+  // Validate CSRF token
+  var tokenValidation = validateCsrfToken('deleteClub_' + clubId, csrfToken);
+  if (!tokenValidation.valid) {
+    alert('Security error: ' + tokenValidation.error);
+    return;
+  }
+
+  // Mark operation as in-progress to prevent race conditions
+  markOperationStarted('deleteClub', clubId);
+
   try {
-    // Delete from Supabase
-    if (!supabaseClient) {
-      alert('Database connection not available. Please refresh the page.');
+    // Race condition fix: Verify club still exists in local array
+    var club = clubs.find(function(c) { return c.clubId === clubId; });
+    if (!club) {
+      alert('Club not found. It may have already been deleted.');
+      markOperationComplete('deleteClub', clubId);
+      return;
+    }
+    var clubName = club.name;
+
+    // Require typing club name to confirm deletion
+    var confirmation = prompt('To permanently delete "' + clubName + '", type the club name below:');
+    if (confirmation === null) {
+      markOperationComplete('deleteClub', clubId);
+      return; // cancelled
+    }
+    if (confirmation.trim().toLowerCase() !== clubName.trim().toLowerCase()) {
+      alert('Club name did not match. Deletion cancelled.');
+      markOperationComplete('deleteClub', clubId);
       return;
     }
 
-    const { error } = await supabaseClient
-      .from('clubs')
-      .delete()
-      .eq('club_id', clubId);
-
-    if (error) {
-      console.error('Supabase delete error:', error);
-      alert('Database error: ' + error.message);
+    // Delete from Supabase
+    if (!supabaseClient) {
+      alert('Database connection not available. Please refresh the page.');
+      markOperationComplete('deleteClub', clubId);
       return;
+    }
+
+    // Race condition fix: Verify club still exists in Supabase before deletion
+    var { data: existingClub, error: checkError } = await supabaseClient
+      .from('clubs')
+      .select('club_id')
+      .eq('club_id', clubId)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Supabase check error:', checkError);
+      alert('Database error while verifying club: ' + checkError.message);
+      markOperationComplete('deleteClub', clubId);
+      return;
+    }
+
+    if (!existingClub) {
+      // Club doesn't exist in Supabase - still clean up local state
+      console.warn('Club ' + clubId + ' not found in Supabase, cleaning up local state only');
+    } else {
+      // Club exists, proceed with deletion
+      var { error } = await supabaseClient
+        .from('clubs')
+        .delete()
+        .eq('club_id', clubId);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+        alert('Database error: ' + error.message);
+        markOperationComplete('deleteClub', clubId);
+        return;
+      }
     }
 
     // Remove from local clubs array
@@ -2236,15 +2526,15 @@ async function performDeleteClub(clubId) {
   } catch (err) {
     console.error('Delete error:', err);
     alert('Error deleting club: ' + err.message);
+  } finally {
+    markOperationComplete('deleteClub', clubId);
   }
 }
 
 // Rebuild all markers (after delete)
 function rebuildMarkers() {
-  // Clear all existing markers
-  markers.forEach(function(m) {
-    if (m) map.removeLayer(m);
-  });
+  // Clear all existing markers from cluster group
+  markerClusterGroup.clearLayers();
   markers = [];
 
   // Recreate markers for all clubs
@@ -2254,10 +2544,11 @@ function rebuildMarkers() {
       return;
     }
     var icon = makeClubIcon(club, 38);
-    var marker = L.marker([club.lat, club.lng], {icon: icon}).addTo(map);
+    var marker = L.marker([club.lat, club.lng], {icon: icon});
     marker.bindPopup(makePopupHtml(club), {maxWidth: 250});
     marker.on('click', function() { selectClub(idx); });
     markers.push(marker);
+    markerClusterGroup.addLayer(marker);
   });
 }
 
@@ -2292,10 +2583,11 @@ clubs.forEach(function(club, idx) {
   }
 
   var icon = makeClubIcon(club, 38);
-  var m = L.marker([club.lat, club.lng], {icon: icon}).addTo(map);
+  var m = L.marker([club.lat, club.lng], {icon: icon});
   m.bindPopup(makePopupHtml(club), {maxWidth:250});
   m.on('click', function() { selectClub(idx); });
   markers.push(m);
+  markerClusterGroup.addLayer(m);
 });
 
 // ── HIERARCHICAL DIVISION FUNCTIONS ──
@@ -2476,9 +2768,11 @@ function updateMarkerVisibility() {
     var matchesCatchment = matchesCatchmentFilters(club);
 
     if (matchesSearch && filterMatch && matchesCatchment) {
-      markers[idx].addTo(map);
+      if (!markerClusterGroup.hasLayer(markers[idx])) {
+        markerClusterGroup.addLayer(markers[idx]);
+      }
     } else {
-      map.removeLayer(markers[idx]);
+      markerClusterGroup.removeLayer(markers[idx]);
     }
   });
 }
@@ -2609,6 +2903,8 @@ function openAddClubModal() {
   document.getElementById('addClubForm').reset();
   document.getElementById('addClubSuccess').style.display = 'none';
   document.getElementById('addClubError').style.display = 'none';
+  // Generate fresh CSRF token when modal opens
+  initAddClubForm();
 }
 
 function closeAddClubModal() {
@@ -2743,6 +3039,7 @@ function performSearch() {
   var minGoals = parseInt(document.getElementById('filter-min-goals').value) || 0;
   var minRatio = parseFloat(document.getElementById('filter-min-ratio').value) || 0;
   var playingUpOnly = document.getElementById('filter-playing-up').checked;
+  var playerNameFilter = (document.getElementById('filter-player-name').value || '').trim().toLowerCase();
 
   var results = [];
 
@@ -2776,6 +3073,9 @@ function performSearch() {
 
       // Iterate through players
       squadData.players.forEach(function(player) {
+        // Filter by player name (case-insensitive partial match)
+        if (playerNameFilter && (!player.name || player.name.toLowerCase().indexOf(playerNameFilter) === -1)) return;
+
         // Filter by position (if any selected)
         if (positions.length > 0) {
           var playerPos = player.position || '';
@@ -2853,7 +3153,7 @@ function displaySearchResults(results) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px; color:#666;">' +
       '<div style="font-size:32px; margin-bottom:12px;">🔍</div>' +
       '<div style="font-weight:600; margin-bottom:8px;">No players found</div>' +
-      '<div style="font-size:12px; color:#999;">Try adjusting your filters or search criteria</div>' +
+      '<div style="font-size:12px; color:#666;">Try adjusting your filters or search criteria</div>' +
       '</td></tr>';
     container.style.display = 'block';
     return;
@@ -3292,6 +3592,14 @@ function generateClubId(clubName) {
   return id;
 }
 
+// Track add club form token for CSRF protection
+var addClubFormToken = null;
+
+// Called when Add Club modal opens to generate fresh token
+function initAddClubForm() {
+  addClubFormToken = generateCsrfToken('addClub');
+}
+
 async function submitAddClub(event) {
   event.preventDefault();
   var form = document.getElementById('addClubForm');
@@ -3303,14 +3611,48 @@ async function submitAddClub(event) {
   errorEl.style.display = 'none';
   successEl.style.display = 'none';
 
+  // Validate CSRF token
+  if (!addClubFormToken) {
+    errorEl.textContent = 'Security error: Please close and reopen the Add Club form.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  var tokenValidation = validateCsrfToken('addClub', addClubFormToken);
+  if (!tokenValidation.valid) {
+    errorEl.textContent = 'Security error: ' + tokenValidation.error;
+    errorEl.style.display = 'block';
+    // Generate new token for retry
+    addClubFormToken = generateCsrfToken('addClub');
+    return;
+  }
+
   // Disable form
   submitBtn.disabled = true;
   submitBtn.textContent = 'Processing...';
   form.classList.add('loading');
 
+  // Get form values early for operation tracking
+  var clubName = form.name.value.trim();
+
+  // Check if an add operation is already in progress for this club name
+  var normalizedName = clubName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  if (isOperationInProgress('addClub', normalizedName)) {
+    errorEl.textContent = 'An add operation is already in progress for this club. Please wait.';
+    errorEl.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Add Club';
+    form.classList.remove('loading');
+    // Generate new token for retry
+    addClubFormToken = generateCsrfToken('addClub');
+    return;
+  }
+
+  // Mark operation as in-progress
+  markOperationStarted('addClub', normalizedName);
+
   try {
-    // Get form values
-    var clubName = form.name.value.trim();
+    // Get remaining form values
     var league = form.league.value;
     var address = form.address.value.trim();
     var logoFile = form.logo.files[0];
@@ -3319,12 +3661,29 @@ async function submitAddClub(event) {
       throw new Error('Please select a logo file');
     }
 
-    // Check if club already exists (by name)
+    // Check if club already exists (by name) in local array
     var existingClub = clubs.find(function(c) {
       return c.name.toLowerCase() === clubName.toLowerCase();
     });
     if (existingClub) {
       throw new Error('A club named "' + clubName + '" already exists (ID: ' + existingClub.clubId + '). Please use a different name or update the existing club.');
+    }
+
+    // Race condition fix: Also check Supabase for existing club
+    submitBtn.textContent = 'Checking for duplicates...';
+    if (supabaseClient) {
+      var { data: existingInDb, error: checkError } = await supabaseClient
+        .from('clubs')
+        .select('club_id, name')
+        .ilike('name', clubName)
+        .limit(1);
+
+      if (checkError) {
+        console.warn('Supabase duplicate check failed:', checkError);
+        // Continue anyway - the insert will fail if there's a duplicate
+      } else if (existingInDb && existingInDb.length > 0) {
+        throw new Error('A club named "' + existingInDb[0].name + '" already exists in the database (ID: ' + existingInDb[0].club_id + '). Please refresh the page to see the latest clubs.');
+      }
     }
 
     // Step 1: Check against CSV league database
@@ -3510,11 +3869,12 @@ async function submitAddClub(event) {
     // Step 9: Create marker on map immediately
     submitBtn.textContent = 'Adding to map...';
     var icon = makeClubIcon(newClub, 38);
-    var marker = L.marker([newClub.lat, newClub.lng], {icon: icon}).addTo(map);
+    var marker = L.marker([newClub.lat, newClub.lng], {icon: icon});
     marker.bindPopup(makePopupHtml(newClub), {maxWidth: 250});
     var clubIndex = clubs.length - 1;
     marker.on('click', function() { selectClub(clubIndex); });
     markers.push(marker);
+    markerClusterGroup.addLayer(marker);
 
     // Step 9: Update the sidebar list and zoom to marker
     buildList();
@@ -3558,6 +3918,11 @@ async function submitAddClub(event) {
     submitBtn.textContent = 'Add Club';
     form.classList.remove('loading');
   } finally {
+    // Clean up operation tracking
+    markOperationComplete('addClub', normalizedName);
+    // Generate new token for next submission
+    addClubFormToken = generateCsrfToken('addClub');
+
     if (submitBtn.textContent !== 'Add Club') {
       setTimeout(function() {
         submitBtn.disabled = false;
@@ -3587,10 +3952,10 @@ loadSearchFromURL();
 </script>
 
 <!-- Add Club Modal -->
-<div id="addClubModal" class="modal-overlay">
+<div id="addClubModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="addClubTitle">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Add New Club</h2>
+      <h2 id="addClubTitle">Add New Club</h2>
     </div>
     <form id="addClubForm" onsubmit="submitAddClub(event)">
       <div class="modal-body">
@@ -3641,11 +4006,11 @@ loadSearchFromURL();
 </div>
 
 <!-- SEARCH MODAL -->
-<div id="search-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeSearchModal()">
+<div id="search-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="searchModalTitle" style="display:none;" onclick="if(event.target===this) closeSearchModal()">
   <div class="modal-container search-modal-container" id="search-modal-container" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h2>🔍 Search Players</h2>
-      <button class="modal-close" onclick="closeSearchModal()">×</button>
+      <h2 id="searchModalTitle">Search Players</h2>
+      <button class="modal-close" onclick="closeSearchModal()" aria-label="Close search modal">×</button>
     </div>
 
     <div class="modal-body">
@@ -3660,6 +4025,13 @@ loadSearchFromURL();
 
       <!-- FILTERS -->
       <div class="search-filters">
+        <div class="filter-row" style="margin-bottom:12px;">
+          <div class="filter-group" style="flex:1;">
+            <label>Player Name</label>
+            <input type="text" id="filter-player-name" placeholder="Search by player name..." />
+          </div>
+        </div>
+
         <div class="filter-row">
           <div class="filter-group">
             <label>Age Group</label>
@@ -3776,10 +4148,10 @@ loadSearchFromURL();
 </div>
 
 <!-- Contact List Modal -->
-<div id="contact-list-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeContactListModal()">
+<div id="contact-list-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="contactListTitle" style="display:none;" onclick="if(event.target===this) closeContactListModal()">
   <div class="modal-container" style="width:900px; max-width:95vw; max-height:90vh;" onclick="event.stopPropagation()">
     <div class="modal-header">
-      <h2>Contact List</h2>
+      <h2 id="contactListTitle">Contact List</h2>
       <button class="modal-close" onclick="closeContactListModal()">&times;</button>
     </div>
     <div class="modal-body" style="padding:20px;">
@@ -4022,6 +4394,6 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+<div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#5a5a5a;font-style:italic;z-index:100;">Created by Stephen Chase</div>
 </body>
 </html>

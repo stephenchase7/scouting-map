@@ -48,7 +48,7 @@ python3 rules_server.py
 
 ## Authentication
 
-Password `Madrid@7` unlocks:
+Password (SHA-256 hashed, not stored in plaintext) unlocks:
 - Editing player data in team.html
 - Admin mode in scouts.html (delete any report)
 
