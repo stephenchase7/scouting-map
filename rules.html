@@ -406,8 +406,15 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 </div>
 
 <script>
-var rulesData = null;
 var currentDoc = 0;
+
+// Embedded document list for file:// protocol support
+var documents = [
+  { name: 'Player Development Guidelines', file: 'player_development_guidelines.html', icon: '📘', pages: '~30' },
+  { name: 'Player Movement Guidelines', file: 'player_movement_guidelines.html', icon: '🔄', pages: '~8' },
+  { name: 'Academy Rules & Regulations', file: 'academy_rules_regulations.html', icon: '📗', pages: '~40' },
+  { name: 'Homegrown Rules & Regulations', file: 'homegrown_rules_regulations.html', icon: '📕', pages: '~30' }
+];
 
 // Calendar periods for Player Movement
 var calendarPeriods = [
@@ -419,52 +426,35 @@ var calendarPeriods = [
   { start:'2026-04-18', end:'2026-05-31', type:'freeze' }
 ];
 
-async function loadRulesData() {
-  try {
-    var response = await fetch('./rules_data/rules_web.json');
-    rulesData = await response.json();
-    renderDocsList();
-    renderStats();
-    if (rulesData.combined && rulesData.combined.documents.length > 0) {
-      showDocument(0);
-    }
-  } catch (error) {
-    console.error('Failed to load:', error);
-    document.getElementById('document-content').innerHTML =
-      '<div class="empty-state"><h3>Failed to Load</h3><p>Run: python3 rules_processor.py web</p></div>';
-  }
+function loadRulesData() {
+  renderDocsList();
+  renderStats();
+  showDocument(0);
 }
 
 function renderDocsList() {
   var list = document.getElementById('docs-list');
-  var docs = rulesData.combined ? rulesData.combined.documents : [];
-  var icons = ['📘', '🔄', '📗', '📕'];
 
-  list.innerHTML = docs.map(function(doc, i) {
-    var pageCount = (doc.text.match(/PAGE\s+\d+/gi) || []).length || '~';
+  list.innerHTML = documents.map(function(doc, i) {
     return '<div class="doc-item' + (i === 0 ? ' active' : '') + '" onclick="showDocument(' + i + ')">' +
-      '<span class="doc-icon">' + (icons[i] || '📄') + '</span>' +
+      '<span class="doc-icon">' + doc.icon + '</span>' +
       '<div class="doc-info">' +
         '<div class="doc-title">' + escapeHtml(doc.name) + '</div>' +
-        '<div class="doc-pages">' + pageCount + ' pages</div>' +
+        '<div class="doc-pages">' + doc.pages + ' pages</div>' +
       '</div></div>';
   }).join('');
 }
 
 function renderStats() {
-  var combined = rulesData.combined;
-  if (combined) {
-    document.getElementById('total-pages').textContent = combined.totalPages || '108';
-    document.getElementById('total-docs').textContent = combined.documents ? combined.documents.length : '4';
-  }
+  document.getElementById('total-pages').textContent = '108';
+  document.getElementById('total-docs').textContent = documents.length;
 }
 
-async function showDocument(index) {
-  var docs = rulesData.combined ? rulesData.combined.documents : [];
-  if (!docs[index]) return;
+function showDocument(index) {
+  if (!documents[index]) return;
 
   currentDoc = index;
-  var doc = docs[index];
+  var doc = documents[index];
 
   // Update active state
   document.querySelectorAll('.doc-item').forEach(function(item, i) {
@@ -472,72 +462,9 @@ async function showDocument(index) {
   });
   document.getElementById('doc-title').textContent = doc.name;
 
-  // Render document
+  // Load document via iframe (works with file:// protocol)
   var content = document.getElementById('document-content');
-
-  // Check if we have a pre-formatted HTML file for this document
-  if (doc.name.indexOf('Player Development') !== -1) {
-    try {
-      var response = await fetch('./player_development_guidelines.html');
-      var htmlContent = await response.text();
-      content.innerHTML = '<div class="doc-container">' + htmlContent + '</div>';
-      content.scrollTop = 0;
-      return;
-    } catch (e) {
-      console.log('Falling back to JSON content');
-    }
-  }
-
-  // Check for Player Movement Guidelines
-  if (doc.name.indexOf('Movement') !== -1) {
-    try {
-      var response = await fetch('./player_movement_guidelines.html');
-      var htmlContent = await response.text();
-      content.innerHTML = '<div class="doc-container">' + htmlContent + '</div>';
-      content.scrollTop = 0;
-      return;
-    } catch (e) {
-      console.log('Falling back to JSON content for Movement');
-    }
-  }
-
-  // Check for Academy Division Rules & Regulations
-  if (doc.name.indexOf('Academy') !== -1 && doc.name.indexOf('Rules') !== -1) {
-    try {
-      var response = await fetch('./academy_rules_regulations.html');
-      var htmlContent = await response.text();
-      content.innerHTML = '<div class="doc-container">' + htmlContent + '</div>';
-      content.scrollTop = 0;
-      return;
-    } catch (e) {
-      console.log('Falling back to JSON content for Academy Rules');
-    }
-  }
-
-  // Check for Homegrown Rules & Regulations
-  if (doc.name.indexOf('Homegrown') !== -1 || (doc.name.indexOf('Rules') !== -1 && doc.name.indexOf('Academy') === -1)) {
-    try {
-      var response = await fetch('./homegrown_rules_regulations.html');
-      var htmlContent = await response.text();
-      content.innerHTML = '<div class="doc-container">' + htmlContent + '</div>';
-      content.scrollTop = 0;
-      return;
-    } catch (e) {
-      console.log('Falling back to JSON content for Rules');
-    }
-  }
-
-  var html = '<div class="doc-container">';
-
-  if (doc.name.indexOf('Movement') !== -1) {
-    html += renderPlayerMovementDoc(doc);
-  } else {
-    html += renderRulesDoc(doc);
-  }
-
-  html += '</div>';
-  content.innerHTML = html;
-  content.scrollTop = 0;
+  content.innerHTML = '<iframe src="' + doc.file + '" style="width:100%;height:100%;border:none;"></iframe>';
 }
 
 function renderPlayerMovementDoc(doc) {

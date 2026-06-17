@@ -465,13 +465,11 @@
         }
         .action-btn .action-tally {
             font-size: 9px;
-            color: rgba(255,255,255,0.4);
-            display: flex;
-            justify-content: center;
-            gap: 6px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 4px;
         }
-        .action-btn .action-tally .good { color: #66bb6a; }
-        .action-btn .action-tally .bad { color: #ef5350; }
+        .action-btn .action-tally .good { color: #66bb6a; font-weight: 600; }
+        .action-btn .action-tally .bad { color: #ef5350; font-weight: 600; }
         .action-btn .action-count {
             font-size: 14px;
             font-weight: 700;
@@ -485,7 +483,69 @@
             background: rgba(200,16,46,0.3);
         }
 
-        /* Inline Rating Buttons (minimal icons) */
+        /* Corner Badge Style */
+        .action-btn.corner-badge {
+            padding: 6px 4px 28px;
+            cursor: default;
+            position: relative;
+            min-height: 52px;
+        }
+        .action-btn.corner-badge:hover {
+            transform: none;
+            background: rgba(255,255,255,0.04);
+        }
+        .corner-btn {
+            position: absolute;
+            bottom: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+        .corner-btn.good {
+            left: 4px;
+            background: rgba(46, 125, 50, 0.7);
+            color: #c8e6c9;
+        }
+        .corner-btn.good:hover {
+            background: #2e7d32;
+            color: #fff;
+            transform: scale(1.15);
+        }
+        .corner-btn.good:active {
+            transform: scale(0.9);
+            background: #1b5e20;
+        }
+        .corner-btn.bad {
+            right: 4px;
+            background: rgba(198, 40, 40, 0.7);
+            color: #ffcdd2;
+        }
+        .corner-btn.bad:hover {
+            background: #c62828;
+            color: #fff;
+            transform: scale(1.15);
+        }
+        .corner-btn.bad:active {
+            transform: scale(0.9);
+            background: #b71c1c;
+        }
+        .action-btn.corner-badge .action-name {
+            margin-top: 2px;
+        }
+        .action-btn.corner-badge .action-tally {
+            margin-bottom: 0;
+        }
+
+        /* Legacy inline rating (no longer used but kept for safety) */
         .action-rating-inline {
             display: none;
             position: absolute;
@@ -1837,19 +1897,17 @@
                     </div>
                 `;
             } else {
-                // Good/Bad rated action
+                // Good/Bad rated action - Corner Badge design
                 const good = data?.good || 0;
                 const bad = data?.bad || 0;
-                const tallyText = (good || bad) ? `<span class="good">${good}✓</span> <span class="bad">${bad}✗</span>` : '—';
+                const tallyText = (good || bad) ? `<span class="good">+${good}</span> / <span class="bad">-${bad}</span>` : '—';
 
                 return `
-                    <div class="action-btn" onclick="showActionRating(this, '${markerId}', '${category}', '${action}')">
+                    <div class="action-btn corner-badge">
+                        <button class="corner-btn good" onclick="recordAction('${markerId}', '${category}', '${action}', 'good')">+</button>
+                        <button class="corner-btn bad" onclick="recordAction('${markerId}', '${category}', '${action}', 'bad')">−</button>
                         <span class="action-name">${action}</span>
                         <span class="action-tally">${tallyText}</span>
-                        <div class="action-rating-inline">
-                            <button class="rating-btn-inline good" onclick="event.stopPropagation(); recordAction('${markerId}', '${category}', '${action}', 'good')">+</button>
-                            <button class="rating-btn-inline bad" onclick="event.stopPropagation(); recordAction('${markerId}', '${category}', '${action}', 'bad')">−</button>
-                        </div>
                     </div>
                 `;
             }
