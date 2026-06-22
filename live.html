@@ -3133,7 +3133,7 @@
                 // Save to Supabase if connected
                 if (supabaseClient && isOnline) {
                     try {
-                        await supabaseClient.from('scout_players').upsert({
+                        const playerData = {
                             id: playerId,
                             scout_id: defaultScoutId,
                             name: d.name || 'Unknown',
@@ -3149,27 +3149,39 @@
                             shared_with: [],
                             date_added: new Date().toISOString(),
                             updated_at: new Date().toISOString()
-                        });
+                        };
 
-                        // Also save the report if there's data
-                        if (report && (report.withBallNotes || report.againstBallNotes)) {
-                            await supabaseClient.from('scout_reports').upsert({
-                                id: 'report-' + playerId,
-                                player_id: playerId,
-                                scout_id: defaultScoutId,
-                                match_event: eventName,
-                                match_date: matchDate,
-                                with_ball: report.withBallNotes || '',
-                                against_ball: report.againstBallNotes || '',
-                                build: '',
-                                priority: 'none',
-                                created_at: new Date().toISOString()
-                            });
+                        console.log('[Export] Saving player:', playerData);
+                        const { data, error } = await supabaseClient.from('scout_players').upsert(playerData);
+
+                        if (error) {
+                            console.error('[Export] Supabase error:', error.message, error.details, error.hint);
+                            showToast('Export failed: ' + error.message, 'error');
+                        } else {
+                            console.log('[Export] Player saved successfully');
+
+                            // Also save the report if there's data
+                            if (report && (report.withBallNotes || report.againstBallNotes)) {
+                                const { error: reportError } = await supabaseClient.from('scout_reports').upsert({
+                                    id: 'report-' + playerId,
+                                    player_id: playerId,
+                                    scout_id: defaultScoutId,
+                                    match_event: eventName,
+                                    match_date: matchDate,
+                                    with_ball: report.withBallNotes || '',
+                                    against_ball: report.againstBallNotes || '',
+                                    build: '',
+                                    priority: 'none',
+                                    created_at: new Date().toISOString()
+                                });
+                                if (reportError) {
+                                    console.error('[Export] Report save error:', reportError.message);
+                                }
+                            }
+                            exportCount++;
                         }
-
-                        exportCount++;
                     } catch (e) {
-                        console.error('[Export] Supabase error:', e);
+                        console.error('[Export] Exception:', e);
                     }
                 } else {
                     exportCount++;
