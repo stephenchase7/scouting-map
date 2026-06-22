@@ -62,11 +62,19 @@
 - [x] Added season filter to Supabase query
 - [x] Season dropdown UI with dynamic selection
 
+### Phase 7: Per-Match Stats System (June 22, 2026)
+- [x] Created player_match_stats table in Supabase
+- [x] New columns in team.html: A, KP, A1v1, D1v1, SV (removed Link/Scout)
+- [x] Player detail modal: + Add Match button
+- [x] Match stats entry modal with all fields
+- [x] Edit/delete buttons on each match stat row
+- [x] Stats aggregate from per-match entries to roster table
+
 ---
 
 ## Planned
 
-### Phase 7: Next Season Stats System
+### Phase 8: Multi-Season History
 
 **What this is:** Currently all data is for one season (2025-2026). This feature lets you:
 - View historical seasons (2024-2025, 2023-2024, etc.)
@@ -113,82 +121,7 @@ UI shows both seasons in dropdown
 
 ---
 
-### Phase 7: Next Season Stats System
-
-**Overview:** Manual stat tracking for key players. Goals scraped from Kitman; all other stats entered manually per match.
-
-**team.html Column Layout:**
-| # | PLAYER | YOB | POS | GAMES | GOALS | ASSISTS | KEY PASSES | ATK 1v1 | DEF 1v1 | SAVES |
-
-**Data Sources:**
-- GOALS: Scraped from Kitman (automatic)
-- All other stats: Manual entry per match
-- Video: Taka.io playlist links (optional)
-
-**Supabase Schema - player_match_stats:**
-```sql
-CREATE TABLE player_match_stats (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    player_key TEXT NOT NULL,          -- clubId_squad_jersey_name
-    club_id TEXT NOT NULL,
-    squad TEXT NOT NULL,
-    match_date DATE NOT NULL,
-    opponent TEXT,
-
-    -- Stats (manual entry)
-    goals INTEGER DEFAULT 0,           -- Can override Kitman
-    assists INTEGER DEFAULT 0,
-    key_passes INTEGER DEFAULT 0,
-    atk_1v1_won INTEGER DEFAULT 0,
-    atk_1v1_total INTEGER DEFAULT 0,   -- Win/Total format (e.g., 5/7)
-    def_1v1_won INTEGER DEFAULT 0,
-    def_1v1_total INTEGER DEFAULT 0,
-    saves INTEGER DEFAULT 0,           -- GK only
-
-    -- Video
-    taka_playlist_url TEXT,
-
-    -- Metadata
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW(),
-
-    UNIQUE(player_key, match_date)
-);
-
-CREATE INDEX idx_player_match_stats_player ON player_match_stats(player_key);
-CREATE INDEX idx_player_match_stats_club ON player_match_stats(club_id, squad);
-```
-
-**UI Changes - team.html:**
-- [ ] Update roster table columns (remove LINK, SCOUT)
-- [ ] Add ASSISTS, KEY PASSES, ATK 1v1, DEF 1v1, SAVES columns
-- [ ] 1v1 columns show "W/T" format (e.g., "5/7" = 5 won, 7 total)
-- [ ] Keep 📋 icon for scouted players (opens scouts.html)
-- [ ] Move Scout button to player detail modal
-
-**UI Changes - Player Detail Modal:**
-- [ ] Show per-match breakdown (like Wyscout)
-- [ ] Match rows: Date, Opponent, Stats, Video link
-- [ ] +/- buttons for manual stat entry
-- [ ] Taka playlist URL field per match
-- [ ] Aggregate totals at top
-
-**UI Changes - live.html:**
-- [ ] Add Assists, Key Passes, ATK 1v1, DEF 1v1 action buttons
-- [ ] Saves button (all players, but mainly for GK)
-- [ ] 1v1 buttons: +Won / +Lost for both types
-
-**Implementation:**
-1. [ ] Create player_match_stats table in Supabase
-2. [ ] Update team.html column layout
-3. [ ] Build player detail modal with per-match view
-4. [ ] Add stat entry UI in modal
-5. [ ] Connect live.html export to new stats table
-6. [ ] Test full flow
-
----
-
-### Phase 8: ECNL Teams to Map
+### Phase 9: ECNL Teams to Map
 
 **Overview:** Add ECNL (Elite Clubs National League) clubs to the scouting map alongside MLS NEXT clubs.
 
@@ -201,7 +134,7 @@ CREATE INDEX idx_player_match_stats_club ON player_match_stats(club_id, squad);
 
 ---
 
-### Phase 9: Authentication & Multi-Tenant SaaS
+### Phase 10: Authentication & Multi-Tenant SaaS
 
 **Overview:** Supabase Auth with organization-based access. White-label ready for selling to other MLS clubs.
 
