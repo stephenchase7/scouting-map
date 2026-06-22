@@ -2782,6 +2782,21 @@
             }
         }
 
+        // Calculate squad from birth year (for 2025-26 season)
+        function getSquadFromBirthYear(yob) {
+            if (!yob) return null;
+            var birthYear = parseInt(yob);
+            if (isNaN(birthYear)) return null;
+            // 2025-26 season age groups
+            if (birthYear >= 2013) return 'u13';
+            if (birthYear === 2012) return 'u14';
+            if (birthYear === 2011) return 'u15';
+            if (birthYear === 2010) return 'u16';
+            if (birthYear === 2009) return 'u17';
+            if (birthYear <= 2008) return 'u19';
+            return null;
+        }
+
         // Look up clubId from club display name (with fuzzy matching)
         function getClubIdFromName(clubName) {
             if (!clubName || !clubsCache.length) return null;
@@ -3646,7 +3661,7 @@
                 linkEl.style.display = 'inline-block';
                 // Use clubId if available, then try lookup, finally fall back to normalized name
                 var clubSlug = player.clubId || getClubIdFromName(player.club) || player.club.toLowerCase().replace(/\s+/g, '_');
-                var squadSlug = player.squad ? player.squad.toLowerCase() : 'u13';
+                var squadSlug = player.squad ? player.squad.toLowerCase() : (getSquadFromBirthYear(player.yob) || 'u13');
                 linkEl.href = 'team.html?club=' + encodeURIComponent(clubSlug) + '#' + squadSlug + '-squad';
             } else {
                 linkEl.style.display = 'none';
