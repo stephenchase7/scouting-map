@@ -2782,12 +2782,32 @@
             }
         }
 
-        // Look up clubId from club display name
+        // Look up clubId from club display name (with fuzzy matching)
         function getClubIdFromName(clubName) {
             if (!clubName || !clubsCache.length) return null;
             var normalized = clubName.toLowerCase().trim();
+
+            // Try exact match first
             var match = clubsCache.find(function(c) {
                 return c.name && c.name.toLowerCase().trim() === normalized;
+            });
+            if (match) return match.id;
+
+            // Try matching with common abbreviations expanded
+            // "SC" = "Soccer Club", "FC" = "Football Club", etc.
+            var expanded = normalized
+                .replace(/\bsc\b/g, 'soccer club')
+                .replace(/\bfc\b/g, 'football club');
+            match = clubsCache.find(function(c) {
+                return c.name && c.name.toLowerCase().trim() === expanded;
+            });
+            if (match) return match.id;
+
+            // Try if club name contains the search term or vice versa
+            match = clubsCache.find(function(c) {
+                if (!c.name) return false;
+                var cName = c.name.toLowerCase().trim();
+                return cName.includes(normalized) || normalized.includes(cName);
             });
             return match ? match.id : null;
         }
