@@ -5022,7 +5022,9 @@
                 html += '<div class="report-header">';
                 html += '<div>';
                 html += '<span class="report-match">' + (report.match || 'Unknown Match') + '</span>';
-                html += '<span class="report-author">By ' + authorName + '</span>';
+                if (report.specialWeapons && report.specialWeapons.length) {
+                    html += '<span class="report-author">Special Weapons: ' + report.specialWeapons.map(function(w) { return escapeHtml(w); }).join(', ') + '</span>';
+                }
                 html += '</div>';
                 html += '<div class="report-header-right">';
                 html += '<span class="report-date">' + dateStr + '</span>';
@@ -5032,15 +5034,6 @@
                 }
                 html += '</div>';
                 html += '</div>';
-                html += '<div class="report-meta">';
-                if (report.source) html += '<span class="report-tag">' + escapeHtml(report.source) + '</span>';
-                if (report.build) html += '<span class="report-tag">' + escapeHtml(report.build) + '</span>';
-                if (report.weakerFoot) html += '<span class="report-tag">Weak Foot: ' + escapeHtml(report.weakerFoot) + '</span>';
-                if (report.generatedByAI) html += '<span class="report-tag" style="background:#8b5cf6;color:#fff;">AI Generated</span>';
-                html += '</div>';
-                if (report.specialWeapons && report.specialWeapons.length) {
-                    html += '<div class="report-weapons"><strong>Special Weapons:</strong> ' + report.specialWeapons.map(function(w) { return escapeHtml(w); }).join(', ') + '</div>';
-                }
                 if (report.withBall) {
                     html += '<div class="report-section"><strong>With Ball:</strong> ' + escapeHtml(report.withBall).replace(/\n/g, '<br>') + '</div>';
                 }
