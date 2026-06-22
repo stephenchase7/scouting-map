@@ -2620,7 +2620,7 @@
                     <button class="btn-save-info" onclick="savePlayerInfo()">Save Changes</button>
                     <button class="btn-cancel-edit" onclick="cancelEdit()">Cancel</button>
                 </div>
-                <a href="#" class="link-to-stats" id="linkToStats" target="_blank">View team stats →</a>
+                <a href="#" class="link-to-stats" id="linkToStats">View team stats →</a>
             </div>
 
             <!-- Video Links Section -->
@@ -2741,6 +2741,7 @@
         var players = [];
         var selectedScoutId = null;
         var isAdminMode = false;
+        var clubsCache = []; // Cache for club name to ID mapping
         var ADMIN_PWD_HASH = '5bd887caace65b71b8056d531a5a7653986a2677f6597053c89aef0e07cb46ea';
 
         async function hashPassword(password) {
@@ -2764,6 +2765,31 @@
             return String(str).replace(/[&<>"']/g, function(c) {
                 return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
             });
+        }
+
+        // Load clubs from Supabase for name->ID mapping
+        async function loadClubsFromSupabase() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('clubs')
+                    .select('id, name');
+                if (error) throw error;
+                clubsCache = data || [];
+            } catch (e) {
+                console.warn('[Clubs] Failed to load clubs:', e);
+                clubsCache = [];
+            }
+        }
+
+        // Look up clubId from club display name
+        function getClubIdFromName(clubName) {
+            if (!clubName || !clubsCache.length) return null;
+            var normalized = clubName.toLowerCase().trim();
+            var match = clubsCache.find(function(c) {
+                return c.name && c.name.toLowerCase().trim() === normalized;
+            });
+            return match ? match.id : null;
         }
 
         // Load data from Supabase
@@ -3598,8 +3624,8 @@
             var linkEl = document.getElementById('linkToStats');
             if (player.club || player.clubId) {
                 linkEl.style.display = 'inline-block';
-                // Use clubId if available, otherwise fall back to normalized club name
-                var clubSlug = player.clubId || player.club.toLowerCase().replace(/\s+/g, '_');
+                // Use clubId if available, then try lookup, finally fall back to normalized name
+                var clubSlug = player.clubId || getClubIdFromName(player.club) || player.club.toLowerCase().replace(/\s+/g, '_');
                 var squadSlug = player.squad ? player.squad.toLowerCase() : 'u13';
                 linkEl.href = 'team.html?club=' + encodeURIComponent(clubSlug) + '#' + squadSlug + '-squad';
             } else {
@@ -4816,6 +4842,9 @@
 
             // Try Supabase first
             const loaded = await loadFromSupabase();
+
+            // Load clubs cache for name->ID lookup
+            await loadClubsFromSupabase();
 
             if (!loaded) {
                 // Fallback to localStorage
