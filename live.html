@@ -3087,9 +3087,32 @@
                 return;
             }
 
-            // Get default scout ID (first scout from localStorage or create default)
+            // Get default scout ID (try localStorage first, then Supabase)
             let scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
             let defaultScoutId = scouts.length > 0 ? scouts[0].id : null;
+
+            // If no scouts in localStorage, query Supabase
+            if (!defaultScoutId && supabaseClient) {
+                try {
+                    const { data: scoutsData, error } = await supabaseClient
+                        .from('scouts')
+                        .select('id')
+                        .limit(1);
+                    if (!error && scoutsData && scoutsData.length > 0) {
+                        defaultScoutId = scoutsData[0].id;
+                        console.log('[Export] Got scout ID from Supabase:', defaultScoutId);
+                    }
+                } catch (e) {
+                    console.error('[Export] Failed to get scout from Supabase:', e);
+                }
+            }
+
+            // If still no scout, show error
+            if (!defaultScoutId) {
+                showToast('No scout found. Please create a scout in Scout Database first.', 'error');
+                closeExportModal();
+                return;
+            }
 
             // Get existing scout players for localStorage backup
             let scoutPlayers = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
