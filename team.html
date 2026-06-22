@@ -2642,40 +2642,25 @@ function updatePlayerDetailSeason() {
   // Will reload player data for selected season when implemented
 }
 
-// Global season change
-var currentSeason = '2025-2026';
+// Global season change - read from URL or default to 2025-2026
+var currentSeason = (function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var seasonParam = urlParams.get('season');
+  if (seasonParam && /^\d{4}-\d{4}$/.test(seasonParam)) {
+    return seasonParam;
+  }
+  return '2025-2026';
+})();
 
-async function changeSeason(season) {
+function changeSeason(season) {
   if (season === currentSeason) return;
-  currentSeason = season;
 
-  // Sync all season selectors on the page
-  document.querySelectorAll('.header-season-select, #season-select').forEach(function(select) {
-    select.value = season;
-  });
+  // Build new URL with season parameter
+  var url = new URL(window.location.href);
+  url.searchParams.set('season', season);
 
-  // Clear existing data and reload from Supabase
-  playersData = {};
-
-  // Show loading state
-  var rosterContainer = document.getElementById('roster-container');
-  if (rosterContainer) {
-    rosterContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">Loading ' + season + ' season data...</div>';
-  }
-
-  // Reload data for selected season
-  var success = await loadSupabaseData(clubId);
-
-  if (success && playersData[clubId] && Object.keys(playersData[clubId]).length > 0) {
-    renderPage();
-    showToast('Loaded ' + season + ' season');
-  } else {
-    // No data for this season
-    if (rosterContainer) {
-      rosterContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No data available for ' + season + ' season</div>';
-    }
-    showToast('No data for ' + season, true);
-  }
+  // Reload page with new season
+  window.location.href = url.toString();
 }
 
 // ========== Director Management Functions ==========
