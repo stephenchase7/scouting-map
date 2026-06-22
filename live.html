@@ -982,30 +982,204 @@
             z-index: 50;
         }
 
-        /* Session Selector */
+        /* Session Selector - Modern Design */
         .session-selector {
+            position: relative;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin: -24px -24px 16px -24px;
+        }
+        .session-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .session-trigger {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .session-trigger:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .session-trigger-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .session-trigger-title {
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .session-trigger-subtitle {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+        }
+        .session-trigger-icon {
+            font-size: 10px;
+            opacity: 0.6;
+            transition: transform 0.2s ease;
+        }
+        .session-trigger.open .session-trigger-icon {
+            transform: rotate(180deg);
+        }
+        .session-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .session-action-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .session-action-btn:hover {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.05);
+        }
+        .session-action-btn.primary {
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+            border-color: transparent;
+        }
+        .session-action-btn.primary:hover {
+            background: linear-gradient(135deg, #ff4d5a 0%, #e63946 100%);
+        }
+
+        /* Session Dropdown Panel */
+        .session-panel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 16px;
+            right: 16px;
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            z-index: 1000;
+            max-height: 320px;
+            overflow-y: auto;
+            display: none;
+            animation: slideDown 0.2s ease;
+        }
+        .session-panel.show {
+            display: block;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .session-panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .session-list {
+            padding: 8px;
+        }
+        .session-card {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 4px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .session-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .session-card.active {
+            background: rgba(230, 57, 70, 0.15);
+            border-color: rgba(230, 57, 70, 0.3);
+        }
+        .session-card-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .session-card-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .session-card-meta {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin: -24px -24px 16px -24px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
         }
-        .session-dropdown {
-            flex: 1;
-            padding: 8px 10px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
+        .session-card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .session-card-delete {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
             border-radius: 6px;
-            color: #fff;
+            color: rgba(255,255,255,0.3);
             font-size: 12px;
             cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s ease;
         }
-        .session-dropdown option {
-            background: #1a1a2e;
-            color: #fff;
+        .session-card:hover .session-card-delete {
+            opacity: 1;
         }
+        .session-card-delete:hover {
+            background: rgba(230, 57, 70, 0.2);
+            color: #e63946;
+        }
+        .session-empty {
+            padding: 24px 16px;
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 12px;
+        }
+        .session-empty-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        /* Legacy - keep for compatibility */
+        .session-dropdown { display: none; }
         .session-btn {
             padding: 8px 12px;
             background: rgba(255,255,255,0.1);
@@ -1296,13 +1470,31 @@
     <div class="main-container">
         <!-- Left Panel - Match Info -->
         <div class="player-info-panel">
-            <!-- Session Selector -->
+            <!-- Session Selector - Modern Design -->
             <div class="session-selector">
-                <select class="session-dropdown" id="sessionDropdown" onchange="loadSession(this.value)">
-                    <option value="">Select Session...</option>
-                </select>
-                <button class="session-btn" onclick="showSessionsModal()">📁</button>
-                <button class="session-btn primary" onclick="newSession()">+</button>
+                <div class="session-header">
+                    <div class="session-trigger" id="sessionTrigger" onclick="toggleSessionPanel()">
+                        <div class="session-trigger-text">
+                            <span class="session-trigger-title" id="sessionTriggerTitle">Select Session...</span>
+                            <span class="session-trigger-subtitle" id="sessionTriggerSubtitle">No session loaded</span>
+                        </div>
+                        <span class="session-trigger-icon">▼</span>
+                    </div>
+                    <div class="session-actions">
+                        <button class="session-action-btn primary" onclick="newSession()" title="New Session">+</button>
+                    </div>
+                </div>
+                <div class="session-panel" id="sessionPanel">
+                    <div class="session-panel-header">Saved Sessions</div>
+                    <div class="session-list" id="sessionList">
+                        <div class="session-empty">
+                            <div class="session-empty-icon">📋</div>
+                            No saved sessions yet
+                        </div>
+                    </div>
+                </div>
+                <!-- Hidden dropdown for compatibility -->
+                <select class="session-dropdown" id="sessionDropdown" style="display:none;"></select>
             </div>
 
             <div class="panel-title">Match Info</div>
@@ -2623,9 +2815,9 @@
         }
 
         function updateSessionDropdown() {
+            // Update hidden dropdown for compatibility
             const dropdown = document.getElementById('sessionDropdown');
             dropdown.innerHTML = '<option value="">Select Session...</option>';
-
             sessions.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.id;
@@ -2633,6 +2825,130 @@
                 if (s.id === currentSessionId) opt.selected = true;
                 dropdown.appendChild(opt);
             });
+
+            // Update modern session panel
+            updateSessionPanel();
+        }
+
+        function toggleSessionPanel() {
+            const panel = document.getElementById('sessionPanel');
+            const trigger = document.getElementById('sessionTrigger');
+            panel.classList.toggle('show');
+            trigger.classList.toggle('open');
+
+            // Close on click outside
+            if (panel.classList.contains('show')) {
+                setTimeout(() => {
+                    document.addEventListener('click', closeSessionPanelOnClickOutside);
+                }, 10);
+            }
+        }
+
+        function closeSessionPanelOnClickOutside(e) {
+            const panel = document.getElementById('sessionPanel');
+            const trigger = document.getElementById('sessionTrigger');
+            if (!panel.contains(e.target) && !trigger.contains(e.target)) {
+                panel.classList.remove('show');
+                trigger.classList.remove('open');
+                document.removeEventListener('click', closeSessionPanelOnClickOutside);
+            }
+        }
+
+        function updateSessionPanel() {
+            const list = document.getElementById('sessionList');
+            const triggerTitle = document.getElementById('sessionTriggerTitle');
+            const triggerSubtitle = document.getElementById('sessionTriggerSubtitle');
+
+            if (sessions.length === 0) {
+                list.innerHTML = `
+                    <div class="session-empty">
+                        <div class="session-empty-icon">📋</div>
+                        No saved sessions yet
+                    </div>
+                `;
+                triggerTitle.textContent = 'Select Session...';
+                triggerSubtitle.textContent = 'No session loaded';
+                return;
+            }
+
+            list.innerHTML = sessions.map(s => {
+                const date = s.match_date ? new Date(s.match_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                const playerCount = s.players ? s.players.length : 0;
+                const isActive = s.id === currentSessionId;
+                return `
+                    <div class="session-card ${isActive ? 'active' : ''}" onclick="selectSession('${s.id}')">
+                        <div class="session-card-content">
+                            <div class="session-card-title">${s.home_team || 'Home'} vs ${s.away_team || 'Away'}</div>
+                            <div class="session-card-meta">
+                                <span>📅 ${date || 'No date'}</span>
+                                <span>⚽ ${playerCount} player${playerCount !== 1 ? 's' : ''}</span>
+                                ${s.event ? `<span>🏆 ${s.event}</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="session-card-delete" onclick="event.stopPropagation(); deleteSession('${s.id}')" title="Delete session">🗑️</button>
+                    </div>
+                `;
+            }).join('');
+
+            // Update trigger with current session
+            const current = sessions.find(s => s.id === currentSessionId);
+            if (current) {
+                triggerTitle.textContent = `${current.home_team || 'Home'} vs ${current.away_team || 'Away'}`;
+                triggerSubtitle.textContent = current.event || 'Live Scouting Session';
+            } else {
+                triggerTitle.textContent = 'Select Session...';
+                triggerSubtitle.textContent = `${sessions.length} saved session${sessions.length !== 1 ? 's' : ''}`;
+            }
+        }
+
+        function selectSession(sessionId) {
+            document.getElementById('sessionPanel').classList.remove('show');
+            document.getElementById('sessionTrigger').classList.remove('open');
+            loadSession(sessionId);
+        }
+
+        async function deleteSession(sessionId) {
+            const session = sessions.find(s => s.id === sessionId);
+            if (!session) return;
+
+            const name = `${session.home_team || 'Home'} vs ${session.away_team || 'Away'}`;
+            if (!confirm(`Delete session "${name}"?\n\nThis cannot be undone.`)) return;
+
+            // Delete from Supabase
+            if (supabaseClient && isOnline) {
+                try {
+                    const { error } = await supabaseClient
+                        .from('live_sessions')
+                        .delete()
+                        .eq('id', sessionId);
+
+                    if (error) {
+                        console.error('[Delete] Supabase error:', error);
+                        showToast('Failed to delete session', 'error');
+                        return;
+                    }
+                } catch (e) {
+                    console.error('[Delete] Exception:', e);
+                    showToast('Failed to delete session', 'error');
+                    return;
+                }
+            }
+
+            // Remove from local array
+            sessions = sessions.filter(s => s.id !== sessionId);
+            localStorage.setItem('liveSessions', JSON.stringify(sessions));
+
+            // Clear if it was the current session
+            if (currentSessionId === sessionId) {
+                currentSessionId = null;
+                clearPitch();
+                document.getElementById('eventName').value = '';
+                document.getElementById('homeTeam').value = '';
+                document.getElementById('awayTeam').value = '';
+            }
+
+            updateSessionPanel();
+            showToast('Session deleted');
         }
 
         async function loadSession(sessionId) {
@@ -2665,6 +2981,8 @@
                 });
             }
 
+            // Update panel to highlight current session
+            updateSessionPanel();
             showToast('Session loaded');
         }
 
