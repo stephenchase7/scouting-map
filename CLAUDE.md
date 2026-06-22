@@ -53,6 +53,23 @@ Password (SHA-256 hashed, not stored in plaintext) unlocks:
 - Editing player data in team.html
 - Admin mode in scouts.html (delete any report)
 
+## Security
+
+**Row Level Security (RLS):** Enabled on all Supabase tables (June 2026)
+- `clubs`, `squad_data` - Public read/write
+- `scout_players`, `scout_reports`, `live_sessions` - Public read/write
+- Future: Restrict writes to authenticated users when Supabase Auth is added
+
+**XSS Prevention:**
+- Use `escapeHtml()` for all user content in innerHTML
+- Use `sanitizeString()` for onclick attribute values
+- Never concatenate raw user input into HTML
+
+**Sensitive Files:**
+- `.env` files must stay in parent directory (not in scouting-map/)
+- Never commit API keys, passwords, or service_role keys
+- `.gitignore` excludes: `.env`, `*.bak`, `*.backup`
+
 ## Architecture Notes
 
 **index.html features:**
@@ -76,13 +93,17 @@ Password (SHA-256 hashed, not stored in plaintext) unlocks:
 - Global compare cart button
 
 **scouts.html features:**
-- Scout CRUD with localStorage persistence
-- Player watchlist per scout
+- Scout CRUD with Supabase persistence
+- Player watchlist per scout with inline status dropdown
+- Checkbox multi-select with bulk delete/status change
+- Clickable player names (opens detail panel)
+- Compact video/report indicators (📹/📝 icons)
 - Scouting reports with custom fields (Match, Build, Next Action, Priority)
 - Video links per player
 - Share players between scouts
 - Global compare cart (syncs with team.html via localStorage)
-- **Known Issue:** "View team stats" link generates wrong club slug (e.g., "long_island_sc" instead of "lisc"). Needs `clubId` field added to scoutPlayers data structure.
+- Link to Roster modal (hidden, code preserved for future use)
+- Prefill from team.html Scout button (auto-creates player with linked_player_key)
 
 **live.html features:**
 - Drag-and-drop player markers onto soccer pitch
@@ -128,7 +149,8 @@ Live URLs:
 
 Data loads from Supabase first, falls back to embedded data:
 - Project: `pjorqdzlzgwqpivoibyx.supabase.co`
-- Tables: `clubs`, `squad_data`
+- Tables: `clubs`, `squad_data`, `scout_players`, `scout_reports`, `live_sessions`
+- RLS enabled on all tables with public read/write policies
 - Add Club and Delete Club write directly to Supabase
 - Upload player data via `import_to_scouting.py --upload-db` (parent directory)
 
@@ -199,9 +221,14 @@ team.html (loads by ?club=CLUB_ID)
 
 ## Roadmap
 
-See `/tasks/roadmap.md` for implementation plan including:
-- Phase 1: Fix club ID linking in scouts.html
-- Phase 2: Club & player autocomplete
-- Phase 3: Bidirectional team.html ↔ scouts.html linking
-- Phase 4: ScoutReport AI integration
-- Phase 5: ECNL teams to map
+See `tasks/roadmap.md` for full implementation plan.
+
+**Completed (June 2026):**
+- Security & code cleanup (XSS fixes, RLS policies, dead code removal)
+- scouts.html UI redesign (checkboxes, inline status, compact icons)
+- team.html → scouts.html flow (Scout button with prefill)
+
+**Next Up:**
+- Phase 5: 📋 badge display on team.html for scouted players
+- Phase 6: Next season stats (Assists, Key Passes, Defensive Duels, Saves)
+- Phase 7: ScoutReport AI integration
