@@ -4867,6 +4867,15 @@
             });
             updateSyncStatus();
 
+            // Auto-refresh data when tab becomes visible (e.g., after exporting from live.html)
+            document.addEventListener('visibilitychange', async function() {
+                if (document.visibilityState === 'visible' && supabaseConnected) {
+                    await loadFromSupabase();
+                    renderScouts();
+                    updateCompareButton();
+                }
+            });
+
             // Check URL params for quick actions
             var params = new URLSearchParams(window.location.search);
             if (params.get('action') === 'quickadd') {
