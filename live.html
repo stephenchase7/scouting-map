@@ -383,6 +383,49 @@
         .card-input::placeholder { color: rgba(255,255,255,0.3); }
         .card-input-sm { padding: 6px 8px; }
 
+        /* Club Autocomplete */
+        .club-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .club-autocomplete {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #2a2a2a;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .club-autocomplete.show { display: block; }
+        .club-autocomplete-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .club-autocomplete-item:last-child { border-bottom: none; }
+        .club-autocomplete-item:hover {
+            background: rgba(200,16,46,0.3);
+        }
+        .club-autocomplete-item .club-id {
+            font-size: 9px;
+            color: rgba(255,255,255,0.4);
+            margin-left: 6px;
+        }
+        .club-autocomplete-empty {
+            padding: 8px 10px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            font-style: italic;
+        }
+
         /* Foot Selector */
         .foot-selector {
             display: flex;
@@ -1445,6 +1488,9 @@
         // Known clubs from scout database (loaded on init)
         let knownClubs = [];
 
+        // Clubs cache for autocomplete (from Supabase)
+        let clubsCache = [];
+
         const QUICK_TAGS = [
             'Top Prospect', 'Watch Closely', 'Follow Up',
             'Academy Ready', 'Raw Talent', 'Needs Work',
@@ -1474,6 +1520,9 @@
 
             // Load known clubs for matching
             await loadKnownClubs();
+
+            // Load clubs for autocomplete
+            await loadClubsForAutocomplete();
 
             // Update sync status
             updateSyncStatus();
@@ -1648,6 +1697,7 @@
                     jersey: '',
                     foot: '',
                     club: '',
+                    clubId: '',
                     position: type === 'goalkeeper' ? 'GK' : '',
                     pillars: { technical: 0, tactical: 0, physical: 0, mental: 0 },
                     withBall: {},
@@ -1773,8 +1823,8 @@
                                    value="${d.jersey}" onchange="updateCardData('${markerData.id}', 'jersey', this.value)">
                         </div>
                         <div class="card-row" style="margin-top: 8px;">
-                            <input type="text" class="card-input card-input-sm" placeholder="Club"
-                                   value="${d.club}" onchange="updateCardData('${markerData.id}', 'club', this.value)">
+                            <input type="text" class="card-input card-input-sm club-input" placeholder="Club"
+                                   value="${d.club}" data-marker-id="${markerData.id}">
                             <select class="card-input card-input-sm" onchange="updateCardData('${markerData.id}', 'position', this.value)">
                                 <option value="">Position</option>
                                 <option value="GK" ${d.position === 'GK' ? 'selected' : ''}>GK</option>
@@ -1932,6 +1982,12 @@
                     const header = card.querySelector('.card-player-name');
                     header.textContent = this.value || 'New Player';
                 });
+            }
+
+            // Setup club autocomplete
+            const clubInput = card.querySelector('.club-input');
+            if (clubInput) {
+                setupClubAutocomplete(clubInput, markerId);
             }
         }
 
@@ -2646,6 +2702,7 @@
                     jersey: playerData.jersey || '',
                     foot: playerData.foot || '',
                     club: playerData.club || '',
+                    clubId: playerData.clubId || '',
                     position: playerData.position || (type === 'goalkeeper' ? 'GK' : ''),
                     pillars: playerData.pillars || { technical: 0, tactical: 0, physical: 0, mental: 0 },
                     withBall: playerData.withBall || {},
@@ -2893,6 +2950,96 @@
             knownClubs = Array.from(clubSet);
         }
 
+        async function loadClubsForAutocomplete() {
+            // Load clubs from Supabase for autocomplete
+            if (!supabaseClient) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('clubs')
+                    .select('id, name')
+                    .order('name');
+
+                if (error) throw error;
+                clubsCache = data || [];
+                console.log(`[Clubs] Loaded ${clubsCache.length} clubs for autocomplete`);
+            } catch (e) {
+                console.warn('[Clubs] Failed to load:', e);
+                clubsCache = [];
+            }
+        }
+
+        function setupClubAutocomplete(input, markerId) {
+            // Create dropdown container
+            const wrapper = document.createElement('div');
+            wrapper.className = 'club-input-wrapper';
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'club-autocomplete';
+            wrapper.appendChild(dropdown);
+
+            // Handle input
+            input.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+
+                if (query.length < 2) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+
+                // Filter matching clubs
+                const matches = clubsCache.filter(c =>
+                    c.name.toLowerCase().includes(query)
+                ).slice(0, 6);
+
+                if (matches.length === 0) {
+                    dropdown.innerHTML = '<div class="club-autocomplete-empty">No clubs found - will save as typed</div>';
+                } else {
+                    dropdown.innerHTML = matches.map(c =>
+                        `<div class="club-autocomplete-item" data-id="${c.id}" data-name="${c.name}">
+                            ${c.name}<span class="club-id">${c.id}</span>
+                        </div>`
+                    ).join('');
+                }
+                dropdown.classList.add('show');
+            });
+
+            // Handle selection
+            dropdown.addEventListener('click', function(e) {
+                const item = e.target.closest('.club-autocomplete-item');
+                if (item) {
+                    const clubName = item.dataset.name;
+                    const clubId = item.dataset.id;
+
+                    input.value = clubName;
+                    updateCardData(markerId, 'club', clubName);
+                    updateCardData(markerId, 'clubId', clubId);
+
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // Close on blur (with delay to allow click)
+            input.addEventListener('blur', function() {
+                setTimeout(() => dropdown.classList.remove('show'), 200);
+            });
+
+            // Also save on blur if typed manually (no selection)
+            input.addEventListener('change', function() {
+                const value = this.value.trim();
+                updateCardData(markerId, 'club', value);
+                // Try to find matching clubId
+                const match = clubsCache.find(c => c.name.toLowerCase() === value.toLowerCase());
+                if (match) {
+                    updateCardData(markerId, 'clubId', match.id);
+                } else {
+                    updateCardData(markerId, 'clubId', '');
+                }
+            });
+        }
+
         function showExportModal() {
             if (markers.length === 0) {
                 showToast('No players to export');
@@ -2954,6 +3101,7 @@
                     name: d.name || 'Unknown',
                     position: d.position || '',
                     club: d.club || 'Independent',
+                    clubId: d.clubId || '',
                     birthYear: d.birthYear || '',
                     jersey: d.jersey || '',
                     foot: d.foot || '',

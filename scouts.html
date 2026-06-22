@@ -3596,9 +3596,10 @@
 
             // Set link to team stats (if club exists)
             var linkEl = document.getElementById('linkToStats');
-            if (player.club) {
+            if (player.club || player.clubId) {
                 linkEl.style.display = 'inline-block';
-                var clubSlug = player.club.toLowerCase().replace(/\s+/g, '_');
+                // Use clubId if available, otherwise fall back to normalized club name
+                var clubSlug = player.clubId || player.club.toLowerCase().replace(/\s+/g, '_');
                 var squadSlug = player.squad ? player.squad.toLowerCase() : 'u13';
                 linkEl.href = 'team.html?club=' + encodeURIComponent(clubSlug) + '#' + squadSlug + '-squad';
             } else {

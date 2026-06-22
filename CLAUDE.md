@@ -13,6 +13,7 @@ Static web application for MLS NEXT youth soccer scouting. Displays club locatio
 | `index.html` | Leaflet.js map with club markers, catchment areas, Add/Delete Club |
 | `team.html` | Team rosters by age group (U13-U19), player stats tables |
 | `scouts.html` | Scout database, player watchlists, scouting reports, player comparison |
+| `live.html` | Live scouting with pitch tracking, player cards, action counters |
 | `rules.html` | MLS NEXT rules viewer with AI Q&A (requires rules_server.py) |
 
 ## Running Locally
@@ -81,6 +82,22 @@ Password (SHA-256 hashed, not stored in plaintext) unlocks:
 - Video links per player
 - Share players between scouts
 - Global compare cart (syncs with team.html via localStorage)
+- **Known Issue:** "View team stats" link generates wrong club slug (e.g., "long_island_sc" instead of "lisc"). Needs `clubId` field added to scoutPlayers data structure.
+
+**live.html features:**
+- Drag-and-drop player markers onto soccer pitch
+- Player cards with:
+  - Player info (name, birth year, jersey, club, position, foot)
+  - 4 Pillars rating (Technical, Tactical, Physical, Mental - 5 stars each)
+  - With Ball actions: Goal, Assist, Personality, Problem Solving, 1v1 Dribble, Ball Carrying, Passing, Shot
+  - Against Ball actions: Tackle, Intercept, Block, Press, Recovery, Aerial
+  - Corner badge +/- buttons (green positive, red negative) for rating actions
+  - Quick tags (Top Prospect, Watch Closely, Academy Ready, etc.)
+  - Voice notes recording
+  - Notes textarea
+- Session management (save to Supabase `live_sessions` table)
+- Export to Scout DB button (copies players to scouts.html watchlist)
+- Undo functionality for actions
 
 **rules.html + rules_server.py:**
 - Loads 4 MLS NEXT documents as semantic HTML
@@ -154,3 +171,37 @@ const { data } = await supabase
   .eq('club_id', clubId)
   .order('season', { ascending: false });
 ```
+
+## Data Flow Architecture
+
+```
+Supabase `clubs` table (SOURCE OF TRUTH for club IDs)
+    ↓
+┌───────────────────────────────────────────────────┐
+│  APIscraper4.py / scraper3.py                     │
+│  - Queries Supabase clubs for ID mapping          │
+│  - Falls back to local csv_to_map_id dict         │
+│  - Outputs JSON with clubId field                 │
+└───────────────────────────────────────────────────┘
+    ↓
+import_to_scouting.py --upload-db
+    ↓
+Supabase `squad_data` table
+    ↓
+team.html (loads by ?club=CLUB_ID)
+```
+
+## Related Projects
+
+- **ScoutReport** (github.com/stephenchase7/scoutreport): AI-powered report generator using Claude Haiku. Takes rough scouting notes and generates professional paragraphs. Planned integration with scouts.html.
+
+- **FC360** (fc360.co): Video tagging system for match analysis. Used alongside Taka.io video platform.
+
+## Roadmap
+
+See `/tasks/roadmap.md` for implementation plan including:
+- Phase 1: Fix club ID linking in scouts.html
+- Phase 2: Club & player autocomplete
+- Phase 3: Bidirectional team.html ↔ scouts.html linking
+- Phase 4: ScoutReport AI integration
+- Phase 5: ECNL teams to map
