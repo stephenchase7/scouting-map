@@ -1628,6 +1628,16 @@ loadSupabaseClubs().then(function() {
   // Continue with hardcoded clubs only - app still works
 });
 
+// Auto-refresh clubs when tab becomes visible
+document.addEventListener('visibilitychange', async function() {
+  if (document.visibilityState === 'visible' && supabaseClient) {
+    await loadSupabaseClubs();
+    if (supabaseDataLoaded && typeof refreshMap === 'function') {
+      refreshMap();
+    }
+  }
+});
+
 // ── CSV TEAM DATA (Age Group + Division Mapping) ──
 var csvTeamData = {
   "AC River": [{age: "U13", division: "Frontier Division"}, {age: "U14", division: "Frontier Division"}, {age: "U15", division: "Frontier Division"}, {age: "U16", division: "Frontier Division"}, {age: "U17", division: "Frontier Division"}, {age: "U19", division: "Frontier Division"}],

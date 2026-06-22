@@ -1531,6 +1531,14 @@
             window.addEventListener('online', () => { isOnline = true; updateSyncStatus(); syncPendingSessions(); });
             window.addEventListener('offline', () => { isOnline = false; updateSyncStatus(); });
 
+            // Auto-refresh sessions when tab becomes visible
+            document.addEventListener('visibilitychange', async function() {
+                if (document.visibilityState === 'visible' && supabaseClient) {
+                    await loadSessions();
+                    updateSyncStatus();
+                }
+            });
+
             initTemplateDrag();
             initCardDrag();
         });

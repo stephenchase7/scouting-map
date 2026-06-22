@@ -2870,6 +2870,15 @@ function copyCommand(command, event) {
   });
 }
 
+// Auto-refresh data when tab becomes visible
+document.addEventListener('visibilitychange', async function() {
+  if (document.visibilityState === 'visible' && supabaseClient && clubId) {
+    await loadSupabaseData(clubId);
+    renderPage();
+    showTeam(currentTeam);
+  }
+});
+
 // Start
 init();
 </script>
