@@ -3079,47 +3079,115 @@
                 return;
             }
 
-            // Get existing scout players
+            // Get default scout ID (first scout from localStorage or create default)
+            let scouts = JSON.parse(localStorage.getItem('scouts') || '[]');
+            let defaultScoutId = scouts.length > 0 ? scouts[0].id : null;
+
+            // Get existing scout players for localStorage backup
             let scoutPlayers = JSON.parse(localStorage.getItem('scoutPlayers') || '[]');
 
             const eventName = document.getElementById('eventName').value.trim();
             const matchDate = document.getElementById('scoutDate').value;
 
+            let exportCount = 0;
+
             // Export selected players
-            indices.forEach(idx => {
+            for (const idx of indices) {
                 const m = markers[idx];
-                if (!m) return;
+                if (!m) continue;
 
                 const d = m.data;
+                const playerId = 'live-' + Date.now() + '-' + idx;
 
                 // Build scouting report from collected data
                 const report = buildScoutingReport(d, eventName, matchDate);
 
-                // Create scout player entry
+                // Create scout player entry (localStorage format)
                 const scoutPlayer = {
-                    id: 'live-' + Date.now() + '-' + idx,
+                    id: playerId,
+                    scoutId: defaultScoutId,
                     name: d.name || 'Unknown',
                     position: d.position || '',
                     club: d.club || 'Independent',
                     clubId: d.clubId || '',
-                    birthYear: d.birthYear || '',
+                    yob: d.birthYear || '',
                     jersey: d.jersey || '',
                     foot: d.foot || '',
                     status: 'watching',
                     source: 'Live Scout',
-                    addedAt: new Date().toISOString(),
+                    dateAdded: new Date().toISOString(),
                     tags: d.tags || [],
-                    reports: [report],
                     notes: d.notes || ''
                 };
 
                 scoutPlayers.push(scoutPlayer);
-            });
 
+                // Save to Supabase if connected
+                if (supabaseClient && isOnline) {
+                    try {
+                        await supabaseClient.from('scout_players').upsert({
+                            id: playerId,
+                            scout_id: defaultScoutId,
+                            name: d.name || 'Unknown',
+                            club: d.club || 'Independent',
+                            club_id: d.clubId || null,
+                            squad: getSquadFromBirthYear(d.birthYear),
+                            jersey: d.jersey || '',
+                            yob: d.birthYear || '',
+                            foot: d.foot || '',
+                            position: d.position || '',
+                            status: 'watching',
+                            notes: d.notes || '',
+                            video_links: [],
+                            shared_with: [],
+                            date_added: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+
+                        // Also save the report if there's data
+                        if (report && (report.withBallNotes || report.againstBallNotes)) {
+                            await supabaseClient.from('scout_reports').upsert({
+                                id: 'report-' + playerId,
+                                player_id: playerId,
+                                scout_id: defaultScoutId,
+                                match_event: eventName,
+                                match_date: matchDate,
+                                with_ball: report.withBallNotes || '',
+                                against_ball: report.againstBallNotes || '',
+                                build: '',
+                                priority: 'none',
+                                created_at: new Date().toISOString()
+                            });
+                        }
+
+                        exportCount++;
+                    } catch (e) {
+                        console.error('[Export] Supabase error:', e);
+                    }
+                } else {
+                    exportCount++;
+                }
+            }
+
+            // Save to localStorage as backup
             localStorage.setItem('scoutPlayers', JSON.stringify(scoutPlayers));
 
             closeExportModal();
-            showToast(`${indices.length} player(s) exported to Scout Database!`);
+            showToast(`${exportCount} player(s) exported to Scout Database!`);
+        }
+
+        // Calculate squad from birth year (for exports)
+        function getSquadFromBirthYear(yob) {
+            if (!yob) return 'u13';
+            var birthYear = parseInt(yob);
+            if (isNaN(birthYear)) return 'u13';
+            if (birthYear >= 2013) return 'u13';
+            if (birthYear === 2012) return 'u14';
+            if (birthYear === 2011) return 'u15';
+            if (birthYear === 2010) return 'u16';
+            if (birthYear === 2009) return 'u17';
+            if (birthYear <= 2008) return 'u19';
+            return 'u13';
         }
 
         function buildScoutingReport(playerData, eventName, matchDate) {
