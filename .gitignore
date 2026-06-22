@@ -1,3 +1,29 @@
+# Vercel
 .vercel
+
+# OS files
 .DS_Store
 **/.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Editor files
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Node modules (if ever added)
+node_modules/
+
+# Logs
+*.log

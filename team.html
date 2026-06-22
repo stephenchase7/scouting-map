@@ -1655,7 +1655,6 @@ async function loadScoutedPlayers() {
         }
       });
     }
-    console.log('[Supabase] Loaded', Object.keys(scoutedPlayerKeys).length, 'scouted player links');
   } catch (e) {
     console.error('[Supabase] Error loading scouted players:', e);
   }
@@ -2006,7 +2005,7 @@ function renderRoster() {
   var data = clubPlayers ? clubPlayers[currentTeam] : null;
   var container = document.getElementById('roster-container');
 
-  if (!data || data.players.length === 0) {
+  if (!data || !data.players || data.players.length === 0) {
     container.innerHTML = '<div class="no-data"><h3>No Data Yet</h3><p>Player data for this team has not been scraped yet.</p></div>';
     return;
   }

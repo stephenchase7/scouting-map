@@ -604,38 +604,6 @@
         .action-btn.show-rating .action-tally {
             opacity: 0;
         }
-        .rating-btn-inline {
-            flex: 1;
-            border: none;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-        }
-        .rating-btn-inline.good {
-            background: #2e7d32;
-            color: #fff;
-        }
-        .rating-btn-inline.good:hover {
-            background: #388e3c;
-        }
-        .rating-btn-inline.good:active {
-            background: #1b5e20;
-        }
-        .rating-btn-inline.bad {
-            background: #c62828;
-            color: #fff;
-        }
-        .rating-btn-inline.bad:hover {
-            background: #d32f2f;
-        }
-        .rating-btn-inline.bad:active {
-            background: #b71c1c;
-        }
-
         /* Quick Tags */
         .tags-container {
             display: flex;
@@ -1454,6 +1422,9 @@
             transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
+        .toast.error {
+            background: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -1702,7 +1673,6 @@
             // Initialize Supabase
             try {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('[Supabase] Connected');
             } catch (e) {
                 console.warn('[Supabase] Failed to connect:', e);
             }
@@ -3190,29 +3160,6 @@
             setSyncStatus('synced');
         }
 
-        async function deleteSession(sessionId) {
-            if (!confirm('Delete this session?')) return;
-
-            if (supabaseClient && isOnline && !sessionId.startsWith('local-')) {
-                try {
-                    await supabaseClient.from('live_sessions').delete().eq('id', sessionId);
-                } catch (e) {
-                    console.error('[Delete] Failed:', e);
-                }
-            }
-
-            sessions = sessions.filter(s => s.id !== sessionId);
-            localStorage.setItem('liveSessions', JSON.stringify(sessions));
-
-            if (currentSessionId === sessionId) {
-                newSession();
-            }
-
-            updateSessionDropdown();
-            renderSessionsList();
-            showToast('Session deleted');
-        }
-
         function showSessionsModal() {
             renderSessionsList();
             document.getElementById('sessionsModal').classList.add('show');
@@ -3288,7 +3235,6 @@
 
                 if (error) throw error;
                 clubsCache = data || [];
-                console.log(`[Clubs] Loaded ${clubsCache.length} clubs for autocomplete`);
             } catch (e) {
                 console.warn('[Clubs] Failed to load:', e);
                 clubsCache = [];
@@ -3418,7 +3364,6 @@
                         .limit(1);
                     if (!error && scoutsData && scoutsData.length > 0) {
                         defaultScoutId = scoutsData[0].id;
-                        console.log('[Export] Got scout ID from Supabase:', defaultScoutId);
                     }
                 } catch (e) {
                     console.error('[Export] Failed to get scout from Supabase:', e);
@@ -3492,14 +3437,12 @@
                             updated_at: new Date().toISOString()
                         };
 
-                        console.log('[Export] Saving player:', playerData);
                         const { data, error } = await supabaseClient.from('scout_players').upsert(playerData);
 
                         if (error) {
                             console.error('[Export] Supabase error:', error.message, error.details, error.hint);
                             showToast('Export failed: ' + error.message, 'error');
                         } else {
-                            console.log('[Export] Player saved successfully');
 
                             // Also save the report if there's data
                             if (report && (report.withBallNotes || report.againstBallNotes)) {
@@ -3604,11 +3547,11 @@
             };
         }
 
-        function showToast(msg) {
+        function showToast(msg, type) {
             const toast = document.getElementById('toast');
             toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
+            toast.className = 'toast show' + (type === 'error' ? ' error' : '');
+            setTimeout(() => { toast.className = 'toast'; }, 2500);
         }
 
         // Close action ratings when clicking outside

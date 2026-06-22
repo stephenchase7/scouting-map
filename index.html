@@ -1460,7 +1460,6 @@ async function loadSupabaseClubs() {
     // Supabase unavailable - try cache first
     var cachedData = getCachedClubData();
     if (cachedData) {
-      console.log('[Cache] Supabase unavailable, using cached data');
       applyClubDataFromCache(cachedData);
       supabaseDataLoaded = true;
       showOfflineBanner();
@@ -1483,7 +1482,6 @@ async function loadSupabaseClubs() {
       // Try to load from cache on error
       var cachedData = getCachedClubData();
       if (cachedData) {
-        console.log('[Cache] Supabase error, using cached data');
         applyClubDataFromCache(cachedData);
         supabaseDataLoaded = true;
         showOfflineBanner();
@@ -1598,7 +1596,6 @@ async function loadSupabaseClubs() {
     // Try to load from cache on network error
     var cachedData = getCachedClubData();
     if (cachedData) {
-      console.log('[Cache] Network error, using cached data');
       applyClubDataFromCache(cachedData);
       supabaseDataLoaded = true;
       showOfflineBanner();
@@ -1618,7 +1615,6 @@ loadSupabaseClubs().then(function() {
   // Try cache on promise rejection
   var cachedData = getCachedClubData();
   if (cachedData) {
-    console.log('[Cache] Promise error, using cached data');
     applyClubDataFromCache(cachedData);
     if (typeof refreshMap === 'function') {
       refreshMap();
@@ -2255,7 +2251,7 @@ function makePopupHtml(club) {
 
   // Add delete button
   var deleteHtml = '<div style="margin-top:8px;text-align:center;">' +
-    '<button onclick="deleteClub(\'' + club.clubId + '\')" class="popup-btn" style="background:#fee;color:#c00;border:1px solid #fcc;flex:0 0 auto;min-width:auto;">Delete</button>' +
+    '<button onclick="deleteClub(\'' + sanitizeString(club.clubId) + '\')" class="popup-btn" style="background:#fee;color:#c00;border:1px solid #fcc;flex:0 0 auto;min-width:auto;">Delete</button>' +
     '</div>';
 
   return '<div class="popup-inner">' +

@@ -3889,7 +3889,6 @@
 
         // Add player
         function submitAddPlayer(e) {
-            console.log('[AddPlayer] Form submitted');
             e.preventDefault();
             try {
                 var form = e.target;
@@ -3909,7 +3908,6 @@
                     dateAdded: new Date().toISOString(),
                     linkedPlayerKey: window.prefillLinkedKey || null
                 };
-                console.log('[AddPlayer] Created player:', newPlayer.name, newPlayer.id);
                 players.push(newPlayer);
 
                 // Clear prefill key after use
@@ -3923,12 +3921,10 @@
 
                 // Store ID before closing modal
                 var newPlayerId = newPlayer.id;
-                console.log('[AddPlayer] Closing modal, will open player:', newPlayerId);
                 closeAddPlayerModal();
 
                 // Auto-open player panel for scouting report
                 setTimeout(function() {
-                    console.log('[AddPlayer] Opening player panel for:', newPlayerId);
                     viewPlayer(newPlayerId);
                 }, 300);
             } catch (err) {
@@ -4080,7 +4076,7 @@
             viewPlayer(playerId);
             // Scroll to reports section after panel opens
             setTimeout(function() {
-                var reportsSection = document.getElementById('reportHistorySection');
+                var reportsSection = document.getElementById('reportHistory');
                 if (reportsSection) {
                     reportsSection.scrollIntoView({ behavior: 'smooth' });
                 }
@@ -4472,7 +4468,7 @@
                     html += '<div class="report-section"><strong>Against Ball:</strong> ' + escapeHtml(report.againstBall).replace(/\n/g, '<br>') + '</div>';
                 }
                 if (report.notes) {
-                    html += '<div class="report-section"><strong>Notes:</strong> ' + report.notes.replace(/\n/g, '<br>') + '</div>';
+                    html += '<div class="report-section"><strong>Notes:</strong> ' + escapeHtml(report.notes).replace(/\n/g, '<br>') + '</div>';
                 }
                 html += '<div class="report-footer">';
                 html += '<span class="report-action ' + (report.nextAction || '').toLowerCase().replace(/\s+/g, '-') + '">' + (report.nextAction || '-') + '</span>';
@@ -4813,7 +4809,6 @@
                 linkedPlayerKey: params.get('linkedKey') || null
             };
 
-            console.log('[Prefill] Auto-creating player:', newPlayer.name);
             players.push(newPlayer);
             localStorage.setItem('scoutPlayers', JSON.stringify(players));
             savePlayerToSupabase(newPlayer);
@@ -4826,7 +4821,6 @@
 
             // Open player detail panel with scouting report form
             setTimeout(function() {
-                console.log('[Prefill] Opening player panel for:', newPlayer.id);
                 viewPlayer(newPlayer.id);
             }, 200);
         }
