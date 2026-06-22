@@ -1560,7 +1560,7 @@ async function loadSupabaseData(targetClubId) {
 
     // Load only the specific club from Supabase (parallel requests)
     const [clubResult, squadsResult] = await Promise.all([
-      supabaseClient.from('clubs').select('*').eq('club_id', targetClubId).single(),
+      supabaseClient.from('clubs').select('*').eq('id', targetClubId).single(),
       supabaseClient.from('squad_data').select('*').eq('club_id', targetClubId).eq('season', currentSeason)
     ]);
 
