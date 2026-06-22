@@ -1561,7 +1561,7 @@ async function loadSupabaseData(targetClubId) {
     // Load only the specific club from Supabase (parallel requests)
     const [clubResult, squadsResult] = await Promise.all([
       supabaseClient.from('clubs').select('*').eq('club_id', targetClubId).single(),
-      supabaseClient.from('squad_data').select('*').eq('club_id', targetClubId)
+      supabaseClient.from('squad_data').select('*').eq('club_id', targetClubId).eq('season', currentSeason)
     ]);
 
     const { data: club, error: clubsError } = clubResult;
@@ -2645,7 +2645,7 @@ function updatePlayerDetailSeason() {
 // Global season change
 var currentSeason = '2025-2026';
 
-function changeSeason(season) {
+async function changeSeason(season) {
   if (season === currentSeason) return;
   currentSeason = season;
 
@@ -2654,11 +2654,28 @@ function changeSeason(season) {
     select.value = season;
   });
 
-  // Placeholder: In multi-season implementation, this will:
-  // 1. Load data for the selected season from Supabase
-  // 2. Re-render the roster with new season data
-  // For now, just show a message that this will be implemented
-  alert('Multi-season data loading coming soon!\n\nSeason ' + season + ' data will be available once the database schema is updated.');
+  // Clear existing data and reload from Supabase
+  playersData = {};
+
+  // Show loading state
+  var rosterContainer = document.getElementById('roster-container');
+  if (rosterContainer) {
+    rosterContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">Loading ' + season + ' season data...</div>';
+  }
+
+  // Reload data for selected season
+  var success = await loadSupabaseData(clubId);
+
+  if (success && playersData[clubId] && Object.keys(playersData[clubId]).length > 0) {
+    renderPage();
+    showToast('Loaded ' + season + ' season');
+  } else {
+    // No data for this season
+    if (rosterContainer) {
+      rosterContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No data available for ' + season + ' season</div>';
+    }
+    showToast('No data for ' + season, true);
+  }
 }
 
 // ========== Director Management Functions ==========
