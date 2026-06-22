@@ -44,59 +44,266 @@
 - [x] Add `scoutPlayer()` function with prefill params
 - [x] Handle prefill params in scouts.html (auto-create player, open panel)
 
----
+### Phase 5: ScoutReport AI Integration (June 22, 2026)
+- [x] Collapsible sections: Special Weapons, With the Ball, Against the Ball
+- [x] Multi-select trait buttons (12 special weapons, 13 with ball, 12 against ball)
+- [x] Voice input via Web Speech API (click mic to record)
+- [x] "Generate Report" button calls rules_server.py /api/generate-report
+- [x] Preview area with editable content
+- [x] Save/Cancel after generation
+- [x] Edit existing reports with Update Report button
+- [x] Reports show Special Weapons in history
+- [x] special_weapons column added to Supabase scout_reports table
 
-## In Progress
-
-### Phase 5: team.html Badge Display
-- [ ] Show 📋 badge next to players who have scouting reports
-- [ ] Badge click opens scouts.html with player selected
-- [ ] Deep link handler in scouts.html (`?player=ID`)
+### Phase 6: Multi-Season Support (June 22, 2026)
+- [x] Verified squad_data table has season column
+- [x] Standardized season format to YYYY-YYYY (e.g., 2025-2026)
+- [x] Implemented `changeSeason()` function in team.html
+- [x] Added season filter to Supabase query
+- [x] Season dropdown UI with dynamic selection
 
 ---
 
 ## Planned
 
-### Phase 6: Next Season Stats (2026-2027)
+### Phase 7: Next Season Stats System
+
+**What this is:** Currently all data is for one season (2025-2026). This feature lets you:
+- View historical seasons (2024-2025, 2023-2024, etc.)
+- Compare player progression across seasons
+- Keep old data when new season starts (no overwriting)
+
+**Example use case:** "How many goals did Player X score last season vs this season?"
+
 **Supabase Schema:**
 ```sql
-ALTER TABLE scout_players
-ADD COLUMN assists INTEGER DEFAULT 0,
-ADD COLUMN key_passes INTEGER DEFAULT 0,
-ADD COLUMN defensive_duels INTEGER DEFAULT 0,
-ADD COLUMN saves INTEGER DEFAULT 0;
+-- Add season to squad_data (composite primary key)
+ALTER TABLE squad_data ADD COLUMN season TEXT DEFAULT '2025-2026';
+ALTER TABLE squad_data DROP CONSTRAINT squad_data_pkey;
+ALTER TABLE squad_data ADD PRIMARY KEY (club_id, squad, season);
+
+-- Add season to player_match_stats when created
+-- Already designed with season support in mind
 ```
 
-**UI Changes:**
-- [ ] Add +/- buttons for Assists, Key Passes, Defensive Duels
-- [ ] Add Saves counter (GK only)
-- [ ] Display in player cards (scouts.html)
-- [ ] Display in live scouting (live.html)
+**UI Changes - team.html:**
+- [ ] Season dropdown selector (top of page)
+- [ ] Default to current season
+- [ ] Load data filtered by selected season
+- [ ] "Compare Seasons" button (side-by-side view)
 
-### Phase 7: ScoutReport AI Integration
-- [ ] Integrate Claude Haiku for report generation
-- [ ] Add "Generate Report" button in scouts.html
-- [ ] Take rough notes → professional paragraphs
+**Data Flow:**
+```
+Scraper runs for 2026-2027 season
+    ↓
+Upload with --season 2026-2027 flag
+    ↓
+New rows created (old 2025-2026 data preserved)
+    ↓
+UI shows both seasons in dropdown
+```
+
+**Implementation:**
+1. [ ] Add season column to squad_data
+2. [ ] Update scraper to include season in output
+3. [ ] Update import script with --season flag
+4. [ ] Add season selector UI
+5. [ ] Update queries to filter by season
+6. [ ] Build comparison view
+
+---
+
+### Phase 7: Next Season Stats System
+
+**Overview:** Manual stat tracking for key players. Goals scraped from Kitman; all other stats entered manually per match.
+
+**team.html Column Layout:**
+| # | PLAYER | YOB | POS | GAMES | GOALS | ASSISTS | KEY PASSES | ATK 1v1 | DEF 1v1 | SAVES |
+
+**Data Sources:**
+- GOALS: Scraped from Kitman (automatic)
+- All other stats: Manual entry per match
+- Video: Taka.io playlist links (optional)
+
+**Supabase Schema - player_match_stats:**
+```sql
+CREATE TABLE player_match_stats (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    player_key TEXT NOT NULL,          -- clubId_squad_jersey_name
+    club_id TEXT NOT NULL,
+    squad TEXT NOT NULL,
+    match_date DATE NOT NULL,
+    opponent TEXT,
+
+    -- Stats (manual entry)
+    goals INTEGER DEFAULT 0,           -- Can override Kitman
+    assists INTEGER DEFAULT 0,
+    key_passes INTEGER DEFAULT 0,
+    atk_1v1_won INTEGER DEFAULT 0,
+    atk_1v1_total INTEGER DEFAULT 0,   -- Win/Total format (e.g., 5/7)
+    def_1v1_won INTEGER DEFAULT 0,
+    def_1v1_total INTEGER DEFAULT 0,
+    saves INTEGER DEFAULT 0,           -- GK only
+
+    -- Video
+    taka_playlist_url TEXT,
+
+    -- Metadata
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+
+    UNIQUE(player_key, match_date)
+);
+
+CREATE INDEX idx_player_match_stats_player ON player_match_stats(player_key);
+CREATE INDEX idx_player_match_stats_club ON player_match_stats(club_id, squad);
+```
+
+**UI Changes - team.html:**
+- [ ] Update roster table columns (remove LINK, SCOUT)
+- [ ] Add ASSISTS, KEY PASSES, ATK 1v1, DEF 1v1, SAVES columns
+- [ ] 1v1 columns show "W/T" format (e.g., "5/7" = 5 won, 7 total)
+- [ ] Keep 📋 icon for scouted players (opens scouts.html)
+- [ ] Move Scout button to player detail modal
+
+**UI Changes - Player Detail Modal:**
+- [ ] Show per-match breakdown (like Wyscout)
+- [ ] Match rows: Date, Opponent, Stats, Video link
+- [ ] +/- buttons for manual stat entry
+- [ ] Taka playlist URL field per match
+- [ ] Aggregate totals at top
+
+**UI Changes - live.html:**
+- [ ] Add Assists, Key Passes, ATK 1v1, DEF 1v1 action buttons
+- [ ] Saves button (all players, but mainly for GK)
+- [ ] 1v1 buttons: +Won / +Lost for both types
+
+**Implementation:**
+1. [ ] Create player_match_stats table in Supabase
+2. [ ] Update team.html column layout
+3. [ ] Build player detail modal with per-match view
+4. [ ] Add stat entry UI in modal
+5. [ ] Connect live.html export to new stats table
+6. [ ] Test full flow
+
+---
 
 ### Phase 8: ECNL Teams to Map
-- [ ] Add ECNL clubs to index.html
-- [ ] Add ECNL logos to `ECNL Logos/` folder
-- [ ] Update division filters
 
-### Phase 9: Multi-Season Support
-- [ ] Add `season` column to `squad_data` table
-- [ ] Update primary key to include season
-- [ ] Add season selector UI in team.html
-- [ ] Historical comparison views
+**Overview:** Add ECNL (Elite Clubs National League) clubs to the scouting map alongside MLS NEXT clubs.
+
+**Tasks:**
+- [ ] Add ECNL clubs to index.html clubs array
+- [ ] Collect ECNL club logos → `ECNL Logos/` folder
+- [ ] Add "ECNL" option to division/pathway filter
+- [ ] Different marker color or icon for ECNL vs MLS NEXT
+- [ ] Update CSV validation for ECNL club names
+
+---
+
+### Phase 9: Authentication & Multi-Tenant SaaS
+
+**Overview:** Supabase Auth with organization-based access. White-label ready for selling to other MLS clubs.
+
+**Access Model:**
+- **Logged out:** Map view only (index.html map + buttons). All other features locked.
+- **Logged in:** Full access to organization's data only
+- **Org admin:** Manages their users, full control of their account
+- **Super admin (you):** Emergency break-glass access with audit trail
+
+**Multi-Tenant Architecture:**
+```sql
+-- Organizations table
+CREATE TABLE organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,                    -- "New England Revolution"
+    slug TEXT UNIQUE NOT NULL,             -- "ne-revolution"
+
+    -- Customization
+    primary_color TEXT DEFAULT '#ED1B24', -- Theme color
+    logo_url TEXT,
+    hq_lat DECIMAL(10, 6),                 -- Distance calculations from their HQ
+    hq_lng DECIMAL(10, 6),
+    hq_name TEXT,                          -- "Gillette Stadium"
+
+    -- Settings
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- User profiles with org membership
+CREATE TABLE user_profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id),
+    organization_id UUID REFERENCES organizations(id),
+    role TEXT DEFAULT 'member',            -- 'member', 'admin', 'super_admin'
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Add org_id to all data tables
+ALTER TABLE clubs ADD COLUMN organization_id UUID REFERENCES organizations(id);
+ALTER TABLE squad_data ADD COLUMN organization_id UUID REFERENCES organizations(id);
+ALTER TABLE scout_players ADD COLUMN organization_id UUID REFERENCES organizations(id);
+ALTER TABLE scout_reports ADD COLUMN organization_id UUID REFERENCES organizations(id);
+ALTER TABLE live_sessions ADD COLUMN organization_id UUID REFERENCES organizations(id);
+```
+
+**Row Level Security (Tenant Isolation):**
+```sql
+-- Users can only see their organization's data
+CREATE POLICY "Tenant isolation" ON clubs
+    USING (organization_id = (
+        SELECT organization_id FROM user_profiles
+        WHERE id = auth.uid()
+    ));
+
+-- Super admin bypass (your account)
+CREATE POLICY "Super admin access" ON clubs
+    USING (
+        EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE id = auth.uid() AND role = 'super_admin'
+        )
+    );
+```
+
+**Security Measures:**
+- [ ] RLS on ALL tables with tenant isolation
+- [ ] Super admin access logged to audit table
+- [ ] Password requirements: 12+ chars, complexity rules
+- [ ] Email verification required
+- [ ] Session timeout (configurable per org)
+- [ ] Rate limiting on auth endpoints
+- [ ] No plaintext secrets in code (use Supabase Vault)
+
+**Features:**
+- [ ] Email/password login via Supabase Auth
+- [ ] Email notification on new signups (Edge Function → your email)
+- [ ] Org admin: invite users, remove users, change roles
+- [ ] Account settings: change password, profile
+- [ ] Super admin dashboard (emergency access, view audit logs)
+- [ ] Help section (How-to guides, FAQs)
+
+**White-Label Customization:**
+- [ ] Dynamic theme colors from org settings
+- [ ] Custom logo per org
+- [ ] Distance calculations from org HQ (not hardcoded NYRB)
+- [ ] Org name in header/title
+
+**Implementation:**
+1. [ ] Create organizations and user_profiles tables
+2. [ ] Add organization_id to all existing tables
+3. [ ] Set up Supabase Auth
+4. [ ] Implement RLS policies with tenant isolation
+5. [ ] Build login/signup UI
+6. [ ] Build org admin user management
+7. [ ] Add super admin dashboard
+8. [ ] Implement white-label theming
+9. [ ] Add audit logging
+10. [ ] Security hardening (rate limits, session config)
 
 ---
 
 ## Backlog (Low Priority)
-
-### Security Improvements
-- [ ] Move to Supabase Auth (replace client-side password hash)
-- [ ] Add input validation on all form submissions
-- [ ] Rate limiting on Supabase writes
 
 ### Code Quality
 - [ ] Consolidate duplicate haversine distance functions (index.html)
