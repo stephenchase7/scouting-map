@@ -1039,6 +1039,215 @@
             margin-top: 16px;
         }
         .btn-save-report:hover { background: #a00000; }
+        .btn-save-report:disabled { background: #999; cursor: not-allowed; }
+
+        /* Generate Report Button */
+        .btn-generate-report {
+            width: 100%;
+            padding: 16px;
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+        .btn-generate-report:hover { background: #b91c1c; }
+        .btn-generate-report:disabled { background: #999; cursor: not-allowed; }
+
+        /* Collapsible Sections */
+        .report-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .report-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #f9fafb;
+            cursor: pointer;
+            user-select: none;
+        }
+        .report-section-header:hover { background: #f3f4f6; }
+        .report-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #dc2626;
+        }
+        .report-section-toggle {
+            font-size: 12px;
+            color: #9ca3af;
+            transition: transform 0.2s;
+        }
+        .report-section.collapsed .report-section-toggle { transform: rotate(-90deg); }
+        .report-section-content {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .report-section.collapsed .report-section-content { display: none; }
+
+        /* Trait Buttons */
+        .trait-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .trait-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            background: #fff;
+            font-size: 12px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .trait-btn:hover { border-color: #9ca3af; background: #f9fafb; }
+        .trait-btn.selected {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #fff;
+        }
+
+        /* Selected Weapons Display */
+        .selected-weapons {
+            min-height: 36px;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f9fafb;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        .selected-weapons:not(:empty) { color: #111827; }
+
+        /* Textarea with Voice */
+        .textarea-with-voice {
+            position: relative;
+        }
+        .textarea-with-voice textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            padding-right: 48px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            background: #fff;
+        }
+        .textarea-with-voice textarea:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        .btn-voice {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #f3f4f6;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.15s;
+        }
+        .btn-voice:hover { background: #e5e7eb; }
+        .btn-voice.recording {
+            background: #dc2626;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Report Preview */
+        .report-preview {
+            margin-top: 20px;
+            padding: 16px;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            background: #fef2f2;
+            display: none;
+        }
+        .report-preview.active { display: block; }
+        .report-preview h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #dc2626;
+        }
+        .report-preview-content {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .report-preview-content[contenteditable="true"]:focus {
+            outline: 2px solid #dc2626;
+            outline-offset: 2px;
+        }
+        .report-preview-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .btn-preview-save {
+            flex: 1;
+            padding: 12px;
+            background: #16a34a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-preview-save:hover { background: #15803d; }
+        .btn-preview-cancel {
+            padding: 12px 24px;
+            background: #6b7280;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-preview-cancel:hover { background: #4b5563; }
+
+        /* Report Weapons Display */
+        .report-weapons {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+        .report-weapons strong {
+            color: #374151;
+        }
 
         /* Report History */
         .report-card {
@@ -2938,7 +3147,7 @@
             <!-- Add Report Section -->
             <div class="detail-section">
                 <h3>Add Scouting Report</h3>
-                <form id="reportForm" onsubmit="submitReport(event)">
+                <form id="reportForm" onsubmit="event.preventDefault();">
                     <div class="report-row">
                         <div class="report-field">
                             <label>Match/Event <span class="required">*</span></label>
@@ -2974,14 +3183,92 @@
                             </select>
                         </div>
                     </div>
-                    <div class="report-field full-width">
-                        <label>Performance - With the Ball</label>
-                        <textarea id="reportWithBall" class="report-textarea" placeholder="Technical ability, ball control, passing, shooting, creativity..."></textarea>
+
+                    <!-- Special Weapons Section -->
+                    <div class="report-section" id="specialWeaponsSection">
+                        <div class="report-section-header" onclick="toggleReportSection('specialWeaponsSection')">
+                            <span class="report-section-title">⭐ SPECIAL WEAPONS</span>
+                            <span class="report-section-toggle">▼</span>
+                        </div>
+                        <div class="report-section-content">
+                            <label style="font-size:12px;color:#6b7280;margin-bottom:8px;display:block;">IDENTIFYING TRAITS - SELECT MULTIPLE</label>
+                            <div class="selected-weapons" id="selectedWeaponsDisplay">Selected weapons</div>
+                            <div class="trait-buttons" id="specialWeaponButtons">
+                                <button type="button" class="trait-btn" data-trait="1v1 Attacker">1v1 Attacker</button>
+                                <button type="button" class="trait-btn" data-trait="1v1 Defender">1v1 Defender</button>
+                                <button type="button" class="trait-btn" data-trait="Ball Carrier">Ball Carrier</button>
+                                <button type="button" class="trait-btn" data-trait="Pressing/Counter-Pressing">Pressing</button>
+                                <button type="button" class="trait-btn" data-trait="Finisher">Finisher</button>
+                                <button type="button" class="trait-btn" data-trait="Playmaker">Playmaker</button>
+                                <button type="button" class="trait-btn" data-trait="Aerial Presence">Aerial</button>
+                                <button type="button" class="trait-btn" data-trait="Engine">Engine</button>
+                                <button type="button" class="trait-btn" data-trait="Game Reader">Game Reader</button>
+                                <button type="button" class="trait-btn" data-trait="Press Resistant">Press Resistant</button>
+                                <button type="button" class="trait-btn" data-trait="Physical Profile">Physical</button>
+                                <button type="button" class="trait-btn" data-trait="Speed">Speed</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="report-field full-width">
-                        <label>Performance - Against the Ball</label>
-                        <textarea id="reportAgainstBall" class="report-textarea" placeholder="Defensive work, positioning, tackling, pressing, recovery runs..."></textarea>
+
+                    <!-- With the Ball Section -->
+                    <div class="report-section" id="withBallSection">
+                        <div class="report-section-header" onclick="toggleReportSection('withBallSection')">
+                            <span class="report-section-title">⚡ WITH THE BALL</span>
+                            <span class="report-section-toggle">▼</span>
+                        </div>
+                        <div class="report-section-content">
+                            <label style="font-size:12px;color:#6b7280;margin-bottom:8px;display:block;">ATTACKING / POSSESSION NOTES</label>
+                            <div class="textarea-with-voice">
+                                <textarea id="reportWithBall" placeholder="Dribbling, passing, movement, goals scored..."></textarea>
+                                <button type="button" class="btn-voice" onclick="toggleVoiceInput('reportWithBall')" title="Voice input">🎤</button>
+                            </div>
+                            <div class="trait-buttons" id="withBallButtons">
+                                <button type="button" class="trait-btn" data-trait="1v1 Attacker">1v1 Attacker</button>
+                                <button type="button" class="trait-btn" data-trait="Technical Passer">Technical Passer</button>
+                                <button type="button" class="trait-btn" data-trait="Technical Dribbler">Technical Dribbler</button>
+                                <button type="button" class="trait-btn" data-trait="Ball Carrier">Ball Carrier</button>
+                                <button type="button" class="trait-btn" data-trait="Dynamic Movement">Dynamic</button>
+                                <button type="button" class="trait-btn" data-trait="Tight Spaces">Tight Spaces</button>
+                                <button type="button" class="trait-btn" data-trait="Composed on Ball">Composed</button>
+                                <button type="button" class="trait-btn" data-trait="Press Resistant">Press Resistant</button>
+                                <button type="button" class="trait-btn" data-trait="Distribution">Distribution</button>
+                                <button type="button" class="trait-btn" data-trait="Final Ball">Final Ball</button>
+                                <button type="button" class="trait-btn" data-trait="Clinical Finisher">Clinical</button>
+                                <button type="button" class="trait-btn" data-trait="Creative">Creative</button>
+                                <button type="button" class="trait-btn" data-trait="Physical Profile">Physical</button>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Against the Ball Section -->
+                    <div class="report-section" id="againstBallSection">
+                        <div class="report-section-header" onclick="toggleReportSection('againstBallSection')">
+                            <span class="report-section-title">🛡️ AGAINST THE BALL</span>
+                            <span class="report-section-toggle">▼</span>
+                        </div>
+                        <div class="report-section-content">
+                            <label style="font-size:12px;color:#6b7280;margin-bottom:8px;display:block;">DEFENSIVE NOTES</label>
+                            <div class="textarea-with-voice">
+                                <textarea id="reportAgainstBall" placeholder="1v1 defending, positioning, work rate, pressing..."></textarea>
+                                <button type="button" class="btn-voice" onclick="toggleVoiceInput('reportAgainstBall')" title="Voice input">🎤</button>
+                            </div>
+                            <div class="trait-buttons" id="againstBallButtons">
+                                <button type="button" class="trait-btn" data-trait="1v1 Defender">1v1 Defender</button>
+                                <button type="button" class="trait-btn" data-trait="Space Behind">Space Behind</button>
+                                <button type="button" class="trait-btn" data-trait="Defend Wide">Defend Wide</button>
+                                <button type="button" class="trait-btn" data-trait="Work Rate">Work Rate</button>
+                                <button type="button" class="trait-btn" data-trait="Aerial">Aerial</button>
+                                <button type="button" class="trait-btn" data-trait="Positioning">Positioning</button>
+                                <button type="button" class="trait-btn" data-trait="Game Reader">Game Reader</button>
+                                <button type="button" class="trait-btn" data-trait="Aggressive Press">Aggressive Press</button>
+                                <button type="button" class="trait-btn" data-trait="Recovery Runs">Recovery Runs</button>
+                                <button type="button" class="trait-btn" data-trait="Strong Tackler">Strong Tackler</button>
+                                <button type="button" class="trait-btn" data-trait="Leadership">Leadership</button>
+                                <button type="button" class="trait-btn" data-trait="Physical Profile">Physical</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="report-row">
                         <div class="report-field">
                             <label>Next Action - NYRB <span class="required">*</span></label>
@@ -3003,11 +3290,19 @@
                             </select>
                         </div>
                     </div>
-                    <div class="report-field full-width">
-                        <label>Additional Notes</label>
-                        <textarea id="reportNotes" class="report-textarea" placeholder="Any other observations..."></textarea>
+
+                    <button type="button" class="btn-generate-report" id="btnGenerateReport" onclick="generateReport()">Generate Report</button>
+                    <button type="button" class="btn-generate-report" id="btnUpdateReport" onclick="updateReport()" style="display:none;background:#16a34a;">Update Report</button>
+
+                    <!-- Report Preview (shown after generation) -->
+                    <div class="report-preview" id="reportPreview">
+                        <h4>Generated Report - Edit if needed</h4>
+                        <div class="report-preview-content" id="reportPreviewContent" contenteditable="true"></div>
+                        <div class="report-preview-actions">
+                            <button type="button" class="btn-preview-save" onclick="saveGeneratedReport()">Save Report</button>
+                            <button type="button" class="btn-preview-cancel" onclick="cancelPreview()">Cancel</button>
+                        </div>
                     </div>
-                    <button type="submit" class="btn-save-report">Save Report</button>
                 </form>
             </div>
 
@@ -4100,8 +4395,10 @@
             // Apply overrides from shared storage
             var player = applyOverridesToPlayer(basePlayer);
 
-            // Reset report form
+            // Reset report form and trait selections
             document.getElementById('reportForm').reset();
+            resetTraitSelections();
+            cancelPreview();
 
             // Use primaryPosition if available
             var displayPosition = player.primaryPosition || player.position || 'Unknown Position';
@@ -4342,6 +4639,283 @@
             }
         }
 
+        // Report Section Toggles
+        function toggleReportSection(sectionId) {
+            var section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('collapsed');
+            }
+        }
+
+        // Trait Button Selection
+        var selectedTraits = {
+            specialWeapons: [],
+            withBall: [],
+            againstBall: []
+        };
+
+        function initTraitButtons() {
+            // Special Weapons
+            document.querySelectorAll('#specialWeaponButtons .trait-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    toggleTrait(this, 'specialWeapons');
+                });
+            });
+            // With Ball
+            document.querySelectorAll('#withBallButtons .trait-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    toggleTrait(this, 'withBall');
+                });
+            });
+            // Against Ball
+            document.querySelectorAll('#againstBallButtons .trait-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    toggleTrait(this, 'againstBall');
+                });
+            });
+        }
+
+        function toggleTrait(btn, category) {
+            var trait = btn.getAttribute('data-trait');
+            btn.classList.toggle('selected');
+
+            if (btn.classList.contains('selected')) {
+                if (!selectedTraits[category].includes(trait)) {
+                    selectedTraits[category].push(trait);
+                }
+            } else {
+                selectedTraits[category] = selectedTraits[category].filter(function(t) { return t !== trait; });
+            }
+
+            if (category === 'specialWeapons') {
+                updateSelectedWeaponsDisplay();
+            }
+        }
+
+        function updateSelectedWeaponsDisplay() {
+            var display = document.getElementById('selectedWeaponsDisplay');
+            if (selectedTraits.specialWeapons.length === 0) {
+                display.textContent = 'Selected weapons';
+                display.style.color = '#6b7280';
+            } else {
+                display.textContent = selectedTraits.specialWeapons.join(', ');
+                display.style.color = '#111827';
+            }
+        }
+
+        function resetTraitSelections() {
+            selectedTraits = { specialWeapons: [], withBall: [], againstBall: [] };
+            document.querySelectorAll('.trait-btn.selected').forEach(function(btn) {
+                btn.classList.remove('selected');
+            });
+            updateSelectedWeaponsDisplay();
+        }
+
+        // Voice Input (Web Speech API)
+        var voiceRecognition = null;
+        var activeVoiceField = null;
+
+        function toggleVoiceInput(textareaId) {
+            var btn = document.querySelector('#' + textareaId).parentElement.querySelector('.btn-voice');
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast('Voice input not supported in this browser', 'error');
+                return;
+            }
+
+            if (voiceRecognition && activeVoiceField === textareaId) {
+                // Stop recording
+                voiceRecognition.stop();
+                btn.classList.remove('recording');
+                voiceRecognition = null;
+                activeVoiceField = null;
+                return;
+            }
+
+            // Stop any existing recording
+            if (voiceRecognition) {
+                voiceRecognition.stop();
+                var prevBtn = document.querySelector('#' + activeVoiceField).parentElement.querySelector('.btn-voice');
+                if (prevBtn) prevBtn.classList.remove('recording');
+            }
+
+            // Start new recording
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.continuous = true;
+            voiceRecognition.interimResults = true;
+            voiceRecognition.lang = 'en-US';
+            activeVoiceField = textareaId;
+
+            var textarea = document.getElementById(textareaId);
+            var finalTranscript = textarea.value;
+
+            voiceRecognition.onresult = function(event) {
+                var interimTranscript = '';
+                for (var i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                textarea.value = finalTranscript + (interimTranscript ? ' ' + interimTranscript : '');
+            };
+
+            voiceRecognition.onerror = function(event) {
+                showToast('Voice error: ' + event.error, 'error');
+                btn.classList.remove('recording');
+                voiceRecognition = null;
+                activeVoiceField = null;
+            };
+
+            voiceRecognition.onend = function() {
+                btn.classList.remove('recording');
+                textarea.value = finalTranscript;
+                voiceRecognition = null;
+                activeVoiceField = null;
+            };
+
+            voiceRecognition.start();
+            btn.classList.add('recording');
+            showToast('Listening... Click mic again to stop');
+        }
+
+        // Generate Report (AI)
+        var generatedReportData = null;
+
+        async function generateReport() {
+            var btn = document.getElementById('btnGenerateReport');
+            var player = players.find(function(p) { return p.id === currentPlayerId; });
+
+            if (!player) {
+                showToast('No player selected', 'error');
+                return;
+            }
+
+            // Validate required fields
+            var match = document.getElementById('reportMatch').value.trim();
+            var source = document.getElementById('reportSource').value;
+            var build = document.getElementById('reportBuild').value;
+            var nextAction = document.getElementById('reportNextAction').value;
+            var priority = document.getElementById('reportPriority').value;
+
+            if (!match || !source || !build || !nextAction || !priority) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+
+            var payload = {
+                playerName: player.name,
+                position: player.position || player.primaryPosition || '',
+                specialWeapon: selectedTraits.specialWeapons.join(', '),
+                notesWithBall: document.getElementById('reportWithBall').value.trim() +
+                    (selectedTraits.withBall.length ? ' [Traits: ' + selectedTraits.withBall.join(', ') + ']' : ''),
+                notesAgainstBall: document.getElementById('reportAgainstBall').value.trim() +
+                    (selectedTraits.againstBall.length ? ' [Traits: ' + selectedTraits.againstBall.join(', ') + ']' : '')
+            };
+
+            try {
+                var response = await fetch('http://localhost:8080/api/generate-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                var data = await response.json();
+
+                if (data.success && data.report) {
+                    // Store data for saving later
+                    generatedReportData = {
+                        match: match,
+                        source: source,
+                        build: build,
+                        weakerFoot: document.getElementById('reportWeakerFoot').value,
+                        withBall: data.withBall || '',
+                        againstBall: data.againstBall || '',
+                        specialWeapons: selectedTraits.specialWeapons.slice(),
+                        withBallTraits: selectedTraits.withBall.slice(),
+                        againstBallTraits: selectedTraits.againstBall.slice(),
+                        nextAction: nextAction,
+                        priority: priority
+                    };
+
+                    // Show preview
+                    var preview = document.getElementById('reportPreview');
+                    var content = document.getElementById('reportPreviewContent');
+                    content.innerHTML = escapeHtml(data.report).replace(/\n/g, '<br>');
+                    preview.classList.add('active');
+                    showToast('Report generated! Review and save.');
+                } else {
+                    showToast(data.error || 'Generation failed', 'error');
+                }
+            } catch (err) {
+                showToast('Server not running. Start rules_server.py', 'error');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Generate Report';
+        }
+
+        function saveGeneratedReport() {
+            if (!generatedReportData || !currentPlayerId || !selectedScoutId) {
+                showToast('No report to save', 'error');
+                return;
+            }
+
+            var currentScout = scouts.find(function(s) { return s.id === selectedScoutId; });
+            if (!currentScout) return;
+
+            var content = document.getElementById('reportPreviewContent').innerText;
+
+            // Parse the edited content back into sections
+            var withBallMatch = content.match(/With the Ball[:\s]*([\s\S]*?)(?=Against the Ball|$)/i);
+            var againstBallMatch = content.match(/Against the Ball[:\s]*([\s\S]*?)$/i);
+
+            var report = {
+                id: 'report_' + Date.now(),
+                playerId: currentPlayerId,
+                authorId: selectedScoutId,
+                authorName: currentScout.name,
+                date: new Date().toISOString(),
+                match: generatedReportData.match,
+                source: generatedReportData.source,
+                build: generatedReportData.build,
+                weakerFoot: generatedReportData.weakerFoot,
+                withBall: withBallMatch ? withBallMatch[1].trim() : generatedReportData.withBall,
+                againstBall: againstBallMatch ? againstBallMatch[1].trim() : generatedReportData.againstBall,
+                specialWeapons: generatedReportData.specialWeapons,
+                withBallTraits: generatedReportData.withBallTraits,
+                againstBallTraits: generatedReportData.againstBallTraits,
+                nextAction: generatedReportData.nextAction,
+                priority: generatedReportData.priority,
+                generatedByAI: true
+            };
+
+            reports.push(report);
+            localStorage.setItem('scoutReports', JSON.stringify(reports));
+            saveReportToSupabase(report);
+
+            var playerName = players.find(function(p) { return p.id === currentPlayerId; });
+            logAuditEntry('Report created (AI)', 'Player: ' + (playerName ? playerName.name : 'Unknown') + ', Match: ' + report.match, 'report', report.id);
+
+            // Reset form
+            cancelPreview();
+            document.getElementById('reportForm').reset();
+            resetTraitSelections();
+
+            renderReportHistory(currentPlayerId);
+            renderPlayers();
+            showToast('Report saved!');
+        }
+
+        function cancelPreview() {
+            document.getElementById('reportPreview').classList.remove('active');
+            generatedReportData = null;
+        }
+
         // Scouting Reports
         function submitReport(e) {
             e.preventDefault();
@@ -4368,7 +4942,7 @@
                     existingReport.againstBall = document.getElementById('reportAgainstBall').value.trim();
                     existingReport.nextAction = document.getElementById('reportNextAction').value;
                     existingReport.priority = document.getElementById('reportPriority').value;
-                    existingReport.notes = document.getElementById('reportNotes').value.trim();
+                    existingReport.specialWeapons = selectedTraits.specialWeapons.slice();
                     existingReport.lastModified = new Date().toISOString();
 
                     localStorage.setItem('scoutReports', JSON.stringify(reports));
@@ -4403,7 +4977,9 @@
                 againstBall: document.getElementById('reportAgainstBall').value.trim(),
                 nextAction: document.getElementById('reportNextAction').value,
                 priority: document.getElementById('reportPriority').value,
-                notes: document.getElementById('reportNotes').value.trim()
+                specialWeapons: selectedTraits.specialWeapons.slice(),
+                withBallTraits: selectedTraits.withBall.slice(),
+                againstBallTraits: selectedTraits.againstBall.slice()
             };
 
             reports.push(report);
@@ -4460,7 +5036,11 @@
                 if (report.source) html += '<span class="report-tag">' + escapeHtml(report.source) + '</span>';
                 if (report.build) html += '<span class="report-tag">' + escapeHtml(report.build) + '</span>';
                 if (report.weakerFoot) html += '<span class="report-tag">Weak Foot: ' + escapeHtml(report.weakerFoot) + '</span>';
+                if (report.generatedByAI) html += '<span class="report-tag" style="background:#8b5cf6;color:#fff;">AI Generated</span>';
                 html += '</div>';
+                if (report.specialWeapons && report.specialWeapons.length) {
+                    html += '<div class="report-weapons"><strong>Special Weapons:</strong> ' + report.specialWeapons.map(function(w) { return escapeHtml(w); }).join(', ') + '</div>';
+                }
                 if (report.withBall) {
                     html += '<div class="report-section"><strong>With Ball:</strong> ' + escapeHtml(report.withBall).replace(/\n/g, '<br>') + '</div>';
                 }
@@ -4502,28 +5082,76 @@
             document.getElementById('reportWeakerFoot').value = report.weakerFoot || '';
             document.getElementById('reportWithBall').value = report.withBall || '';
             document.getElementById('reportAgainstBall').value = report.againstBall || '';
-            document.getElementById('reportNotes').value = report.notes || '';
             document.getElementById('reportNextAction').value = report.nextAction || '';
             document.getElementById('reportPriority').value = report.priority || '';
 
-            // Change submit button text
-            var submitBtn = document.querySelector('#reportForm button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.textContent = 'Update Report';
+            // Restore trait selections if present
+            resetTraitSelections();
+            if (report.specialWeapons && report.specialWeapons.length) {
+                report.specialWeapons.forEach(function(trait) {
+                    var btn = document.querySelector('#specialWeaponButtons .trait-btn[data-trait="' + trait + '"]');
+                    if (btn) {
+                        btn.classList.add('selected');
+                        selectedTraits.specialWeapons.push(trait);
+                    }
+                });
+                updateSelectedWeaponsDisplay();
             }
+
+            // Show Update Report button, hide Generate button
+            document.getElementById('btnGenerateReport').style.display = 'none';
+            document.getElementById('btnUpdateReport').style.display = 'block';
 
             // Scroll to form
             document.getElementById('reportForm').scrollIntoView({ behavior: 'smooth' });
-            showToast('Editing report - make changes and click Update');
+            showToast('Editing report - make changes and click Update Report');
         }
 
         function cancelEditReport() {
             editingReportId = null;
             document.getElementById('reportForm').reset();
-            var submitBtn = document.querySelector('#reportForm button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.textContent = 'Submit Report';
+            resetTraitSelections();
+            document.getElementById('btnGenerateReport').style.display = 'block';
+            document.getElementById('btnUpdateReport').style.display = 'none';
+        }
+
+        function updateReport() {
+            if (!editingReportId) {
+                showToast('No report being edited', 'error');
+                return;
             }
+
+            var report = reports.find(function(r) { return r.id === editingReportId; });
+            if (!report) {
+                showToast('Report not found', 'error');
+                return;
+            }
+
+            // Update report fields
+            report.match = document.getElementById('reportMatch').value.trim();
+            report.source = document.getElementById('reportSource').value;
+            report.build = document.getElementById('reportBuild').value;
+            report.weakerFoot = document.getElementById('reportWeakerFoot').value;
+            report.withBall = document.getElementById('reportWithBall').value.trim();
+            report.againstBall = document.getElementById('reportAgainstBall').value.trim();
+            report.nextAction = document.getElementById('reportNextAction').value;
+            report.priority = document.getElementById('reportPriority').value;
+            report.specialWeapons = selectedTraits.specialWeapons.slice();
+            report.withBallTraits = selectedTraits.withBall.slice();
+            report.againstBallTraits = selectedTraits.againstBall.slice();
+            report.lastModified = new Date().toISOString();
+
+            localStorage.setItem('scoutReports', JSON.stringify(reports));
+            saveReportToSupabase(report);
+
+            var playerName = players.find(function(p) { return p.id === currentPlayerId; });
+            logAuditEntry('Report edited', 'Player: ' + (playerName ? playerName.name : 'Unknown') + ', Match: ' + report.match, 'report', editingReportId);
+
+            // Reset form
+            cancelEditReport();
+            renderReportHistory(currentPlayerId);
+            renderPlayers();
+            showToast('Report updated!');
         }
 
         function deleteReport(reportId) {
@@ -5554,6 +6182,9 @@
                 updateSyncStatus();
             });
             updateSyncStatus();
+
+            // Initialize trait buttons for report form
+            initTraitButtons();
 
             // Auto-refresh data when tab becomes visible (e.g., after exporting from live.html)
             document.addEventListener('visibilitychange', async function() {

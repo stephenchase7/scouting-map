@@ -131,6 +131,94 @@ DOCUMENTATION:
         return {"error": str(e), "success": False}
 
 
+def generate_scouting_report(data: dict) -> dict:
+    """Generate a professional scouting report using Claude"""
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    if not api_key:
+        return {"error": "ANTHROPIC_API_KEY not found in .env", "success": False}
+
+    player_name = data.get('playerName', 'The player')
+    position = data.get('position', 'Unknown')
+    special_weapon = data.get('specialWeapon', '')
+    notes_with_ball = data.get('notesWithBall', '')
+    notes_against_ball = data.get('notesAgainstBall', '')
+
+    # Check if there's any meaningful input
+    if not notes_with_ball.strip() and not notes_against_ball.strip() and not special_weapon:
+        return {"error": "Please provide some notes or select traits", "success": False}
+
+    system_prompt = """You are a professional youth soccer scout writing a scouting report.
+Convert the rough notes provided into polished, professional scouting paragraphs.
+
+Rules:
+1. Write in clear, professional scouting language
+2. Be specific and reference what was observed
+3. Only write about what is explicitly mentioned in the notes
+4. Do NOT fabricate or assume information not provided
+5. If a section has no notes, write "N/A" for that section
+6. Use position-appropriate vocabulary (e.g., "distribution" for GK, "link-up play" for CAM)
+7. Keep each section to 2-3 sentences
+8. Do NOT use em-dashes (—), use commas or periods instead"""
+
+    user_prompt = f"""Player: {player_name}
+Position: {position}
+Special Weapons: {special_weapon if special_weapon else 'None specified'}
+
+WITH THE BALL NOTES:
+{notes_with_ball if notes_with_ball.strip() else 'No notes provided'}
+
+AGAINST THE BALL NOTES:
+{notes_against_ball if notes_against_ball.strip() else 'No notes provided'}
+
+Generate a professional scouting report with exactly two sections:
+
+**With the Ball:**
+[Professional paragraph about attacking/possession abilities based on notes above]
+
+**Against the Ball:**
+[Professional paragraph about defensive abilities based on notes above]"""
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=1024,
+            messages=[
+                {"role": "user", "content": system_prompt + "\n\n" + user_prompt}
+            ]
+        )
+
+        report_text = response.content[0].text
+
+        # Parse sections from response
+        with_ball = ""
+        against_ball = ""
+
+        # Try to extract sections
+        if "**With the Ball:**" in report_text or "With the Ball:" in report_text:
+            parts = report_text.split("Against the Ball")
+            if len(parts) >= 2:
+                with_ball_part = parts[0]
+                # Clean up the with ball section
+                with_ball = with_ball_part.replace("**With the Ball:**", "").replace("With the Ball:", "").strip()
+                with_ball = with_ball.replace("**", "").strip()
+
+                against_ball_part = parts[1]
+                # Clean up the against ball section
+                against_ball = against_ball_part.replace(":**", "").replace(":", "").strip()
+                against_ball = against_ball.replace("**", "").strip()
+
+        return {
+            "success": True,
+            "report": report_text,
+            "withBall": with_ball,
+            "againstBall": against_ball
+        }
+
+    except Exception as e:
+        return {"error": str(e), "success": False}
+
+
 class RulesHandler(http.server.SimpleHTTPRequestHandler):
     """Custom handler that serves static files and handles /api/ask"""
 
@@ -139,12 +227,12 @@ class RulesHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=os.path.dirname(__file__), **kwargs)
 
     def do_POST(self):
-        """Handle POST requests to /api/ask"""
-        if self.path == '/api/ask':
-            # Read request body
-            content_length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(content_length).decode('utf-8')
+        """Handle POST requests"""
+        # Read request body
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length).decode('utf-8')
 
+        if self.path == '/api/ask':
             try:
                 data = json.loads(body)
                 question = data.get('question', '')
@@ -161,6 +249,19 @@ class RulesHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json_response({"error": "Invalid JSON"}, 400)
             except Exception as e:
                 self.send_json_response({"error": str(e)}, 500)
+
+        elif self.path == '/api/generate-report':
+            try:
+                data = json.loads(body)
+                print(f"Generate Report: {data.get('playerName', 'Unknown')}")
+                result = generate_scouting_report(data)
+                self.send_json_response(result)
+
+            except json.JSONDecodeError:
+                self.send_json_response({"error": "Invalid JSON"}, 400)
+            except Exception as e:
+                self.send_json_response({"error": str(e)}, 500)
+
         else:
             self.send_error(404, "Not Found")
 
@@ -200,11 +301,14 @@ def main():
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), RulesHandler) as httpd:
         print(f"\n{'='*50}")
-        print(f"MLS NEXT Rules Server")
+        print(f"MLS NEXT Rules & Scouting Server")
         print(f"{'='*50}")
         print(f"Server running at: http://localhost:{PORT}")
         print(f"Rules page: http://localhost:{PORT}/rules.html")
-        print(f"API endpoint: POST http://localhost:{PORT}/api/ask")
+        print(f"Scouts page: http://localhost:{PORT}/scouts.html")
+        print(f"API endpoints:")
+        print(f"  POST /api/ask - Rules Q&A")
+        print(f"  POST /api/generate-report - Scout Report AI")
         print(f"{'='*50}")
         print(f"Press Ctrl+C to stop\n")
 
