@@ -345,6 +345,203 @@
         .status-signed { background: #c8e6c9; color: #2e7d32; }
         .status-passed { background: #f5f5f5; color: #616161; }
 
+        /* Selection bar */
+        .selection-bar {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 6px 6px 0 0;
+            margin: 0 -1px;
+        }
+        .selection-bar #selectedCount {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .selection-action {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .selection-action:hover { background: rgba(255,255,255,0.1); }
+        .selection-action.delete { border-color: #ef4444; color: #ef4444; }
+        .selection-action.delete:hover { background: #ef4444; color: white; }
+        .selection-action.cancel { margin-left: auto; }
+        .selection-status-dropdown { position: relative; }
+        .bulk-status-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 120px;
+            z-index: 100;
+            margin-top: 4px;
+        }
+        .bulk-status-menu.active { display: block; }
+        .bulk-status-menu div {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+        }
+        .bulk-status-menu div:hover { background: #f5f5f5; }
+        .bulk-status-menu div:first-child { border-radius: 6px 6px 0 0; }
+        .bulk-status-menu div:last-child { border-radius: 0 0 6px 6px; }
+
+        /* Checkbox column */
+        .th-checkbox { width: 40px; text-align: center; }
+        .td-checkbox { text-align: center; }
+        .td-checkbox input { cursor: pointer; width: 16px; height: 16px; }
+        .th-icon { width: 40px; text-align: center; }
+
+        /* Clickable player name */
+        .player-name-clickable {
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        .player-name-clickable:hover { color: #cc0000; }
+
+        /* Compact indicators */
+        .video-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .video-indicator:hover { background: #f0f0f0; }
+        .video-indicator.has-video { color: #1976d2; }
+        .video-indicator.no-video { color: #ccc; }
+
+        .report-indicator-clickable {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0 8px;
+            transition: transform 0.15s;
+        }
+        .report-indicator-clickable:hover { transform: scale(1.1); }
+        .report-indicator-empty {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        /* Inline status dropdown */
+        .status-badge-clickable {
+            cursor: pointer;
+            position: relative;
+        }
+        .status-badge-clickable:hover { opacity: 0.85; }
+        .status-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 100px;
+            z-index: 100;
+            margin-top: 4px;
+        }
+        .status-dropdown.active { display: block; }
+        .status-dropdown div {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .status-dropdown div:hover { background: #f5f5f5; }
+
+        /* Row hover effect */
+        .player-table tr.selected td { background: #e3f2fd !important; }
+        .player-row { transition: background 0.15s; }
+        .player-row:hover { background: #f8f9fa; }
+        .player-row.clickable { cursor: pointer; }
+
+        /* Clickable player name */
+        .player-name-cell.clickable { cursor: pointer; }
+        .player-name-cell.clickable:hover { color: #cc0000; }
+
+        /* Compact icon cells */
+        .td-icon { text-align: center; width: 40px; }
+        .video-icon, .report-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .video-icon:hover, .report-icon:hover { background: #f0f0f0; }
+        .icon-count {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background: #cc0000;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            min-width: 14px;
+            height: 14px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+        }
+
+        /* Inline status dropdown */
+        .inline-status-dropdown { position: relative; display: inline-block; }
+        .inline-status-dropdown .status-badge { cursor: pointer; }
+        .inline-status-dropdown .status-badge:hover { opacity: 0.85; }
+        .inline-status-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 100px;
+            z-index: 100;
+            margin-top: 4px;
+        }
+        .inline-status-menu.active { display: block; }
+        .inline-status-menu div {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .inline-status-menu div:hover { background: #f5f5f5; }
+        .inline-status-menu div:first-child { border-radius: 6px 6px 0 0; }
+        .inline-status-menu div:last-child { border-radius: 0 0 6px 6px; }
+
         .action-btn {
             background: none;
             border: 1px solid #ddd;
@@ -983,6 +1180,74 @@
             margin-top: 12px;
         }
         .link-to-stats:hover { text-decoration: underline; }
+
+        /* Link to Roster */
+        .btn-link-roster {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            margin-right: 8px;
+        }
+        .btn-link-roster:hover { background: #2563eb; }
+        .linked-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: #10b981;
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .roster-match-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .roster-match-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .roster-match-item:hover {
+            background: #e9ecef;
+            transform: translateX(2px);
+        }
+        .roster-match-info {
+            flex: 1;
+        }
+        .roster-match-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a1a2e;
+        }
+        .roster-match-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        .roster-match-score {
+            padding: 4px 8px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .roster-match-score.high { background: #dcfce7; color: #166534; }
+        .roster-match-score.medium { background: #fef3c7; color: #92400e; }
 
         /* Edit Mode */
         .edit-toggle-btn {
@@ -1976,18 +2241,32 @@
                             <span class="card-title">Players I'm Tracking</span>
                             <button class="btn-add" onclick="openAddPlayerModal()">+ Add Player</button>
                         </div>
+                        <!-- Selection Bar -->
+                        <div class="selection-bar" id="selectionBar" style="display:none;">
+                            <span id="selectedCount">0 selected</span>
+                            <button class="selection-action delete" onclick="deleteSelectedPlayers()">Delete</button>
+                            <div class="selection-status-dropdown">
+                                <button class="selection-action" onclick="toggleBulkStatusMenu()">Change Status ▼</button>
+                                <div class="bulk-status-menu" id="bulkStatusMenu">
+                                    <div onclick="bulkChangeStatus('watching')">Watching</div>
+                                    <div onclick="bulkChangeStatus('priority')">Priority</div>
+                                    <div onclick="bulkChangeStatus('passed')">Passed</div>
+                                </div>
+                            </div>
+                            <button class="selection-action cancel" onclick="clearSelection()">Cancel</button>
+                        </div>
                         <div class="card-body">
                             <table class="player-table" id="myPlayersTable">
                                 <thead>
                                     <tr>
+                                        <th class="th-checkbox"><input type="checkbox" id="selectAllPlayers" onchange="toggleSelectAll()"></th>
                                         <th>Player</th>
                                         <th>Club</th>
-                                        <th>Position</th>
+                                        <th>Pos</th>
                                         <th>YOB</th>
-                                        <th>Video</th>
-                                        <th>Report</th>
+                                        <th class="th-icon">📹</th>
+                                        <th class="th-icon">📝</th>
                                         <th>Status</th>
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="myPlayersBody">
@@ -2239,6 +2518,24 @@
         </div>
     </div>
 
+    <!-- Link to Roster Modal -->
+    <div class="modal-overlay" id="linkRosterModal" style="z-index:5000;">
+        <div class="modal" style="max-width:550px;">
+            <div class="modal-header">
+                <span class="modal-title">Link to Roster Player</span>
+                <button class="modal-close" onclick="closeLinkRosterModal()">&times;</button>
+            </div>
+            <p style="font-size:13px;color:#666;margin-bottom:12px;">
+                Select the matching roster player for <strong id="linkPlayerName"></strong>:
+            </p>
+            <div id="rosterMatchList" class="roster-match-list">
+                <!-- Roster matches populated here -->
+            </div>
+            <div id="noRosterMatches" style="display:none;text-align:center;padding:20px;color:#666;">
+                No roster players found for this club.
+            </div>
+        </div>
+    </div>
 
     <!-- Match Mode Modal - Modern Dark Design -->
     <div class="modal-overlay" id="matchModeModal">
@@ -2621,6 +2918,11 @@
                     <button class="btn-cancel-edit" onclick="cancelEdit()">Cancel</button>
                 </div>
                 <a href="#" class="link-to-stats" id="linkToStats">View team stats →</a>
+                <!-- Link to Roster - hidden for now, code preserved -->
+                <div style="margin-top:12px;display:none;">
+                    <button class="btn-link-roster" id="btnLinkRoster" onclick="openLinkRosterModal()">Link to Roster</button>
+                    <span class="linked-indicator" id="linkedIndicator" style="display:none;">✓ Linked</span>
+                </div>
             </div>
 
             <!-- Video Links Section -->
@@ -2948,7 +3250,8 @@
                     video_links: player.videoLinks || [],
                     shared_with: player.sharedWith || [],
                     date_added: player.dateAdded,
-                    updated_at: new Date().toISOString()
+                    updated_at: new Date().toISOString(),
+                    linked_player_key: player.linkedPlayerKey || null
                 });
             } catch (e) {
                 console.error('[Supabase] Save player error:', e);
@@ -3338,6 +3641,14 @@
 
                 renderPlayers();
                 renderSharedPlayers();
+
+                // Check for pending prefill params (from team.html Scout button)
+                if (window.pendingPrefillParams) {
+                    setTimeout(function() {
+                        handlePrefillParams(window.pendingPrefillParams);
+                        window.pendingPrefillParams = null;
+                    }, 100);
+                }
             }
 
             renderScouts();
@@ -3352,6 +3663,7 @@
             if (scoutPlayers.length === 0) {
                 tbody.innerHTML = '';
                 noMsg.style.display = 'block';
+                document.getElementById('selectionBar').style.display = 'none';
                 return;
             }
 
@@ -3368,40 +3680,47 @@
                 // Use primaryPosition if available, fall back to position
                 var displayPosition = player.primaryPosition || player.position || '-';
 
-                // Check for video links
+                // Check for video links - compact icon
                 var hasVideo = player.videoLinks && player.videoLinks.length > 0;
                 var videoCount = hasVideo ? player.videoLinks.length : 0;
                 var videoHtml = '';
                 if (hasVideo) {
-                    videoHtml = '<a href="' + player.videoLinks[0] + '" target="_blank" class="video-link-btn">LINK';
+                    videoHtml = '<a href="' + player.videoLinks[0] + '" target="_blank" class="video-icon" title="' + videoCount + ' video(s)">📹';
                     if (videoCount > 1) {
-                        videoHtml += '<span class="video-count">' + videoCount + '</span>';
+                        videoHtml += '<span class="icon-count">' + videoCount + '</span>';
                     }
                     videoHtml += '</a>';
                 }
 
-                // Check for reports
+                // Check for reports - compact clickable icon
                 var playerReports = reports.filter(function(r) { return r.playerId === basePlayer.id; });
-                var reportHtml = playerReports.length > 0 ? '<span class="report-indicator">' + playerReports.length + '</span>' : '';
+                var reportHtml = '';
+                if (playerReports.length > 0) {
+                    reportHtml = '<span class="report-icon" onclick="viewPlayerReports(\'' + basePlayer.id + '\')" title="' + playerReports.length + ' report(s)">📝';
+                    if (playerReports.length > 1) {
+                        reportHtml += '<span class="icon-count">' + playerReports.length + '</span>';
+                    }
+                    reportHtml += '</span>';
+                }
 
-                html += '<tr>';
-                html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + player.name + '</div></td>';
-                html += '<td>' + (player.club || '-') + '</td>';
-                html += '<td>' + displayPosition + '</td>';
+                // Inline status dropdown
+                var statusDropdown = '<div class="inline-status-dropdown">';
+                statusDropdown += '<span class="status-badge ' + statusClass + '" onclick="toggleInlineStatus(event, \'' + basePlayer.id + '\')">' + status + ' ▾</span>';
+                statusDropdown += '<div class="inline-status-menu" id="statusMenu_' + basePlayer.id + '">';
+                statusDropdown += '<div onclick="changePlayerStatus(\'' + basePlayer.id + '\', \'watching\')">Watching</div>';
+                statusDropdown += '<div onclick="changePlayerStatus(\'' + basePlayer.id + '\', \'priority\')">Priority</div>';
+                statusDropdown += '<div onclick="changePlayerStatus(\'' + basePlayer.id + '\', \'passed\')">Passed</div>';
+                statusDropdown += '</div></div>';
+
+                html += '<tr class="player-row" data-player-id="' + basePlayer.id + '">';
+                html += '<td class="td-checkbox"><input type="checkbox" class="player-checkbox" data-id="' + basePlayer.id + '" onchange="updateSelectionBar()"></td>';
+                html += '<td><div class="player-name-cell clickable" onclick="viewPlayer(\'' + basePlayer.id + '\')"><div class="player-avatar">' + initials + '</div>' + escapeHtml(player.name) + '</div></td>';
+                html += '<td>' + escapeHtml(player.club || '-') + '</td>';
+                html += '<td>' + escapeHtml(displayPosition) + '</td>';
                 html += '<td>' + (player.yob || '-') + '</td>';
-                html += '<td>' + videoHtml + '</td>';
-                html += '<td>' + reportHtml + '</td>';
-                html += '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>';
-                // Check if in compare cart
-                var inCompare = isInCompareCart(basePlayer.id);
-                var compareBtnClass = inCompare ? 'action-btn compare-btn added' : 'action-btn compare-btn';
-                var compareBtnText = inCompare ? '✓' : '+';
-
-                html += '<td>';
-                html += '<button class="' + compareBtnClass + '" onclick="addToCompareFromList(\'' + basePlayer.id + '\')" title="Add to Compare">' + compareBtnText + '</button>';
-                html += '<button class="action-btn" onclick="viewPlayer(\'' + basePlayer.id + '\')">View</button>';
-                html += '<button class="action-btn" onclick="deletePlayer(\'' + basePlayer.id + '\')">Delete</button>';
-                html += '</td>';
+                html += '<td class="td-icon">' + videoHtml + '</td>';
+                html += '<td class="td-icon">' + reportHtml + '</td>';
+                html += '<td>' + statusDropdown + '</td>';
                 html += '</tr>';
             });
             tbody.innerHTML = html;
@@ -3421,28 +3740,35 @@
                 var status = player.status || 'watching';
                 var statusClass = 'status-' + status;
 
-                // Check for video links
+                // Check for video links - compact icon
                 var hasVideo = player.videoLinks && player.videoLinks.length > 0;
                 var videoCount = hasVideo ? player.videoLinks.length : 0;
                 var videoHtml = '';
                 if (hasVideo) {
-                    videoHtml = '<a href="' + player.videoLinks[0] + '" target="_blank" class="video-link-btn">LINK';
+                    videoHtml = '<a href="' + player.videoLinks[0] + '" target="_blank" class="video-icon" title="' + videoCount + ' video(s)">📹';
                     if (videoCount > 1) {
-                        videoHtml += '<span class="video-count">' + videoCount + '</span>';
+                        videoHtml += '<span class="icon-count">' + videoCount + '</span>';
                     }
                     videoHtml += '</a>';
                 }
 
-                // Check for reports
+                // Check for reports - compact clickable icon
                 var playerReports = reports.filter(function(r) { return r.playerId === player.id; });
-                var reportHtml = playerReports.length > 0 ? '<span class="report-indicator">' + playerReports.length + '</span>' : '';
+                var reportHtml = '';
+                if (playerReports.length > 0) {
+                    reportHtml = '<span class="report-icon" onclick="viewPlayerReports(\'' + player.id + '\')" title="' + playerReports.length + ' report(s)">📝';
+                    if (playerReports.length > 1) {
+                        reportHtml += '<span class="icon-count">' + playerReports.length + '</span>';
+                    }
+                    reportHtml += '</span>';
+                }
 
-                html += '<tr>';
-                html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + player.name + '</div></td>';
-                html += '<td>' + (player.club || '-') + '</td>';
-                html += '<td>' + videoHtml + '</td>';
-                html += '<td>' + reportHtml + '</td>';
-                html += '<td>' + (scout ? scout.name : 'Unknown') + '</td>';
+                html += '<tr class="player-row clickable" onclick="viewPlayer(\'' + player.id + '\')">';
+                html += '<td><div class="player-name-cell"><div class="player-avatar">' + initials + '</div>' + escapeHtml(player.name) + '</div></td>';
+                html += '<td>' + escapeHtml(player.club || '-') + '</td>';
+                html += '<td class="td-icon">' + videoHtml + '</td>';
+                html += '<td class="td-icon">' + reportHtml + '</td>';
+                html += '<td>' + (scout ? escapeHtml(scout.name) : 'Unknown') + '</td>';
                 html += '<td><span class="status-badge ' + statusClass + '">' + status + '</span></td>';
                 html += '</tr>';
             });
@@ -3563,31 +3889,51 @@
 
         // Add player
         function submitAddPlayer(e) {
+            console.log('[AddPlayer] Form submitted');
             e.preventDefault();
-            var form = e.target;
+            try {
+                var form = e.target;
 
-            var newPlayer = {
-                id: Date.now().toString(),
-                scoutId: selectedScoutId,
-                name: form.player_name.value.trim(),
-                club: form.club.value.trim(),
-                squad: form.squad.value,
-                jersey: form.jersey.value,
-                yob: form.yob.value,
-                foot: form.foot.value,
-                position: form.position.value,
-                status: form.status.value || 'watching',
-                notes: form.notes.value.trim(),
-                dateAdded: new Date().toISOString()
-            };
-            players.push(newPlayer);
+                var newPlayer = {
+                    id: Date.now().toString(),
+                    scoutId: selectedScoutId,
+                    name: form.player_name.value.trim(),
+                    club: form.club.value.trim(),
+                    squad: form.squad.value,
+                    jersey: form.jersey.value,
+                    yob: form.yob.value,
+                    foot: form.foot.value,
+                    position: form.position.value,
+                    status: form.status.value || 'watching',
+                    notes: form.notes.value.trim(),
+                    dateAdded: new Date().toISOString(),
+                    linkedPlayerKey: window.prefillLinkedKey || null
+                };
+                console.log('[AddPlayer] Created player:', newPlayer.name, newPlayer.id);
+                players.push(newPlayer);
 
-            localStorage.setItem('scoutPlayers', JSON.stringify(players));
-            savePlayerToSupabase(newPlayer);
-            logAuditEntry('Player added', newPlayer.name + ' (' + (newPlayer.club || 'No club') + ', ' + (newPlayer.squad || 'No squad') + ')', 'player', newPlayer.id);
-            renderPlayers();
-            selectScout(selectedScoutId); // Refresh stats
-            closeAddPlayerModal();
+                // Clear prefill key after use
+                window.prefillLinkedKey = null;
+
+                localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                savePlayerToSupabase(newPlayer);
+                logAuditEntry('Player added', newPlayer.name + ' (' + (newPlayer.club || 'No club') + ', ' + (newPlayer.squad || 'No squad') + ')', 'player', newPlayer.id);
+                renderPlayers();
+                selectScout(selectedScoutId); // Refresh stats
+
+                // Store ID before closing modal
+                var newPlayerId = newPlayer.id;
+                console.log('[AddPlayer] Closing modal, will open player:', newPlayerId);
+                closeAddPlayerModal();
+
+                // Auto-open player panel for scouting report
+                setTimeout(function() {
+                    console.log('[AddPlayer] Opening player panel for:', newPlayerId);
+                    viewPlayer(newPlayerId);
+                }, 300);
+            } catch (err) {
+                console.error('[AddPlayer] Error:', err);
+            }
         }
 
         // Delete player
@@ -3601,6 +3947,144 @@
                 renderPlayers();
                 selectScout(selectedScoutId); // Refresh stats
             }
+        }
+
+        // ═══════════════════════════════════════════════════
+        // SELECTION & BULK ACTIONS
+        // ═══════════════════════════════════════════════════
+
+        function toggleSelectAll() {
+            var selectAll = document.getElementById('selectAllPlayers');
+            var checkboxes = document.querySelectorAll('.player-checkbox');
+            checkboxes.forEach(function(cb) {
+                cb.checked = selectAll.checked;
+            });
+            updateSelectionBar();
+        }
+
+        function updateSelectionBar() {
+            var checkboxes = document.querySelectorAll('.player-checkbox:checked');
+            var count = checkboxes.length;
+            var bar = document.getElementById('selectionBar');
+            var countEl = document.getElementById('selectedCount');
+
+            if (count > 0) {
+                bar.style.display = 'flex';
+                countEl.textContent = count + ' selected';
+            } else {
+                bar.style.display = 'none';
+                document.getElementById('selectAllPlayers').checked = false;
+            }
+        }
+
+        function deleteSelectedPlayers() {
+            var checkboxes = document.querySelectorAll('.player-checkbox:checked');
+            var ids = [];
+            checkboxes.forEach(function(cb) {
+                ids.push(cb.dataset.id);
+            });
+
+            if (ids.length === 0) return;
+
+            if (confirm('Delete ' + ids.length + ' player(s) from watchlist?')) {
+                ids.forEach(function(id) {
+                    var playerToDelete = players.find(function(p) { return p.id === id; });
+                    players = players.filter(function(p) { return p.id !== id; });
+                    deleteFromSupabase('scout_players', id);
+                    logAuditEntry('Player removed (bulk)', playerToDelete ? playerToDelete.name : 'Unknown', 'player', id);
+                });
+                localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                clearSelection();
+                renderPlayers();
+                selectScout(selectedScoutId);
+                showToast(ids.length + ' player(s) deleted');
+            }
+        }
+
+        function toggleBulkStatusMenu() {
+            var menu = document.getElementById('bulkStatusMenu');
+            menu.classList.toggle('active');
+        }
+
+        function bulkChangeStatus(status) {
+            var checkboxes = document.querySelectorAll('.player-checkbox:checked');
+            var ids = [];
+            checkboxes.forEach(function(cb) {
+                ids.push(cb.dataset.id);
+            });
+
+            if (ids.length === 0) return;
+
+            ids.forEach(function(id) {
+                var player = players.find(function(p) { return p.id === id; });
+                if (player) {
+                    player.status = status;
+                    savePlayerToSupabase(player);
+                }
+            });
+            localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            document.getElementById('bulkStatusMenu').classList.remove('active');
+            clearSelection();
+            renderPlayers();
+            showToast(ids.length + ' player(s) updated to ' + status);
+        }
+
+        function clearSelection() {
+            var checkboxes = document.querySelectorAll('.player-checkbox');
+            checkboxes.forEach(function(cb) { cb.checked = false; });
+            document.getElementById('selectAllPlayers').checked = false;
+            document.getElementById('selectionBar').style.display = 'none';
+            document.getElementById('bulkStatusMenu').classList.remove('active');
+        }
+
+        // ═══════════════════════════════════════════════════
+        // INLINE STATUS DROPDOWN
+        // ═══════════════════════════════════════════════════
+
+        var activeStatusMenu = null;
+
+        function toggleInlineStatus(event, playerId) {
+            event.stopPropagation();
+            var menu = document.getElementById('statusMenu_' + playerId);
+
+            // Close any other open menu
+            if (activeStatusMenu && activeStatusMenu !== menu) {
+                activeStatusMenu.classList.remove('active');
+            }
+
+            menu.classList.toggle('active');
+            activeStatusMenu = menu.classList.contains('active') ? menu : null;
+        }
+
+        function changePlayerStatus(playerId, status) {
+            var player = players.find(function(p) { return p.id === playerId; });
+            if (player) {
+                player.status = status;
+                localStorage.setItem('scoutPlayers', JSON.stringify(players));
+                savePlayerToSupabase(player);
+                renderPlayers();
+            }
+            activeStatusMenu = null;
+        }
+
+        // Close status menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (activeStatusMenu && !e.target.closest('.inline-status-dropdown')) {
+                activeStatusMenu.classList.remove('active');
+                activeStatusMenu = null;
+            }
+        });
+
+        // View player and scroll to reports
+        function viewPlayerReports(playerId) {
+            viewPlayer(playerId);
+            // Scroll to reports section after panel opens
+            setTimeout(function() {
+                var reportsSection = document.getElementById('reportHistorySection');
+                if (reportsSection) {
+                    reportsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 100);
         }
 
         // ═══════════════════════════════════════════════════
@@ -3672,6 +4156,9 @@
 
             // Load report history
             renderReportHistory(id);
+
+            // Update link indicator
+            updateLinkIndicator(player);
 
             // Show panel
             document.getElementById('panelBackdrop').classList.add('active');
@@ -4138,6 +4625,213 @@
                 closeShareModal();
             }
         }
+
+        // ========== LINK TO ROSTER FUNCTIONS ==========
+
+        // Generate player key: clubId_squad_jersey_name
+        function generatePlayerKey(clubId, squad, jersey, name) {
+            var safeName = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+            return clubId + '_' + squad + '_' + jersey + '_' + safeName;
+        }
+
+        // Open link roster modal
+        async function openLinkRosterModal() {
+            if (!currentPlayerId) return;
+            var player = players.find(function(p) { return p.id === currentPlayerId; });
+            if (!player) return;
+
+            // Get club ID from player's club name
+            var clubId = getClubIdFromName(player.club);
+            if (!clubId) {
+                showToast('Set a club name first', 'error');
+                return;
+            }
+
+            document.getElementById('linkPlayerName').textContent = player.name;
+            document.getElementById('rosterMatchList').innerHTML = '<div style="text-align:center;padding:20px;color:#666;">Loading roster...</div>';
+            document.getElementById('noRosterMatches').style.display = 'none';
+            document.getElementById('linkRosterModal').classList.add('active');
+
+            // Query squad_data for this club
+            if (!supabaseClient) {
+                document.getElementById('rosterMatchList').innerHTML = '';
+                document.getElementById('noRosterMatches').style.display = 'block';
+                return;
+            }
+
+            try {
+                var { data: squads, error } = await supabaseClient
+                    .from('squad_data')
+                    .select('squad, players')
+                    .eq('club_id', clubId);
+
+                if (error || !squads || squads.length === 0) {
+                    document.getElementById('rosterMatchList').innerHTML = '';
+                    document.getElementById('noRosterMatches').style.display = 'block';
+                    return;
+                }
+
+                // Flatten all players with scoring
+                var allMatches = [];
+                squads.forEach(function(sq) {
+                    if (!sq.players) return;
+                    sq.players.forEach(function(rp) {
+                        var score = scoreRosterMatch(player, rp);
+                        var playerKey = generatePlayerKey(clubId, sq.squad, rp.jersey_number || '', rp.name);
+                        allMatches.push({
+                            name: rp.name,
+                            jersey: rp.jersey_number,
+                            yob: rp.year_of_birth,
+                            squad: sq.squad,
+                            score: score,
+                            playerKey: playerKey
+                        });
+                    });
+                });
+
+                // Sort by score descending
+                allMatches.sort(function(a, b) { return b.score - a.score; });
+
+                renderRosterMatches(allMatches);
+            } catch (e) {
+                console.error('[LinkRoster] Error:', e);
+                document.getElementById('rosterMatchList').innerHTML = '';
+                document.getElementById('noRosterMatches').style.display = 'block';
+            }
+        }
+
+        // Score how well a roster player matches scouted player
+        function scoreRosterMatch(scoutPlayer, rosterPlayer) {
+            var score = 0;
+
+            // Name match (most important)
+            var scoutName = (scoutPlayer.name || '').toLowerCase().trim();
+            var rosterName = (rosterPlayer.name || '').toLowerCase().trim();
+            if (scoutName === rosterName) {
+                score += 50;
+            } else if (rosterName.includes(scoutName) || scoutName.includes(rosterName)) {
+                score += 30;
+            } else {
+                // Check last name match
+                var scoutLast = scoutName.split(' ').pop();
+                var rosterLast = rosterName.split(' ').pop();
+                if (scoutLast === rosterLast && scoutLast.length > 2) {
+                    score += 20;
+                }
+            }
+
+            // Jersey match
+            var scoutJersey = String(scoutPlayer.jersey || '');
+            var rosterJersey = String(rosterPlayer.jersey_number || '');
+            if (scoutJersey && rosterJersey && scoutJersey === rosterJersey) {
+                score += 30;
+            }
+
+            // Birth year match
+            var scoutYob = String(scoutPlayer.yob || '');
+            var rosterYob = String(rosterPlayer.year_of_birth || '');
+            if (scoutYob && rosterYob && scoutYob === rosterYob) {
+                score += 20;
+            }
+
+            return score;
+        }
+
+        // Render roster match items
+        function renderRosterMatches(matches) {
+            var container = document.getElementById('rosterMatchList');
+            if (!matches || matches.length === 0) {
+                container.innerHTML = '';
+                document.getElementById('noRosterMatches').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('noRosterMatches').style.display = 'none';
+            var html = matches.map(function(m) {
+                var scoreClass = m.score >= 50 ? 'high' : (m.score >= 30 ? 'medium' : '');
+                var scoreLabel = m.score >= 50 ? 'Strong' : (m.score >= 30 ? 'Possible' : 'Weak');
+                return '<div class="roster-match-item" onclick="selectRosterMatch(\'' + m.playerKey + '\')">' +
+                    '<div class="roster-match-info">' +
+                        '<div class="roster-match-name">' + (m.name || 'Unknown') + '</div>' +
+                        '<div class="roster-match-details">#' + (m.jersey || '-') + ' • ' + (m.yob || '-') + ' • ' + (m.squad || '-') + '</div>' +
+                    '</div>' +
+                    '<span class="roster-match-score ' + scoreClass + '">' + scoreLabel + '</span>' +
+                '</div>';
+            }).join('');
+            container.innerHTML = html;
+        }
+
+        // Select a roster match and save link
+        async function selectRosterMatch(playerKey) {
+            if (!currentPlayerId) return;
+            var player = players.find(function(p) { return p.id === currentPlayerId; });
+            if (!player) return;
+
+            player.linkedPlayerKey = playerKey;
+            localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            await savePlayerToSupabase(player);
+
+            closeLinkRosterModal();
+            updateLinkIndicator(player);
+            showToast('Linked to roster!');
+        }
+
+        // Update link indicator visibility
+        function updateLinkIndicator(player) {
+            var btn = document.getElementById('btnLinkRoster');
+            var indicator = document.getElementById('linkedIndicator');
+            if (player && player.linkedPlayerKey) {
+                btn.style.display = 'none';
+                indicator.style.display = 'inline-flex';
+            } else {
+                btn.style.display = 'inline-block';
+                indicator.style.display = 'none';
+            }
+        }
+
+        // Close link roster modal
+        function closeLinkRosterModal() {
+            document.getElementById('linkRosterModal').classList.remove('active');
+        }
+
+        // Handle prefill params from team.html Scout button
+        function handlePrefillParams(params) {
+            // Create player directly (skip the Add Player modal)
+            var newPlayer = {
+                id: Date.now().toString(),
+                scoutId: selectedScoutId,
+                name: params.get('name') || '',
+                club: params.get('club') || '',
+                squad: (params.get('squad') || '').toUpperCase(),
+                jersey: params.get('jersey') || '',
+                yob: params.get('yob') || '',
+                foot: '',
+                position: '',
+                status: 'watching',
+                notes: '',
+                dateAdded: new Date().toISOString(),
+                linkedPlayerKey: params.get('linkedKey') || null
+            };
+
+            console.log('[Prefill] Auto-creating player:', newPlayer.name);
+            players.push(newPlayer);
+            localStorage.setItem('scoutPlayers', JSON.stringify(players));
+            savePlayerToSupabase(newPlayer);
+
+            // Refresh UI
+            renderPlayers();
+            var scoutPlayers = players.filter(function(p) { return p.scoutId === selectedScoutId; });
+            document.getElementById('selectedScoutStats').textContent = scoutPlayers.length + ' player' + (scoutPlayers.length !== 1 ? 's' : '') + ' tracked';
+            document.getElementById('myPlayersBadge').textContent = scoutPlayers.length;
+
+            // Open player detail panel with scouting report form
+            setTimeout(function() {
+                console.log('[Prefill] Opening player panel for:', newPlayer.id);
+                viewPlayer(newPlayer.id);
+            }, 200);
+        }
+
+        // ========== END LINK TO ROSTER FUNCTIONS ==========
 
         // Render shared players for a scout
         function renderSharedPlayers() {
@@ -4899,6 +5593,22 @@
 
             renderScouts();
             updateCompareButton();
+
+            // Handle deep link to specific player
+            var deepLinkPlayerId = params.get('player');
+            if (deepLinkPlayerId) {
+                setTimeout(function() {
+                    viewPlayer(deepLinkPlayerId);
+                }, 200);
+            }
+
+            // Handle prefill from team.html "Scout" button
+            // Store params - they'll be applied after user selects a scout
+            if (params.get('prefill') === '1') {
+                window.pendingPrefillParams = params;
+                // Clear URL params to prevent confusion
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
             // Process any pending sync items
             if (navigator.onLine && pendingSyncQueue.length > 0) {

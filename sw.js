@@ -1,5 +1,5 @@
 // NYRB Scouting Service Worker
-const CACHE_NAME = 'nyrb-scouting-v1';
+const CACHE_NAME = 'nyrb-scouting-v3';
 const OFFLINE_URL = '/scouts.html';
 
 // Files to cache for offline use

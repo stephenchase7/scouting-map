@@ -872,6 +872,27 @@ td.editable:hover::after {
 .player-name-cell { cursor: pointer; }
 .player-name-cell:hover { background: #f0f0f0; }
 .player-name-cell .player-name { color: #1976d2; }
+.scouted-badge {
+  display: inline-block;
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  vertical-align: middle;
+  transition: transform 0.15s;
+}
+.scouted-badge:hover { transform: scale(1.2); }
+.scout-cell { text-align: center; padding: 4px !important; }
+.btn-scout-player {
+  padding: 4px 10px;
+  font-size: 11px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-scout-player:hover { background: #059669; }
 .no-goals-data {
   text-align: center;
   padding: 20px;
@@ -1484,6 +1505,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabaseClient = null;
 let supabaseDataLoaded = false;
 
+// Scouted players cache: { playerKey: scoutPlayerId }
+var scoutedPlayerKeys = {};
+
 // Initialize Supabase client
 try {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1608,6 +1632,73 @@ async function loadSupabaseData(targetClubId) {
   }
 }
 
+// Load scouted players with linked_player_key for badge display
+async function loadScoutedPlayers() {
+  if (!supabaseClient) return;
+  try {
+    var { data, error } = await supabaseClient
+      .from('scout_players')
+      .select('id, linked_player_key')
+      .not('linked_player_key', 'is', null);
+
+    if (error) {
+      console.warn('[Supabase] Failed to load scouted players:', error);
+      return;
+    }
+
+    // Build cache: { playerKey: scoutPlayerId }
+    scoutedPlayerKeys = {};
+    if (data) {
+      data.forEach(function(p) {
+        if (p.linked_player_key) {
+          scoutedPlayerKeys[p.linked_player_key] = p.id;
+        }
+      });
+    }
+    console.log('[Supabase] Loaded', Object.keys(scoutedPlayerKeys).length, 'scouted player links');
+  } catch (e) {
+    console.error('[Supabase] Error loading scouted players:', e);
+  }
+}
+
+// Check if a player is scouted
+function isPlayerScouted(playerKey) {
+  return scoutedPlayerKeys.hasOwnProperty(playerKey);
+}
+
+// Get scout player ID for a linked player
+function getScoutPlayerId(playerKey) {
+  return scoutedPlayerKeys[playerKey] || null;
+}
+
+// Generate player key matching scouts.html format
+function generatePlayerKey(clubId, squad, jersey, name) {
+  var safeName = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  return clubId + '_' + squad + '_' + jersey + '_' + safeName;
+}
+
+// Open scouts.html with player pre-filled for scouting
+function scoutPlayer(playerKey, name, jersey, yob, clubName, squad) {
+  var params = new URLSearchParams({
+    prefill: '1',
+    name: name || '',
+    jersey: jersey || '',
+    yob: yob || '',
+    club: clubName || '',
+    squad: squad || '',
+    linkedKey: playerKey
+  });
+  window.location.href = 'scouts.html?' + params.toString();
+}
+
+// Open scouts.html to view existing scouted player
+function openScoutedPlayer(playerKey) {
+  var scoutPlayerId = getScoutPlayerId(playerKey);
+  if (scoutPlayerId) {
+    window.open('scouts.html?player=' + scoutPlayerId, '_blank');
+  }
+}
+
 // ══════════════════════════════════════════════════════════════
 // APP LOGIC
 // ══════════════════════════════════════════════════════════════
@@ -1677,6 +1768,9 @@ async function init() {
     showError('Connection Error', 'Unable to connect to the database. Please check your internet connection and refresh.');
     return;
   }
+
+  // Load scouted players for badge display
+  await loadScoutedPlayers();
 
   currentClub = clubsData[clubId];
 
@@ -2033,6 +2127,7 @@ function renderRoster() {
     '<th>Games</th>' +
     '<th>Goals</th>' +
     '<th>Link</th>' +
+    '<th>Scout</th>' +
     '</tr>' +
     '<tr class="filter-row">' +
     '<th></th>' +
@@ -2048,6 +2143,7 @@ function renderRoster() {
     '<th></th>' +
     '<th></th>' +
     '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
+    '<th></th>' +
     '</tr>' +
     '</thead><tbody>';
 
@@ -2077,14 +2173,29 @@ function renderRoster() {
       club: currentClub ? currentClub.name : '', squad: currentTeam
     }).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
+    // Generate player key for scouting link
+    var playerKey = generatePlayerKey(clubId, currentTeam, p.jersey, p.name);
+    var isScouted = isPlayerScouted(playerKey);
+
+    // Scouted badge or Scout button
+    var scoutBadgeHtml = '';
+    if (isScouted) {
+      scoutBadgeHtml = '<span class="scouted-badge" onclick="event.stopPropagation(); openScoutedPlayer(\'' + playerKey + '\')" title="View scouting report">📋</span>';
+    }
+
+    // Scout button data
+    var clubName = currentClub ? currentClub.name : '';
+    var scoutBtnData = playerKey + '\', \'' + p.name.replace(/'/g, "\\'") + '\', \'' + (p.jersey || '') + '\', \'' + (p.yob || '') + '\', \'' + clubName.replace(/'/g, "\\'") + '\', \'' + currentTeam;
+
     html += '<tr class="player-row" data-player="' + fullPlayerData + '" data-idx="' + idx + '">' +
       '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
-      '<td class="player-name-cell" onclick="openPlayerDetail(this.closest(\'tr\'))"><span class="player-name">' + p.name + '</span></td>' +
+      '<td class="player-name-cell" onclick="openPlayerDetail(this.closest(\'tr\'))"><span class="player-name">' + p.name + '</span>' + scoutBadgeHtml + '</td>' +
       '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
       '<td class="editable' + editedClass('position') + '" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
       '<td class="editable' + editedClass('games') + '" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
       '<td class="editable' + editedClass('goals') + '" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
       '<td class="editable' + editedClass('link') + '" onclick="handleCellClick(' + idx + ', \'link\')">' + linkHtml + '</td>' +
+      '<td class="scout-cell">' + (isScouted ? '' : '<button class="btn-scout-player" onclick="event.stopPropagation(); scoutPlayer(\'' + scoutBtnData + '\')">Scout</button>') + '</td>' +
       '</tr>';
   });
 
