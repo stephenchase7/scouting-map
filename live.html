@@ -1539,9 +1539,21 @@
             }
 
             /* When expanded, show all content with proper padding */
-            .player-info-panel.expanded .session-selector,
+            .player-info-panel.expanded .session-selector {
+                padding: 15px;
+                margin-top: 0;
+            }
             .player-info-panel.expanded .form-group {
                 padding: 0 15px;
+            }
+
+            /* Hide OUT/GK buttons from toolbar when expanded - use form ones instead */
+            .player-info-panel.expanded .mobile-template-buttons {
+                display: none;
+            }
+            .player-info-panel.expanded .mobile-toolbar {
+                justify-content: flex-end;
+                padding: 8px 15px;
             }
             .player-info-panel.expanded .panel-title {
                 padding: 15px 15px 5px;
@@ -1572,9 +1584,13 @@
                 max-height: calc(100vh - 200px);
             }
 
-            /* Hide duplicate marker templates on mobile - we have them in toolbar */
-            .marker-templates {
-                display: none !important;
+            /* Hide marker templates when collapsed - show when expanded */
+            .player-info-panel:not(.expanded) .marker-templates {
+                display: none;
+            }
+            .player-info-panel.expanded .marker-templates {
+                display: block;
+                padding: 0 15px;
             }
 
             /* Fix session selector layout on mobile */
