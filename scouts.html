@@ -2335,8 +2335,9 @@
                 border-bottom: 1px solid #e0e0e0;
             }
             .scout-panel { max-height: 200px; }
-            .player-panel { max-height: 300px; flex: none; }
-            .detail-panel { flex: 1; min-height: 400px; }
+            .player-panel { flex: 1; min-height: 200px; }
+            .player-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+            .detail-panel { flex: 1; min-height: 300px; }
             .scout-list { max-height: 140px; }
         }
 
@@ -2415,7 +2416,8 @@
                 max-height: 160px;
             }
 
-            .player-panel { flex: 1; min-height: 300px; }
+            .player-panel { flex: 1; min-height: 0; }
+            .player-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; max-height: calc(100vh - 350px); }
             .scout-list { max-height: 100px; }
 
             .header-nav a { font-size: 10px; padding: 6px 8px; }

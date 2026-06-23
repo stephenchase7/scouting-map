@@ -1430,45 +1430,126 @@
         /* MOBILE & TABLET RESPONSIVE STYLES */
         /* ══════════════════════════════════════════════════════════════ */
 
-        /* Tablet & Mobile - Bottom toolbar for template buttons */
+        /* Hide mobile toolbar on desktop */
+        .mobile-toolbar { display: none; }
+
+        /* Tablet & Mobile - Expandable bottom sheet */
         @media (max-width: 991px) {
             .main-container {
                 flex-direction: column;
                 height: calc(100vh - 58px);
-                padding-bottom: 70px; /* Space for bottom toolbar */
+                padding-bottom: 70px;
             }
+
+            /* Mobile toolbar - always visible */
+            .mobile-toolbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 15px;
+                background: #12121f;
+                border-bottom: 1px solid #333;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+            .mobile-template-buttons {
+                display: flex;
+                gap: 10px;
+            }
+            .mobile-marker {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 14px;
+                cursor: grab;
+            }
+            .mobile-marker.outfield {
+                background: #3b82f6;
+                color: white;
+            }
+            .mobile-marker.goalkeeper {
+                background: #f59e0b;
+                color: white;
+            }
+            .mobile-expand-btn {
+                background: #cc0000;
+                color: white;
+                border: none;
+                padding: 10px 16px;
+                border-radius: 6px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .expand-icon {
+                transition: transform 0.3s ease;
+            }
+            .player-info-panel.expanded .expand-icon {
+                transform: rotate(180deg);
+            }
+
+            /* Bottom sheet panel */
             .player-info-panel {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
                 width: 100%;
-                height: 70px;
                 max-height: 70px;
-                overflow-x: auto;
-                overflow-y: hidden;
+                overflow: hidden;
                 border-right: none;
                 border-top: 1px solid #333;
                 background: #12121f;
                 z-index: 100;
+                transition: max-height 0.3s ease;
                 display: flex;
-                align-items: center;
+                flex-direction: column;
+            }
+            .player-info-panel.expanded {
+                max-height: 60vh;
+                overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            .template-buttons {
-                flex-direction: row;
-                flex-wrap: nowrap;
-                gap: 8px;
-                padding: 10px 15px;
-                min-width: max-content;
-                margin: 0;
+
+            /* Hide desktop content when collapsed, show when expanded */
+            .player-info-panel:not(.expanded) .session-selector,
+            .player-info-panel:not(.expanded) .panel-title,
+            .player-info-panel:not(.expanded) .form-group,
+            .player-info-panel:not(.expanded) .sync-status,
+            .player-info-panel:not(.expanded) .marker-templates,
+            .player-info-panel:not(.expanded) .start-btn {
+                display: none;
             }
-            .template-button {
-                width: 50px;
-                height: 50px;
-                font-size: 22px;
-                min-width: 50px;
+
+            /* When expanded, show all content with proper padding */
+            .player-info-panel.expanded .session-selector,
+            .player-info-panel.expanded .form-group {
+                padding: 0 15px;
             }
+            .player-info-panel.expanded .panel-title {
+                padding: 15px 15px 5px;
+                color: #fff;
+            }
+            .player-info-panel.expanded .form-label {
+                color: #aaa;
+            }
+            .player-info-panel.expanded .form-input {
+                background: #1e1e2f;
+                border: 1px solid #333;
+                color: #fff;
+            }
+            .player-info-panel.expanded .start-btn {
+                margin: 10px 15px;
+            }
+
             .pitch-panel {
                 flex: 1;
                 width: 100%;
@@ -1492,11 +1573,14 @@
             .header-nav { gap: 8px; }
             .header-nav a { font-size: 11px; padding: 6px 10px; }
 
-            .template-button {
-                width: 46px;
-                height: 46px;
-                font-size: 20px;
-                min-width: 46px;
+            .mobile-marker {
+                width: 44px;
+                height: 44px;
+                font-size: 12px;
+            }
+            .mobile-expand-btn {
+                font-size: 12px;
+                padding: 8px 12px;
             }
 
             .player-card {
@@ -1505,7 +1589,7 @@
                 left: 50%;
                 right: auto;
                 transform: translateX(-50%);
-                bottom: 80px; /* Above bottom toolbar */
+                bottom: 80px;
                 top: auto;
                 max-height: calc(100vh - 160px);
             }
@@ -1544,15 +1628,20 @@
             .main-container {
                 padding-bottom: 60px;
             }
-            .player-info-panel {
-                height: 60px;
+            .player-info-panel:not(.expanded) {
                 max-height: 60px;
             }
-            .template-button {
-                width: 42px;
-                height: 42px;
-                font-size: 18px;
-                min-width: 42px;
+            .mobile-marker {
+                width: 40px;
+                height: 40px;
+                font-size: 11px;
+            }
+            .mobile-expand-btn {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+            .mobile-toolbar {
+                padding: 8px 10px;
             }
 
             .player-card {
@@ -1587,7 +1676,18 @@
 
     <div class="main-container">
         <!-- Left Panel - Match Info -->
-        <div class="player-info-panel">
+        <div class="player-info-panel" id="playerInfoPanel">
+            <!-- Mobile: Collapsed toolbar with expand button -->
+            <div class="mobile-toolbar">
+                <div class="mobile-template-buttons">
+                    <div class="template-marker outfield mobile-marker" data-type="outfield">OUT</div>
+                    <div class="template-marker goalkeeper mobile-marker" data-type="goalkeeper">GK</div>
+                </div>
+                <button class="mobile-expand-btn" onclick="toggleMobilePanel()">
+                    <span class="expand-icon">▲</span> Match Info
+                </button>
+            </div>
+
             <!-- Session Selector - Modern Design -->
             <div class="session-selector">
                 <div class="session-header">
@@ -2945,6 +3045,12 @@
 
             // Update modern session panel
             updateSessionPanel();
+        }
+
+        // Mobile: Toggle bottom sheet panel
+        function toggleMobilePanel() {
+            const panel = document.getElementById('playerInfoPanel');
+            panel.classList.toggle('expanded');
         }
 
         function toggleSessionPanel() {
