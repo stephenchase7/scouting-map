@@ -1849,6 +1849,7 @@ function setLeagueFilter(league) {
 var map = new google.maps.Map(document.getElementById('map'), {
   center: {lat: 40.82, lng: -74.4},
   zoom: 8,
+  gestureHandling: 'greedy',
   zoomControl: false,
   mapTypeControl: false,
   streetViewControl: false,

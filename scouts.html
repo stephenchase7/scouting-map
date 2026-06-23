@@ -2363,6 +2363,19 @@
             .detail-section { padding: 12px; }
             .section-title { font-size: 13px; }
 
+            /* Slide panel full width on mobile */
+            .player-slide-panel {
+                width: 100%;
+                right: -100%;
+            }
+            .player-slide-panel.active { right: 0; }
+
+            /* Table - hide non-essential columns */
+            .player-table .th-video, .player-table .td-video,
+            .player-table .th-reports, .player-table .td-reports { display: none; }
+            .player-table th, .player-table td { padding: 8px 4px; font-size: 12px; }
+            .player-table { font-size: 12px; }
+
             /* Modals */
             .modal { padding: 20px; max-width: 95%; margin: 10px; }
             .modal h2 { font-size: 18px; }
@@ -2379,14 +2392,22 @@
 
         @media (max-width: 480px) {
             .scout-panel { max-height: 180px; }
-            .player-panel { max-height: 250px; }
+            .player-panel { max-height: 250px; flex: 1; min-height: 200px; }
             .scout-list { max-height: 120px; }
 
-            .header-nav a { font-size: 10px; }
+            .header-nav a { font-size: 10px; padding: 6px 8px; }
             .admin-btn { padding: 4px 8px; font-size: 10px; }
 
             .rating-group { flex-direction: column; gap: 8px; }
             .rating-item { width: 100%; }
+
+            /* Hide status column on very small screens */
+            .player-table .th-status, .player-table .td-status { display: none; }
+            .player-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+
+            /* Selection bar full width */
+            .selection-bar { flex-wrap: wrap; gap: 8px; }
+            .selection-bar .btn { font-size: 11px; padding: 6px 10px; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
