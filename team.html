@@ -936,6 +936,17 @@ td.editable:hover::after {
   cursor: pointer;
 }
 .btn-add-match:hover { background: #a00000; }
+.btn-add-player {
+  padding: 6px 12px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-add-player:hover { background: #1557b0; }
 
 .match-stats-list {
   display: flex;
@@ -1270,6 +1281,53 @@ td.editable:hover::after {
       <div class="modal-actions">
         <button class="btn-save-stats" onclick="saveMatchStats()">Save Stats</button>
         <button class="btn-cancel" onclick="closeAddMatchStats()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Player Modal -->
+<div id="add-player-modal" class="player-detail-overlay" onclick="if(event.target===this)closeAddPlayerModal()">
+  <div class="add-match-modal">
+    <div class="player-detail-header">
+      <div class="player-detail-title">
+        <h2>Add Player</h2>
+        <p id="add-player-squad-name">U13 Squad</p>
+      </div>
+      <button class="player-detail-close" onclick="closeAddPlayerModal()">&times;</button>
+    </div>
+    <div class="add-match-body">
+      <div class="form-row">
+        <label>Jersey Number</label>
+        <input type="number" id="newPlayerJersey" min="0" max="99" placeholder="0">
+      </div>
+      <div class="form-row">
+        <label>Player Name</label>
+        <input type="text" id="newPlayerName" placeholder="First Last">
+      </div>
+      <div class="form-row">
+        <label>Year of Birth</label>
+        <input type="number" id="newPlayerYOB" min="2000" max="2020" placeholder="2012">
+      </div>
+      <div class="form-row">
+        <label>Position</label>
+        <select id="newPlayerPosition">
+          <option value="GK">GK</option>
+          <option value="CB">CB</option>
+          <option value="RB">RB</option>
+          <option value="LB">LB</option>
+          <option value="DM">DM</option>
+          <option value="CM" selected>CM</option>
+          <option value="AM">AM</option>
+          <option value="LW">LW</option>
+          <option value="RW">RW</option>
+          <option value="CF">CF</option>
+          <option value="ST">ST</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-save-stats" onclick="saveNewPlayer()">Add Player</button>
+        <button class="btn-cancel" onclick="closeAddPlayerModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -2339,6 +2397,7 @@ function renderRoster() {
     '<span class="player-count">' + playersWithIndex.length + ' of ' + data.players.length + ' players</span>' +
     '</div>' +
     '<div class="roster-controls">' +
+    '<button class="btn-add-player" onclick="openAddPlayerModal()">+ Add Player</button>' +
     '<button id="auth-status" class="auth-status ' + (isAuthenticated ? 'unlocked' : 'locked') + '" onclick="toggleAuth()">' +
     (isAuthenticated ? 'Unlocked' : 'Locked') + '</button>' +
     '</div>' +
@@ -3142,6 +3201,113 @@ function renderMatchStats() {
   });
 
   container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADD PLAYER MODAL
+// ══════════════════════════════════════════════════════════════
+
+function openAddPlayerModal() {
+  document.getElementById('add-player-squad-name').textContent = currentTeam.toUpperCase() + ' Squad';
+
+  // Reset form
+  document.getElementById('newPlayerJersey').value = '';
+  document.getElementById('newPlayerName').value = '';
+  document.getElementById('newPlayerYOB').value = '';
+  document.getElementById('newPlayerPosition').value = 'CM';
+
+  document.getElementById('add-player-modal').classList.add('active');
+}
+
+function closeAddPlayerModal() {
+  document.getElementById('add-player-modal').classList.remove('active');
+}
+
+async function saveNewPlayer() {
+  if (!supabaseClient) {
+    showToast('Error: Not connected to database');
+    return;
+  }
+
+  var name = document.getElementById('newPlayerName').value.trim();
+  if (!name) {
+    showToast('Please enter a player name');
+    return;
+  }
+
+  var jersey = parseInt(document.getElementById('newPlayerJersey').value) || 0;
+  var yob = parseInt(document.getElementById('newPlayerYOB').value) || 2012;
+  var position = document.getElementById('newPlayerPosition').value;
+
+  // Generate player key: jersey_name_yob
+  var playerKey = jersey + '_' + name.toLowerCase().replace(/\s+/g, '_') + '_' + yob;
+
+  // Create new player object
+  var newPlayer = {
+    name: name,
+    jersey: jersey,
+    yob: yob,
+    position: position,
+    games: 0,
+    goals: 0,
+    goalsByMatch: [],
+    positionsByMatch: []
+  };
+
+  try {
+    // Fetch current squad data
+    var { data: existing, error: fetchError } = await supabaseClient
+      .from('squad_data')
+      .select('players')
+      .eq('club_id', clubId)
+      .eq('squad', currentTeam)
+      .eq('season', currentSeason)
+      .single();
+
+    var players = [];
+    if (existing && existing.players) {
+      players = existing.players;
+    }
+
+    // Check for duplicate
+    var duplicate = players.find(function(p) {
+      return p.name.toLowerCase() === name.toLowerCase();
+    });
+    if (duplicate) {
+      showToast('Player already exists: ' + name);
+      return;
+    }
+
+    // Add new player
+    players.push(newPlayer);
+
+    // Upsert squad data
+    var { error } = await supabaseClient
+      .from('squad_data')
+      .upsert({
+        club_id: clubId,
+        squad: currentTeam,
+        season: currentSeason,
+        players: players,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Error adding player:', error);
+      showToast('Error adding player: ' + error.message);
+      return;
+    }
+
+    closeAddPlayerModal();
+    showToast('Player added: ' + name);
+
+    // Reload roster
+    loadTeamData(clubId);
+
+  } catch (err) {
+    console.error('Error saving player:', err);
+    showToast('Error saving player');
+  }
 }
 
 function updatePlayerDetailSeason() {

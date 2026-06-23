@@ -348,6 +348,20 @@ body { font-family:'Segoe UI',Arial,sans-serif; background:#f5f5f5; color:#1a1a2
 .filter-group input[type="checkbox"] {
   margin-right:6px;
 }
+.league-toggle {
+  display:flex; gap:0; background:#f0f0f0; border-radius:6px; padding:3px;
+}
+.league-btn {
+  padding:8px 14px; border:none; background:transparent; font-size:12px;
+  font-weight:600; cursor:pointer; border-radius:4px; color:#666;
+  transition:all 0.15s;
+}
+.league-btn:hover {
+  color:#333;
+}
+.league-btn.active {
+  background:#cc0000; color:#fff;
+}
 .dropdown-checkbox-wrapper {
   position:relative;
 }
@@ -860,6 +874,14 @@ var playersData = {};
         <span class="clear-all-btn" onclick="clearAllFilters()">Clear All</span>
       </div>
       <div class="filter-row">
+        <div class="filter-group">
+          <label>League</label>
+          <div class="league-toggle">
+            <button class="league-btn active" data-league="all" onclick="setLeagueFilter('all')">All</button>
+            <button class="league-btn" data-league="mls" onclick="setLeagueFilter('mls')">MLS NEXT</button>
+            <button class="league-btn" data-league="ecnl" onclick="setLeagueFilter('ecnl')">ECNL</button>
+          </div>
+        </div>
         <div class="filter-group">
           <label>Division</label>
           <div class="dropdown-checkbox-wrapper">
@@ -1813,6 +1835,15 @@ function getClubDivisionsByAge(clubName) {
 var filters = {
   division: ''
 };
+var currentLeagueFilter = 'all';
+
+function setLeagueFilter(league) {
+  currentLeagueFilter = league;
+  document.querySelectorAll('.league-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.league === league);
+  });
+  applyFilters();
+}
 
 // ── MAP INIT (Google Maps) ──
 var map = new google.maps.Map(document.getElementById('map'), {
@@ -2633,6 +2664,17 @@ function extractDivisionsByAge() {
 // ── FILTER MATCHING ──
 function matchesFilters(club) {
   var clubName = club.name;
+
+  // League filter check (MLS NEXT = HD/AD, ECNL = ECNL)
+  if (currentLeagueFilter !== 'all') {
+    var clubLeague = club.league || '';
+    if (currentLeagueFilter === 'mls' && clubLeague !== 'HD' && clubLeague !== 'AD') {
+      return false;
+    }
+    if (currentLeagueFilter === 'ecnl' && clubLeague !== 'ECNL') {
+      return false;
+    }
+  }
 
   // Custom clubs (added via "Add Club" button) always show - they're not in CSV data
   if (club.isCustom) {

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Static web application for MLS NEXT youth soccer scouting. Displays club locations on an interactive map, team rosters with stats, scout watchlists, and AI-powered MLS rules search. No build process - all vanilla HTML/CSS/JS.
+Static web application for MLS NEXT and ECNL youth soccer scouting. Displays club locations on an interactive map, team rosters with stats, scout watchlists, and AI-powered MLS rules search. No build process - all vanilla HTML/CSS/JS.
 
 ## Key Files
 
@@ -73,8 +73,11 @@ Password (SHA-256 hashed, not stored in plaintext) unlocks:
 ## Architecture Notes
 
 **index.html features:**
-- Leaflet.js map centered on NYRB HQ (40.8167, -74.4028)
+- Google Maps centered on NYRB HQ (40.8167, -74.4028)
 - Club markers with custom icons (logos or initials)
+- **League Toggle Filter** - [All] [MLS NEXT] [ECNL] buttons
+  - MLS NEXT = HD (Homegrown Division) + AD (Academy Division)
+  - ECNL = Elite Clubs National League
 - **Catchment Areas** - 3 scouting zones:
   - Primary: 75-mile radius circle from NYRB
   - Regional: East Coast states (DC, MD, VA, PA, CT, MA, NH, RI, NJ, NY)
@@ -88,6 +91,13 @@ Password (SHA-256 hashed, not stored in plaintext) unlocks:
 **team.html features:**
 - Age group tabs (U13-U19)
 - Filterable/sortable player tables
+- Season selector dropdown (2024-2025, 2025-2026, 2026-2027)
+- **Per-Match Stats System:**
+  - New columns: A (Assists), KP (Key Passes), A1v1, D1v1, SV (Saves)
+  - Player detail modal with "+ Add Match" button
+  - Edit/delete buttons on each match stat entry
+  - Stats aggregate from `player_match_stats` Supabase table
+- **Add Player button** - Manual roster entry for ECNL teams (no Kitman scraping)
 - Date range filtering for goals
 - "Add to Watchlist" button links to scouts.html
 - Global compare cart button
@@ -149,10 +159,11 @@ Live URLs:
 
 Data loads from Supabase first, falls back to embedded data:
 - Project: `pjorqdzlzgwqpivoibyx.supabase.co`
-- Tables: `clubs`, `squad_data`, `scout_players`, `scout_reports`, `live_sessions`
+- Tables: `clubs`, `squad_data`, `scout_players`, `scout_reports`, `live_sessions`, `player_match_stats`
 - RLS enabled on all tables with public read/write policies
 - Add Club and Delete Club write directly to Supabase
 - Upload player data via `import_to_scouting.py --upload-db` (parent directory)
+- Import ECNL clubs via `import_ecnl_clubs.py` (parent directory)
 
 ### Multi-Season Support (Planned)
 
@@ -224,11 +235,28 @@ team.html (loads by ?club=CLUB_ID)
 See `tasks/roadmap.md` for full implementation plan.
 
 **Completed (June 2026):**
-- Security & code cleanup (XSS fixes, RLS policies, dead code removal)
-- scouts.html UI redesign (checkboxes, inline status, compact icons)
-- team.html → scouts.html flow (Scout button with prefill)
+- Phase 0: Security & code cleanup (XSS fixes, RLS policies, dead code removal)
+- Phase 1-4: Supabase schema, scouts.html UI redesign, team→scouts flow
+- Phase 5: ScoutReport AI integration (voice input, trait buttons, Claude Haiku)
+- Phase 6: Multi-season support (season dropdown, filtered queries)
+- Phase 7: Per-match stats system (player_match_stats table, edit/delete)
+- Phase 9: ECNL teams to map (league toggle, import script, Add Player)
 
 **Next Up:**
-- Phase 5: 📋 badge display on team.html for scouted players
-- Phase 6: Next season stats (Assists, Key Passes, Defensive Duels, Saves)
-- Phase 7: ScoutReport AI integration
+- Phase 8: Multi-season history (compare seasons side-by-side)
+- Phase 10: Authentication & Multi-Tenant SaaS
+
+## ECNL Club Import
+
+Import ECNL clubs from CSV:
+```bash
+python3 import_ecnl_clubs.py ecnl_clubs.csv
+```
+
+**CSV format:**
+```csv
+division,team_name,club_name,address,logo_filename
+ECNL Northeast,PDA U13,Players Development Academy,"123 Main St, NJ",pda.png
+```
+
+**Logo files:** Place in `scouting-map/ECNL Logos/`

@@ -121,16 +121,23 @@ UI shows both seasons in dropdown
 
 ---
 
-### Phase 9: ECNL Teams to Map
+### Phase 9: ECNL Teams to Map (June 22, 2026)
 
 **Overview:** Add ECNL (Elite Clubs National League) clubs to the scouting map alongside MLS NEXT clubs.
 
-**Tasks:**
-- [ ] Add ECNL clubs to index.html clubs array
-- [ ] Collect ECNL club logos → `ECNL Logos/` folder
-- [ ] Add "ECNL" option to division/pathway filter
-- [ ] Different marker color or icon for ECNL vs MLS NEXT
-- [ ] Update CSV validation for ECNL club names
+**Completed:**
+- [x] League toggle filter [All] [MLS NEXT] [ECNL] in index.html
+- [x] `setLeagueFilter()` function and `matchesFilters()` league check
+- [x] CSS for toggle buttons (red active state)
+- [x] Created `ECNL Logos/` folder
+- [x] Created `import_ecnl_clubs.py` bulk CSV import script
+- [x] Add Player button and modal in team.html (manual roster entry)
+- [x] `saveNewPlayer()` upserts to Supabase squad_data
+
+**Pending (user provides):**
+- [ ] ECNL clubs CSV file with division, club_name, address, logo_filename
+- [ ] ECNL club logo files → `ECNL Logos/` folder
+- [ ] Run `python3 import_ecnl_clubs.py ecnl_clubs.csv`
 
 ---
 
