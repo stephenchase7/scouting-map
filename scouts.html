@@ -2391,9 +2391,32 @@
         }
 
         @media (max-width: 480px) {
-            .scout-panel { max-height: 180px; }
-            .player-panel { max-height: 250px; flex: 1; min-height: 200px; }
-            .scout-list { max-height: 120px; }
+            /* Collapsible scout panel */
+            .scout-panel {
+                max-height: none;
+                transition: max-height 0.3s ease;
+            }
+            .scout-panel .panel-header {
+                cursor: pointer;
+            }
+            .scout-panel .collapse-arrow {
+                display: inline-block;
+                transition: transform 0.3s ease;
+                font-size: 10px;
+                margin-left: 4px;
+            }
+            .scout-panel.collapsed .collapse-arrow {
+                transform: rotate(-90deg);
+            }
+            .scout-panel.collapsed .scout-list {
+                display: none;
+            }
+            .scout-panel:not(.collapsed) {
+                max-height: 160px;
+            }
+
+            .player-panel { flex: 1; min-height: 300px; }
+            .scout-list { max-height: 100px; }
 
             .header-nav a { font-size: 10px; padding: 6px 8px; }
             .admin-btn { padding: 4px 8px; font-size: 10px; }
@@ -2408,6 +2431,12 @@
             /* Selection bar full width */
             .selection-bar { flex-wrap: wrap; gap: 8px; }
             .selection-bar .btn { font-size: 11px; padding: 6px 10px; }
+        }
+
+        /* Hide collapse arrow on desktop */
+        .collapse-arrow { display: none; }
+        @media (max-width: 480px) {
+            .collapse-arrow { display: inline-block; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2433,10 +2462,10 @@
 
     <div class="main-container">
         <!-- Scout List Panel -->
-        <div class="scout-panel">
-            <div class="panel-header">
-                <span class="panel-title">Scouts</span>
-                <button class="btn-add" onclick="openAddScoutModal()">+ Add Scout</button>
+        <div class="scout-panel" id="scoutPanel">
+            <div class="panel-header" onclick="toggleScoutPanel()">
+                <span class="panel-title">Scouts <span class="collapse-arrow">▼</span></span>
+                <button class="btn-add" onclick="event.stopPropagation(); openAddScoutModal()">+ Add Scout</button>
             </div>
             <div class="scout-list" id="scoutList">
                 <div class="empty-state">
@@ -4105,6 +4134,14 @@
                 }
             });
             document.getElementById(tab + '-tab').style.display = 'block';
+        }
+
+        // Mobile: Toggle scout panel collapse
+        function toggleScoutPanel() {
+            if (window.innerWidth <= 480) {
+                var panel = document.getElementById('scoutPanel');
+                panel.classList.toggle('collapsed');
+            }
         }
 
         // Modal functions
