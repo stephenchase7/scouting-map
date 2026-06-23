@@ -1446,20 +1446,19 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 10px 15px;
-                background: #12121f;
-                border-bottom: 1px solid #333;
+                padding: 6px 12px;
+                background: transparent;
                 position: sticky;
                 top: 0;
                 z-index: 10;
             }
             .mobile-template-buttons {
                 display: flex;
-                gap: 10px;
+                gap: 8px;
             }
             .mobile-marker {
-                width: 50px;
-                height: 50px;
+                width: 42px;
+                height: 42px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -1499,16 +1498,16 @@
             /* Bottom sheet panel */
             .player-info-panel {
                 position: fixed;
-                bottom: calc(55px + env(safe-area-inset-bottom, 0px));
+                bottom: calc(45px + env(safe-area-inset-bottom, 0px));
                 left: 0;
                 right: 0;
                 width: 100%;
-                max-height: 80px;
+                max-height: 60px;
                 overflow: hidden;
                 border-right: none;
                 border-top: 1px solid #333;
                 border-radius: 12px 12px 0 0;
-                background: #12121f;
+                background: rgba(18, 18, 31, 0.85);
                 z-index: 100;
                 transition: max-height 0.3s ease;
                 display: flex;
