@@ -1661,9 +1661,49 @@
                 padding: 10px;
             }
         }
+
+        /* Pull-to-Refresh */
+        .pull-indicator {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background: #c8102e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 0 0 12px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 10000;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .pull-indicator.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+        .pull-indicator .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Pull-to-Refresh Indicator -->
+    <div class="pull-indicator" id="pullIndicator">
+        <div class="spinner"></div>
+        <span>Refreshing...</span>
+    </div>
+
     <div class="header">
         <h1>Live Scouting</h1>
         <div class="header-nav">
@@ -1939,6 +1979,45 @@
             // Listen for online/offline
             window.addEventListener('online', () => { isOnline = true; updateSyncStatus(); syncPendingSessions(); });
             window.addEventListener('offline', () => { isOnline = false; updateSyncStatus(); });
+
+            // Pull-to-Refresh (mobile gesture)
+            var pullStartY = 0;
+            var pullCurrentY = 0;
+            var isPulling = false;
+            var pullThreshold = 80;
+            var pullIndicator = document.getElementById('pullIndicator');
+
+            document.addEventListener('touchstart', function(e) {
+                if (window.scrollY === 0 && e.touches.length === 1) {
+                    pullStartY = e.touches[0].clientY;
+                    isPulling = true;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isPulling) return;
+                pullCurrentY = e.touches[0].clientY;
+                var pullDistance = pullCurrentY - pullStartY;
+                if (pullDistance > 30 && window.scrollY === 0) {
+                    pullIndicator.classList.add('visible');
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', async function() {
+                if (!isPulling) return;
+                var pullDistance = pullCurrentY - pullStartY;
+                if (pullDistance > pullThreshold && window.scrollY === 0) {
+                    // Trigger refresh
+                    pullIndicator.querySelector('span').textContent = 'Refreshing...';
+                    await loadSessions();
+                    updateSyncStatus();
+                    showToast('Sessions refreshed');
+                }
+                pullIndicator.classList.remove('visible');
+                isPulling = false;
+                pullStartY = 0;
+                pullCurrentY = 0;
+            });
 
             // Auto-refresh sessions when tab becomes visible
             document.addEventListener('visibilitychange', async function() {
