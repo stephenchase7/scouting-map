@@ -1499,14 +1499,15 @@
             /* Bottom sheet panel */
             .player-info-panel {
                 position: fixed;
-                bottom: 0;
+                bottom: calc(20px + env(safe-area-inset-bottom, 0px));
                 left: 0;
                 right: 0;
                 width: 100%;
-                max-height: 70px;
+                max-height: 80px;
                 overflow: hidden;
                 border-right: none;
                 border-top: 1px solid #333;
+                border-radius: 12px 12px 0 0;
                 background: #12121f;
                 z-index: 100;
                 transition: max-height 0.3s ease;
@@ -1624,7 +1625,7 @@
             .header-nav a { font-size: 11px; padding: 6px 10px; }
 
             .soccer-pitch {
-                max-height: calc(100vh - 280px);
+                max-height: calc(100vh - 310px);
             }
 
             .mobile-marker {
