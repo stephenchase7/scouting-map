@@ -1514,9 +1514,18 @@
                 flex-direction: column;
             }
             .player-info-panel.expanded {
-                max-height: 60vh;
+                max-height: 55vh;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
+            }
+
+            /* Mobile toolbar stays fixed at top of panel */
+            .player-info-panel.expanded .mobile-toolbar {
+                position: sticky;
+                top: 0;
+                background: #12121f;
+                z-index: 10;
+                border-bottom: 1px solid #333;
             }
 
             /* Hide desktop content when collapsed, show when expanded */
@@ -1562,6 +1571,31 @@
             .soccer-pitch {
                 max-height: calc(100vh - 200px);
             }
+
+            /* Hide duplicate marker templates on mobile - we have them in toolbar */
+            .marker-templates {
+                display: none !important;
+            }
+
+            /* Fix session selector layout on mobile */
+            .session-selector {
+                margin-bottom: 10px;
+            }
+            .session-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .session-trigger {
+                width: 100%;
+            }
+            .session-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .session-action-btn {
+                width: 44px;
+                height: 44px;
+            }
         }
 
         /* Mobile */
@@ -1574,7 +1608,7 @@
             .header-nav a { font-size: 11px; padding: 6px 10px; }
 
             .soccer-pitch {
-                max-height: calc(100vh - 260px);
+                max-height: calc(100vh - 280px);
             }
 
             .mobile-marker {
