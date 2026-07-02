@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYRB Scout Database — Desktop</title>
+<style>
+  :root{
+    --red:#c8102e; --navy:#10162b; --navy2:#1b2440; --ink:#1b1d24; --muted:#6b7280;
+    --line:#e4e6ea; --bg:#f4f5f7; --card:#fff;
+    --database:#8a8f99; --watchlist:#e0a500; --priority:#3f9c2f; --trial:#d98a1f; --squad:#c8102e; --passed:#b9bcc4;
+    --now:#2f7fd6; --ceiling:#1d9e75; --press:#e0762b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:14px;}
+  .top{background:var(--red); color:#fff; height:54px; display:flex; align-items:center; gap:12px; padding:0 20px;}
+  .crest{width:32px;height:32px;border-radius:7px;background:#fff;color:var(--red);font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:-.5px;}
+  .top h1{font-size:16px;margin:0;font-weight:700;}
+  .top .sub{font-size:11px;opacity:.85;}
+  .top .right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12px;opacity:.9;}
+  .top .right .on{display:flex;align-items:center;gap:5px;}
+  .top .right .on i{width:8px;height:8px;border-radius:50%;background:#7CFC9A;display:inline-block;}
+
+  .body{display:flex; min-height:calc(100vh - 54px);}
+  aside{width:210px; background:var(--navy); color:#cdd2e0; padding:16px 0; flex:none;}
+  aside .nav button{width:100%;text-align:left;background:none;border:none;color:#cdd2e0;padding:11px 20px;font-size:13.5px;cursor:pointer;display:flex;gap:10px;align-items:center;}
+  aside .nav button:hover{background:var(--navy2);color:#fff;}
+  aside .nav button.on{background:var(--navy2);color:#fff;border-left:3px solid var(--red);padding-left:17px;font-weight:600;}
+  aside .grp{font-size:10.5px;letter-spacing:.6px;color:#6f7798;margin:18px 20px 8px;text-transform:uppercase;}
+  aside .fil{padding:0 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  aside .fchip{font-size:11.5px;padding:5px 10px;border-radius:14px;background:var(--navy2);color:#aeb4c9;cursor:pointer;border:1px solid transparent;}
+  aside .fchip.active{background:#fff;color:var(--navy);font-weight:600;}
+
+  main{flex:1; padding:22px 26px; overflow:auto;}
+  .scr{display:none;} .scr.on{display:block;}
+  .h2{font-size:18px;font-weight:700;margin:0 0 3px;}
+  .sub2{font-size:12.5px;color:var(--muted);margin:0 0 16px;}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  thead th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:left;padding:10px 12px;background:#fafbfc;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;}
+  thead th .ar{opacity:.5;font-size:9px;}
+  tr.filters th{padding:6px 10px;background:#fff;border-bottom:1px solid var(--line);cursor:default;}
+  tr.filters input,tr.filters select{width:100%;border:1px solid var(--line);border-radius:6px;padding:5px 6px;font-size:11px;background:#fff;color:var(--ink);font-family:inherit;}
+  tbody td{padding:11px 12px;border-bottom:1px solid #f0f1f4;font-size:13px;}
+  tbody tr.row{cursor:pointer;} tbody tr.row:hover{background:#f7f9fb;}
+  tbody tr.row:last-child td{border-bottom:none;}
+  .stat{display:inline-flex;align-items:center;gap:7px;font-size:12px;white-space:nowrap;}
+  .stat .d{width:9px;height:9px;border-radius:50%;}
+  .nm{font-weight:600;}
+  .sc{font-weight:700;} .now-c{color:var(--now);} .ceil-c{color:var(--ceiling);} .press-c{color:var(--press);}
+  .fit{font-weight:700;font-size:13px;}
+  .ptag{font-size:11px;padding:2px 9px;border-radius:12px;background:#eef0f3;color:#444;white-space:nowrap;}
+  .ptag.project{background:#e1f5ee;color:#0f6e56;} .ptag.top{background:#eaf3de;color:#3b6d11;} .ptag.depth{background:#faeeda;color:#854f0b;}
+  .bolt{color:var(--press);font-size:11px;}
+  .wlist{font-size:11px;color:var(--muted);}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;}
+  .search{flex:1;max-width:300px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;background:#fff;}
+  .cnt{font-size:12px;color:var(--muted);}
+  .clr{font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;}
+
+  .pf-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;}
+  .pf-name{font-size:22px;font-weight:700;}
+  .pf-meta{font-size:13px;color:var(--muted);margin-top:3px;}
+  .badge{font-size:11.5px;padding:4px 11px;border-radius:14px;color:#fff;font-weight:600;}
+  .scores{display:flex;gap:8px;margin-top:16px;}
+  .score{flex:1;background:var(--bg);border-radius:11px;padding:10px 6px;text-align:center;}
+  .score .lab{font-size:9.5px;color:var(--muted);letter-spacing:.4px;}
+  .score .val{font-size:24px;font-weight:700;}
+  .score.now .val{color:var(--now);} .score.ceiling .val{color:var(--ceiling);} .score.press .val{color:var(--press);}
+  .fitbar{display:flex;justify-content:space-between;align-items:center;background:var(--navy);color:#fff;border-radius:11px;padding:10px 14px;margin-top:10px;}
+  .fitbar .l{font-size:11px;opacity:.8;letter-spacing:.4px;} .fitbar .v{font-size:20px;font-weight:700;}
+  .fitbar .p{font-size:11px;}
+  .sec-t{font-size:11px;letter-spacing:.6px;color:var(--muted);font-weight:700;margin:0 0 10px;text-transform:uppercase;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .kpi-col h4{font-size:12px;margin:0 0 8px;font-weight:700;}
+  .kpi-col.with h4{color:var(--now);} .kpi-col.against h4{color:#b4561a;}
+  .kpi{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px dashed #eef0f3;}
+  .kpi span:first-child{color:var(--muted);}
+  .kpi .bolt{margin-right:3px;}
+  .ed{cursor:pointer;border-bottom:1px dashed var(--muted);} .ed:hover{color:var(--red);border-color:var(--red);}
+  .weapons{display:flex;flex-wrap:wrap;gap:7px;}
+  .wpn{font-size:11.5px;padding:5px 11px;border-radius:14px;background:#fff3d6;color:#7a4d00;border:1px solid #f0d99a;}
+  .hist .h{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #f0f1f4;font-size:12.5px;}
+  .hist .h .d{width:60px;color:var(--muted);}
+  .up{color:var(--ceiling);}
+  .btn{padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;border:none;cursor:pointer;}
+  .btn.red{background:var(--red);color:#fff;} .btn.navy{background:var(--navy);color:#fff;} .btn.ghost{background:#fff;border:1px solid var(--line);}
+  .backlink{background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0;margin-bottom:12px;}
+  .stsel{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;}
+  .stsel .opt{padding:7px 13px;border:1px solid var(--line);border-radius:9px;font-size:12px;cursor:pointer;background:#fff;}
+
+  .depth-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;}
+  .dcol{min-width:190px;flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .dcol .pl{font-size:12px;font-weight:700;color:var(--navy);letter-spacing:.5px;margin-bottom:10px;text-align:center;border-bottom:1px solid var(--line);padding-bottom:8px;}
+  .dp-card{border:1px solid var(--line);border-left-width:3px;border-radius:9px;padding:8px 10px;margin-bottom:7px;}
+  .dp-card .n{font-size:13px;font-weight:600;} .dp-card .m{font-size:11px;color:var(--muted);}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin:0 0 16px;}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;}
+  .pitch{position:relative;width:100%;max-width:780px;height:660px;margin:0 auto;background:#2f8a4e;border-radius:12px;overflow:hidden;border:2px solid rgba(255,255,255,.25);}
+  .pitch .pline{position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.22);}
+  .pitch .pcircle{position:absolute;left:50%;top:50%;width:120px;height:120px;border:2px solid rgba(255,255,255,.22);border-radius:50%;transform:translate(-50%,-50%);}
+  .pitch .pbox{position:absolute;left:50%;transform:translateX(-50%);width:210px;height:66px;border:2px solid rgba(255,255,255,.22);}
+  .pitch .pbox.top{top:0;border-top:none;} .pitch .pbox.bot{bottom:0;border-bottom:none;}
+  .ppos{position:absolute;transform:translate(-50%,-50%);width:152px;z-index:2;}
+  .ppos-h{font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:4px 8px;border-radius:6px 6px 0 0;text-align:center;letter-spacing:.5px;cursor:move;}
+  .ppos-h:hover{background:rgba(0,0,0,.68);}
+  .ppos-list{background:rgba(255,255,255,.96);border-radius:0 0 6px 6px;padding:3px;}
+  .ppl{font-size:11px;padding:4px 7px;border-radius:4px;margin:2px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:#1b1d24;}
+  .ppl .ppl-age{color:#6b7280;font-size:10px;} .ppl:hover{filter:brightness(.96);}
+  .ppl-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ppl-r{display:inline-flex;align-items:center;gap:6px;flex:none;}
+  .ord-btns{display:inline-flex;flex-direction:column;line-height:.85;}
+  .ord-btns span{cursor:pointer;font-size:8px;color:#9aa0a6;}
+  .ord-btns span:hover{color:#c8102e;}
+  .ppl.empty{justify-content:center;color:#b0b0b0;cursor:default;font-style:italic;}
+  .ppl[draggable]{user-select:none;}
+  .pmark{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+  .pmark line,.pmark rect,.pmark circle,.pmark path{fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.2;vector-effect:non-scaling-stroke;}
+  .pmark .spot{fill:rgba(255,255,255,.55);stroke:none;}
+  #depthAge .fchip{display:inline-block;font-size:11.5px;padding:5px 11px;border-radius:14px;background:#eef0f3;color:#444;cursor:pointer;border:1px solid transparent;margin:0;}
+  #depthAge .fchip.active{background:var(--navy);color:#fff;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;}
+  .modal{background:#fff;border-radius:14px;padding:20px;width:520px;max-width:92vw;max-height:90vh;overflow:auto;}
+  .mform{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .mform label{font-size:11px;color:var(--muted);font-weight:700;display:flex;flex-direction:column;gap:4px;text-transform:uppercase;letter-spacing:.3px;}
+  .mform input,.mform select{font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;text-transform:none;letter-spacing:normal;}
+
+  .cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+  label.fl{font-size:11px;color:var(--muted);font-weight:700;display:block;margin:14px 0 7px;letter-spacing:.4px;text-transform:uppercase;}
+  select,textarea,input.t{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:13px;background:#fff;font-family:inherit;}
+  .sel{display:flex;gap:7px;}
+  .sel .opt{flex:1;text-align:center;padding:10px 0;border:1px solid var(--line);border-radius:9px;font-size:14px;cursor:pointer;background:#fff;}
+  .sel .opt.sel-n{background:var(--now);color:#fff;border-color:var(--now);}
+  .sel .opt.sel-c{background:var(--ceiling);color:#fff;border-color:var(--ceiling);}
+  .sel .opt.sel-p{background:var(--press);color:#fff;border-color:var(--press);}
+  .tally{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed #eef0f3;font-size:13px;}
+  .step{display:flex;align-items:center;gap:10px;}
+  .step button{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:#fff;font-size:16px;cursor:pointer;}
+  .step .v{min-width:18px;text-align:center;font-weight:700;}
+  .wsel{font-size:12px;padding:6px 12px;border-radius:14px;border:1px solid var(--line);background:#fff;cursor:pointer;}
+  .wsel.on{background:#fff3d6;color:#7a4d00;border-color:#f0d99a;}
+  .toast{position:fixed;right:26px;bottom:26px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="crest">RB</div>
+  <div><h1>Scout Database</h1><div class="sub">NY Red Bulls Academy · scouting hub</div></div>
+  <div class="right"><span class="on"><i></i>Online · synced</span><span>Stephen Chase</span></div>
+</div>
+<div class="body">
+  <aside>
+    <div class="nav">
+      <button class="on" id="nav-database" onclick="go('database')">Database</button>
+      <button id="nav-depth" onclick="go('depth')">Depth chart</button>
+      <button id="nav-capture" onclick="go('capture')">Live capture</button>
+    </div>
+    <div class="grp">Quick · age group</div>
+    <div class="fil" id="ageFilters"></div>
+    <div class="grp">Quick · status</div>
+    <div class="fil" id="statusFilters"></div>
+    <div class="grp">Quick · tier</div>
+    <div class="fil" id="tierFilters"></div>
+  </aside>
+
+  <main>
+    <section class="scr on" id="database">
+      <div class="h2">All players</div>
+      <div class="sub2">Coverage of the catchment. Use the search, the quick filters, or the per-column filters under each header.</div>
+      <div class="toolbar">
+        <input class="search" id="q" placeholder="Search name or club…" oninput="render()">
+        <span class="cnt" id="cnt"></span>
+        <button class="clr" onclick="clearFilters()">clear filters</button>
+        <button class="btn ghost" style="padding:8px 14px;margin-left:auto" onclick="openImport()">Import from capture</button>
+        <button class="btn red" style="padding:8px 14px" onclick="openAdd()">+ Add player</button>
+      </div>
+      <table>
+        <thead>
+          <tr id="headRow"></tr>
+          <tr class="filters" id="filterRow"></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+
+    <section class="scr" id="profile"></section>
+
+    <section class="scr" id="depth">
+      <div class="h2">Shadow / depth chart</div>
+      <div class="sub2">Auto-built from ratings — best players stacked by position against the squad starter (●). Not a status you set.</div>
+      <div class="fil" id="depthAge" style="margin-bottom:14px"></div>
+      <div class="legend">
+        <span><i style="background:var(--squad)"></i>NYRB squad</span>
+        <span><i style="background:var(--priority)"></i>priority</span>
+        <span><i style="background:var(--watchlist)"></i>watchlist</span>
+        <span><i style="background:var(--database)"></i>database</span>
+      </div>
+      <div class="pitch" id="pitch"></div>
+    </section>
+
+    <section class="scr" id="capture">
+      <div class="h2">Live capture <span style="font-size:12px;color:var(--muted);font-weight:400">· ScoutGenerator, embedded in the hub</span></div>
+      <div class="sub2">The exact ScoutGenerator build, hosted right here. Reports sync to the same database.</div>
+      <div style="margin-bottom:10px"><a class="btn navy" href="https://scoutgenerator-beta.vercel.app/" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Open ScoutGenerator in new tab</a></div>
+      <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff">
+        <iframe src="https://scoutgenerator-beta.vercel.app/" style="width:100%;height:780px;border:0;display:block" title="ScoutGenerator"></iframe>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px">If the frame is blank, ScoutGenerator is blocking embedding — use the button above. In production, hosting it on the same domain makes the embed reliable.</p>
+    </section>
+  </main>
+</div>
+<div id="modal" class="modal-bg" style="display:none">
+  <div class="modal">
+    <h3 id="modalTitle" style="margin:0 0 14px;font-size:16px;font-weight:700">Add player</h3>
+    <div class="mform">
+      <label>Name<input id="m-name"></label>
+      <label>Club<input id="m-club"></label>
+      <label>Position<select id="m-pos" onchange="captureModalKpi();renderModalExtras()"><option>GK</option><option>CB</option><option>LB</option><option>RB</option><option>DM</option><option>CM</option><option>AM</option><option>LW</option><option>RW</option><option>ST</option></select></label>
+      <label>Age group<select id="m-age"><option>U13</option><option>U14</option><option>U15</option><option>U16</option><option>U17</option></select></label>
+      <label>Catchment tier<select id="m-tier"><option>1</option><option>2</option><option>3</option></select></label>
+      <label>Foot<select id="m-foot"><option>R</option><option>L</option><option>Both</option></select></label>
+      <label>Status<select id="m-status"><option value="database">Database</option><option value="watchlist">Watchlist</option><option value="priority">Priority</option><option value="squad">NYRB squad</option></select></label>
+      <label>Now<select id="m-now"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+      <label>Ceiling<select id="m-ceiling"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+      <label>Pressing<select id="m-press"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+    </div>
+    <div style="margin-top:16px"><p class="sec-t">Position KPIs — <span id="m-poslabel">CM</span></p><div class="kpi-grid" id="m-kpigrid"></div></div>
+    <div style="margin-top:14px"><p class="sec-t">Special weapons</p><div class="weapons" id="m-weapons"></div></div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn red" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+<div id="importModal" class="modal-bg" style="display:none">
+  <div class="modal" style="width:460px">
+    <h3 style="margin:0 0 6px;font-size:16px;font-weight:700">Import from live capture</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 14px">Recent ScoutGenerator reports. Import adds them to the database as watchlist.</p>
+    <div id="importList"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn ghost" onclick="closeImport()">Close</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STATUS={database:{label:'Database',c:'var(--database)'},watchlist:{label:'Watchlist',c:'var(--watchlist)'},priority:{label:'Priority',c:'var(--priority)'},squad:{label:'NYRB squad',c:'var(--squad)'}};
+const WEAPONS=['1v1 Attacker','Press Resistant','Playmaker','Finisher','Engine','Game Reader','Aerial','Speed','Ball Carrier','1v1 Defender'];
+// position KPI map (⚡ = pressing-related), shared by live capture + profile
+// each KPI = [label, weight] — placeholder RB weights, swap in ScoutGenerator's real values
+const POSKPI={
+  GK:{with:[['Build-up distribution',1.5],['Long distribution / switch',1.2],['Composure on the ball',1.3],['Decision-making in build-up',1.4]],against:[['Shot stopping',1.5],['Sweeping / starting position',1.4],['Cross claiming',1.2],['1v1 saves',1.3]]},
+  CB:{with:[['Line-breaking pass',1.5],['Carrying out of the back',1.2],['Range / switch of play',1.2],['Composure on the ball',1.3]],against:[['1v1 defending',1.6],['Aerial duels',1.4],['Defensive positioning',1.4],['Recovery & reading',1.4]]},
+  FB:{with:[['Attacking runs',1.3],['Crossing / final ball',1.4],['Carrying ball',1.2],['Combination play',1.1]],against:[['1v1 defending',1.6],['Defensive positioning',1.3],['Recovery runs',1.4],['Aerial duels',1.0]]},
+  DM:{with:[['Press resistance',1.6],['Passing range',1.4],['Ball progression',1.4],['Receiving under pressure',1.5]],against:[['Ball-winning',1.6],['Defensive positioning',1.5],['Tackling',1.3],['Interceptions',1.4]]},
+  CM:{with:[['Press resistance',1.5],['Passing range',1.3],['Final third entries',1.4],['Dribbling / carrying',1.2]],against:[['Ball-winning',1.5],['Defensive work rate',1.5],['Positioning',1.3],['Tracking runners',1.3]]},
+  AM:{with:[['Receiving between lines',1.5],['Key pass / final ball',1.6],['1v1 / dribble',1.3],['Shot & finish',1.4]],against:[['Tracking back',1.2],['Counterpressing',1.5],['Recovery',1.2],['Cutting passing lanes',1.4]]},
+  W:{with:[['1v1 dribbling',1.6],['Final ball / crossing',1.5],['Finishing',1.3],['Movement off ball',1.2]],against:[['Defensive tracking',1.3],['Defensive work rate',1.3],['Recovery runs',1.3],['1v1 defending',1.2]]},
+  ST:{with:[['Finishing',1.7],['Movement / runs',1.4],['Link-up play',1.2],['1v1 / dribbling',1.2]],against:[['Defensive work rate',1.3],['Counterpressing',1.5],['Aerial duels',1.1],['Cutting passing lanes',1.4]]}
+};
+function posKey(p){return ({LB:'FB',RB:'FB',LW:'W',RW:'W',CF:'ST'})[p]||(POSKPI[p]?p:'CM');}
+function posKpi(p){return POSKPI[posKey(p)];}
+
+let players=[
+ {id:1,name:'Jordan Romero',club:'NYRB',pos:'CM',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:4,press:5,weapons:['Playmaker','Engine'],reports:[{d:'Jun 28',e:'vs Met Oval',c:4},{d:'May 03',e:'vs Oakwood',c:4}]},
+ {id:2,name:'Daniel Osei',club:'Met Oval',pos:'CB',age:'U15',foot:'R',tier:1,status:'priority',now:4,ceiling:4,press:4,weapons:['Aerial','1v1 Defender'],reports:[{d:'Jun 28',e:'vs NYRB',c:4}]},
+ {id:3,name:'Sefa Adeyemi',club:'Cedar Stars',pos:'CM',age:'U15',foot:'L',tier:1,status:'priority',now:3,ceiling:4,press:4,weapons:['Press Resistant','Ball Carrier'],reports:[{d:'Jun 21',e:'vs PA Classics',c:4}]},
+ {id:4,name:'Marco Silva',club:'Cedar Stars',pos:'CM',age:'U14',foot:'L',tier:1,status:'watchlist',now:2,ceiling:5,press:3,weapons:['Playmaker','Press Resistant'],reports:[{d:'Jun 28',e:'vs Met Oval',c:5},{d:'May 03',e:'vs Oakwood',c:4},{d:'Mar 11',e:'ID event',c:4}]},
+ {id:5,name:'Kwame Diallo',club:'NYRB',pos:'CB',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:4,press:4,weapons:['Aerial','Game Reader'],reports:[{d:'Jun 28',e:'vs Met Oval',c:4}]},
+ {id:6,name:'Pavel Nilsen',club:'Oakwood',pos:'CB',age:'U15',foot:'L',tier:2,status:'watchlist',now:3,ceiling:4,press:3,weapons:['Press Resistant'],reports:[{d:'Jun 14',e:'vs Cedar',c:4}]},
+ {id:7,name:'Fabio Costa',club:'NYRB',pos:'ST',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:5,press:4,weapons:['Finisher','Speed'],reports:[{d:'Jun 28',e:'vs Met Oval',c:5}]},
+ {id:8,name:'Noah Okafor',club:'PA Classics',pos:'ST',age:'U15',foot:'R',tier:2,status:'priority',now:3,ceiling:5,press:3,weapons:['Finisher','Engine'],reports:[{d:'Jun 21',e:'vs Cedar',c:5}]},
+ {id:9,name:'Gabriel Park',club:'PA Classics',pos:'ST',age:'U15',foot:'L',tier:2,status:'watchlist',now:2,ceiling:4,press:2,weapons:['Speed'],reports:[{d:'Jun 07',e:'vs Oakwood',c:4}]},
+ {id:10,name:'Andre Reyes',club:'NYRB',pos:'GK',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:4,press:3,weapons:['Game Reader'],reports:[{d:'Jun 28',e:'vs Met Oval',c:4}]},
+ {id:11,name:'Tomas Boateng',club:'Met Oval',pos:'GK',age:'U15',foot:'R',tier:1,status:'watchlist',now:3,ceiling:4,press:3,weapons:['Aerial'],reports:[{d:'Jun 14',e:'vs Cedar',c:4}]},
+ {id:12,name:'Luca Marsh',club:'Oakwood',pos:'GK',age:'U15',foot:'R',tier:2,status:'database',now:0,ceiling:0,press:0,weapons:[],reports:[]},
+ {id:13,name:'Diego Ferreira',club:'Cedar Stars',pos:'LW',age:'U14',foot:'R',tier:1,status:'priority',now:3,ceiling:5,press:4,weapons:['1v1 Attacker','Speed'],reports:[{d:'Jun 21',e:'vs PA',c:5}]},
+ {id:14,name:'Ethan Cole',club:'Met Oval',pos:'RB',age:'U16',foot:'R',tier:1,status:'watchlist',now:3,ceiling:4,press:4,weapons:['Engine'],reports:[{d:'Jun 14',e:'vs NYRB',c:4}]},
+ {id:15,name:'Mateo Cruz',club:'Vegas SC',pos:'AM',age:'U16',foot:'L',tier:3,status:'watchlist',now:3,ceiling:5,press:2,weapons:['Playmaker','1v1 Attacker'],reports:[{d:'May 30',e:'showcase',c:5}]},
+ {id:16,name:'Owen Blake',club:'Bethesda',pos:'DM',age:'U17',foot:'R',tier:2,status:'database',now:0,ceiling:0,press:0,weapons:[],reports:[]}
+];
+const AGES=['All','U13','U14','U15','U16','U17'];
+let af='All',sf='All',tf='All',cur=null,sortK='fit',sortDir=-1,capState=null;
+const colFilters={status:'',name:'',club:'',pos:'',age:'',tier:'',now:'',ceiling:'',press:'',priority:'',weapons:''};
+const COLS=[['status','Status'],['name','Player'],['club','Club'],['pos','Pos'],['age','Age'],['tier','Tier'],['now','Now'],['ceiling','Ceiling'],['press','Press'],['fit','Fit'],['priority','Suggested'],['weapons','Special weapons']];
+
+// weighted Fit score — KPIs feed it; blank fields are skipped and weights renormalize over what's present
+const W={ceiling:.30,now:.25,press:.25,kpi:.20};
+const KPIBASE={1:4,2:4,3:3,4:3,5:4,6:3,7:4,8:3,9:3,10:4,11:3,12:0,13:4,14:3,15:4,16:0};
+function baseLevel(p){return KPIBASE[p.id]||0;}
+function ratingFor(p,name){const b=baseLevel(p);if(!b)return 0;let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))%7;return Math.min(5,Math.max(2,b-1+(h%3)));}
+function kpiWeighted(p){const kp=posKpi(p.pos);let num=0,den=0;[...kp.with,...kp.against].forEach(([label,w])=>{const r=(p.kpiRatings&&p.kpiRatings[label]!=null)?p.kpiRatings[label]:ratingFor(p,label);if(r){num+=w*r;den+=w;}});return den?num/den:0;}
+function fitParts(p){return [['ceiling',p.ceiling],['now',p.now],['press',p.press],['kpi',kpiWeighted(p)]];}
+function fitScore(p){let num=0,den=0;fitParts(p).forEach(([k,v])=>{if(v>0){num+=W[k]*v;den+=W[k];}});return den?Math.round(100*(num/den)/5):null;}
+function fitFields(p){return fitParts(p).filter(([k,v])=>v>0).length;}
+function ensureKpi(p){if(!p.kpiRatings){p.kpiRatings={};const kp=posKpi(p.pos);[...kp.with,...kp.against].forEach(([label])=>{p.kpiRatings[label]=ratingFor(p,label)||0;});}}
+function cycleVal(v){return v>=5?0:(v||0)+1;}
+function editScore(id,f){const p=players.find(x=>x.id===id);p[f]=cycleVal(p[f]);openP(id);render();}
+function editKpi(id,label){const p=players.find(x=>x.id===id);ensureKpi(p);p.kpiRatings[label]=cycleVal(p.kpiRatings[label]);openP(id);render();}
+function suggested(p){const f=fitScore(p);if(f==null)return{key:'',label:'Unrated'};if(f>=75)return{key:'priority',label:'Priority'};if(f>=55)return{key:'watchlist',label:'Watchlist'};return{key:'database',label:'Database'};}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
+function go(s){document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));document.getElementById(s).classList.add('on');document.querySelectorAll('aside .nav button').forEach(b=>b.classList.remove('on'));const nb=document.getElementById('nav-'+s);if(nb)nb.classList.add('on');if(s==='depth')renderDepth();if(s==='capture'&&document.getElementById('capPlayer'))initCap();window.scrollTo(0,0);}
+function chips(arr,active,fn,host){document.getElementById(host).innerHTML=arr.map(a=>`<div class="fchip ${a===active?'active':''}" onclick="${fn}('${a}')">${a}</div>`).join('');}
+function setAge(a){af=a;chips(AGES,af,'setAge','ageFilters');render();}
+function setStatus(s){sf=s;const items=[['All','Database'],['watchlist','Watchlist'],['priority','Priority'],['squad','NYRB squad']];document.getElementById('statusFilters').innerHTML=items.map(([k,lab])=>`<div class="fchip ${k===sf?'active':''}" onclick="setStatus('${k}')">${lab}</div>`).join('');render();}
+function setTier(t){tf=t;chips(['All','1','2','3'],tf,'setTier','tierFilters');render();}
+function sortBy(k){if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=(['now','ceiling','press','fit'].includes(k))?-1:1;}render();}
+
+function distinct(key){return [...new Set(players.map(p=>p[key]))].sort();}
+function buildHead(){
+  document.getElementById('headRow').innerHTML=COLS.map(c=>`<th onclick="sortBy('${c[0]}')">${c[1]} <span class="ar">${sortK===c[0]?(sortDir<0?'▼':'▲'):'⇅'}</span></th>`).join('');
+  const opt=(arr)=>['<option value="">All</option>',...arr.map(v=>`<option value="${v}">${v}</option>`)].join('');
+  const numOpt=['<option value="">≥</option>',...[1,2,3,4,5].map(v=>`<option value="${v}">≥ ${v}</option>`)].join('');
+  const cells={
+    status:`<select onchange="setCol('status',this.value)"><option value="">Database</option><option value="Watchlist">Watchlist</option><option value="Priority">Priority</option><option value="NYRB squad">NYRB squad</option></select>`,
+    name:`<input placeholder="filter" oninput="setCol('name',this.value)">`,
+    club:`<select onchange="setCol('club',this.value)">${opt(distinct('club'))}</select>`,
+    pos:`<select onchange="setCol('pos',this.value)">${opt(distinct('pos'))}</select>`,
+    age:`<select onchange="setCol('age',this.value)">${opt(distinct('age'))}</select>`,
+    tier:`<select onchange="setCol('tier',this.value)">${opt(distinct('tier'))}</select>`,
+    now:`<select onchange="setCol('now',this.value)">${numOpt}</select>`,
+    ceiling:`<select onchange="setCol('ceiling',this.value)">${numOpt}</select>`,
+    press:`<select onchange="setCol('press',this.value)">${numOpt}</select>`,
+    fit:``,
+    priority:`<select onchange="setCol('priority',this.value)">${opt(['Database','Watchlist','Priority'])}</select>`,
+    weapons:`<input placeholder="filter" oninput="setCol('weapons',this.value)">`
+  };
+  document.getElementById('filterRow').innerHTML=COLS.map(c=>`<th>${cells[c[0]]}</th>`).join('');
+}
+function setCol(k,v){colFilters[k]=v;render();}
+function clearFilters(){Object.keys(colFilters).forEach(k=>colFilters[k]='');document.getElementById('q').value='';buildHead();render();}
+
+function render(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  let f=players.filter(p=>{
+    if(!(af==='All'||p.age===af))return false;
+    if(!(sf==='All'||p.status===sf))return false;
+    if(!(tf==='All'||p.tier==tf))return false;
+    if(q&&!(p.name.toLowerCase().includes(q)||p.club.toLowerCase().includes(q)))return false;
+    if(colFilters.status&&STATUS[p.status].label!==colFilters.status)return false;
+    if(colFilters.name&&!p.name.toLowerCase().includes(colFilters.name.toLowerCase()))return false;
+    if(colFilters.club&&p.club!==colFilters.club)return false;
+    if(colFilters.pos&&p.pos!==colFilters.pos)return false;
+    if(colFilters.age&&p.age!==colFilters.age)return false;
+    if(colFilters.tier&&p.tier!=colFilters.tier)return false;
+    if(colFilters.now&&p.now<+colFilters.now)return false;
+    if(colFilters.ceiling&&p.ceiling<+colFilters.ceiling)return false;
+    if(colFilters.press&&p.press<+colFilters.press)return false;
+    if(colFilters.priority&&suggested(p).label!==colFilters.priority)return false;
+    if(colFilters.weapons&&!p.weapons.join(' ').toLowerCase().includes(colFilters.weapons.toLowerCase()))return false;
+    return true;
+  });
+  f.sort((a,b)=>{let x=sortK==='fit'?(fitScore(a)||-1):a[sortK],y=sortK==='fit'?(fitScore(b)||-1):b[sortK];if(typeof x==='string')return x.localeCompare(y)*sortDir;return (x-y)*sortDir;});
+  document.getElementById('cnt').textContent=`${f.length} players`;
+  document.getElementById('rows').innerHTML=f.map(p=>{const sg=suggested(p);const fs=fitScore(p);return `
+    <tr class="row" onclick="openP(${p.id})">
+      <td><span class="stat"><span class="d" style="background:${STATUS[p.status].c}"></span>${STATUS[p.status].label}</span></td>
+      <td class="nm">${p.name}</td><td>${p.club}</td><td>${p.pos}</td><td>${p.age}</td><td>T${p.tier}</td>
+      <td class="sc ${p.now?'now-c':''}">${p.now||'–'}</td>
+      <td class="sc ${p.ceiling?'ceil-c':''}">${p.ceiling||'–'}</td>
+      <td class="sc ${p.press?'press-c':''}">${p.press||'–'}</td>
+      <td class="fit">${fs!=null?fs:'–'}</td>
+      <td>${sg.key?`<span class="stat"><span class="d" style="background:${STATUS[sg.key].c}"></span>${sg.label}</span>`:'<span style="color:var(--muted);font-size:12px">—</span>'}</td>
+      <td class="wlist">${p.weapons.join(', ')||'—'}</td>
+    </tr>`;}).join('');
+}
+
+function openP(id){
+  cur=players.find(p=>p.id===id);const p=cur;ensureKpi(p);const sg=suggested(p);const fs=fitScore(p);const kp=posKpi(p.pos);
+  const kpiHtml=arr=>arr.map(([label,w])=>{const r=p.kpiRatings[label]||0;return `<div class="kpi"><span>${label}</span><span class="ed" onclick="editKpi(${p.id},'${label}')">${r||'–'}</span></div>`;}).join('');
+  document.getElementById('profile').innerHTML=`
+    <button class="backlink" onclick="go('database')">‹ Back to database</button>
+    <div class="pf-grid">
+      <div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><div class="pf-name">${p.name}</div><div class="pf-meta">${p.pos} · ${p.age} · ${p.club}<br>${p.foot} foot · Catchment tier ${p.tier}</div></div>
+            <span class="badge" style="background:${STATUS[p.status].c}">${STATUS[p.status].label}</span>
+          </div>
+          <div class="scores">
+            <div class="score now"><div class="lab">NOW</div><div class="val ed" onclick="editScore(${p.id},'now')">${p.now||'–'}</div></div>
+            <div class="score ceiling"><div class="lab">CEILING</div><div class="val ed" onclick="editScore(${p.id},'ceiling')">${p.ceiling||'–'}</div></div>
+            <div class="score press"><div class="lab">PRESSING</div><div class="val ed" onclick="editScore(${p.id},'press')">${p.press||'–'}</div></div>
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:6px">Click any number to change (cycles 1–5, then clears)</div>
+          <div class="fitbar"><div><div class="l">FIT SCORE · weighted${fs!=null?' · '+fitFields(p)+'/4 fields':''}</div><div class="p">Suggested: ${sg.label}</div></div><div class="v">${fs!=null?fs:'–'}</div></div>
+          <label class="fl">Change status</label>
+          <div class="stsel">${Object.keys(STATUS).map(k=>`<div class="opt" style="${p.status===k?'background:'+STATUS[k].c+';color:#fff;border-color:'+STATUS[k].c:''}" onclick="setPStatus(${p.id},'${k}')">${STATUS[k].label}</div>`).join('')}</div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn red" style="flex:1" onclick="go('capture');presetCap(${p.id})">+ Add live report</button>
+            <button class="btn navy" style="flex:1">Scoutastic</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn ghost" style="flex:1" onclick="openEdit(${p.id})">Edit details</button>
+            <button class="btn ghost" style="flex:1;color:var(--red)" onclick="delPlayer(${p.id})">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <p class="sec-t">Position KPIs (${p.pos}) — same set as live capture · click a number to edit</p>
+          <div class="kpi-grid"><div class="kpi-col with"><h4>With ball</h4>${kpiHtml(kp.with)}</div><div class="kpi-col against"><h4>Against ball</h4>${kpiHtml(kp.against)}</div></div>
+        </div>
+        <div class="card"><p class="sec-t">Special weapons</p><div class="weapons">${p.weapons.length?p.weapons.map(w=>`<span class="wpn">${w}</span>`).join(''):'<span style="font-size:12px;color:var(--muted)">none logged</span>'}</div></div>
+        <div class="card"><p class="sec-t">Report history</p><div class="hist">${p.reports.length?p.reports.map((r,i)=>`<div class="h"><span class="d">${r.d}</span><span style="flex:1">${r.e}</span><span class="${i===0?'up':''}">ceil ${r.c}${i===0?' ↑':''}</span></div>`).join(''):'<span style="font-size:12px;color:var(--muted)">no reports yet</span>'}</div></div>
+      </div>
+    </div>`;
+  go('profile');
+}
+function setPStatus(id,k){players.find(p=>p.id===id).status=k;openP(id);render();toast('Status → '+STATUS[k].label);}
+
+let depthAge='U15';
+const STINT={squad:'#fdeaec',priority:'#eaf3de',watchlist:'#fdf6da',database:'#f1efe8'};
+const SLOTDEF=[['ST','ST'],['LW','LW'],['RW','RW'],['CM_L','CM'],['CM_R','CM'],['DM','DM'],['LB','LB'],['LCB','LCB'],['RCB','RCB'],['RB','RB'],['GK','GK']];
+let SLOTPOS={ST:[50,13],LW:[16,24],RW:[84,24],CM_L:[34,44],CM_R:[66,44],DM:[50,58],LB:[13,74],LCB:[38,80],RCB:[62,80],RB:[87,74],GK:[50,92]};
+const rankOrder={squad:0,priority:1,watchlist:2,database:3};
+function sortDepth(a,b){const s=rankOrder[a.status]-rankOrder[b.status];if(s)return s;const ao=(a.ord!=null)?a.ord:(1000-(fitScore(a)||0));const bo=(b.ord!=null)?b.ord:(1000-(fitScore(b)||0));return ao-bo;}
+function slotFamily(pos){if(pos==='CB')return['LCB','RCB'];if(pos==='CM'||pos==='AM')return['CM_L','CM_R'];const m={GK:'GK',LB:'LB',RB:'RB',DM:'DM',LW:'LW',RW:'RW',ST:'ST',CF:'ST'};return[m[pos]||'CM_L'];}
+function slotBasePos(slot){if(slot==='LCB'||slot==='RCB')return'CB';if(slot==='CM_L'||slot==='CM_R')return'CM';return slot;}
+function computeSlots(){
+  const bySlot={};SLOTDEF.forEach(([id])=>bySlot[id]=[]);
+  const inAge=players.filter(p=>p.age===depthAge);
+  const autoFam={};
+  inAge.forEach(p=>{
+    if(p.slot&&bySlot[p.slot]!==undefined){bySlot[p.slot].push(p);return;}
+    const fam=slotFamily(p.pos);
+    if(fam.length===1)bySlot[fam[0]].push(p);
+    else{const k=fam.join();(autoFam[k]=autoFam[k]||{fam,list:[]}).list.push(p);}
+  });
+  Object.values(autoFam).forEach(({fam,list})=>{list.slice().sort(sortDepth).forEach((p,i)=>bySlot[fam[i%fam.length]].push(p));});
+  SLOTDEF.forEach(([id])=>bySlot[id].sort(sortDepth));
+  return bySlot;
+}
+function renderDepth(){
+  chips(['U13','U14','U15','U16','U17'],depthAge,'setDepthAge','depthAge');
+  const bySlot=computeSlots();
+  const svg=`<svg class="pmark" viewBox="0 0 100 130" preserveAspectRatio="none"><line x1="0" y1="65" x2="100" y2="65"/><circle cx="50" cy="65" r="9"/><circle cx="50" cy="65" r="0.8" class="spot"/><rect x="20" y="0" width="60" height="16"/><rect x="35" y="0" width="30" height="6"/><path d="M41,16 A9,9 0 0,0 59,16"/><rect x="20" y="114" width="60" height="16"/><rect x="35" y="124" width="30" height="6"/><path d="M41,114 A9,9 0 0,1 59,114"/></svg>`;
+  const boxes=SLOTDEF.map(([id,label])=>{
+    const [x,y]=SLOTPOS[id];const list=bySlot[id];
+    const rows=list.length?list.map(p=>`<div class="ppl" draggable="true" ondragstart="onDrag(event,${p.id})" onclick="pplClick(${p.id})" style="background:${STINT[p.status]};border-left:3px solid ${STATUS[p.status].c}"><span class="ppl-nm">${p.name}${p.status==='squad'?' ●':''}</span><span class="ppl-r"><span class="ppl-age">${p.age}</span><span class="ord-btns"><span onclick="event.stopPropagation();moveInSlot(${p.id},-1)" title="rank up">▲</span><span onclick="event.stopPropagation();moveInSlot(${p.id},1)" title="rank down">▼</span></span></span></div>`).join(''):'<div class="ppl empty">drop here</div>';
+    return `<div class="ppos" id="slot-${id}" style="left:${x}%;top:${y}%" ondragover="event.preventDefault()" ondrop="onDrop(event,'${id}')"><div class="ppos-h" onmousedown="boxDown(event,'${id}')" title="drag to move this position">${label}</div><div class="ppos-list">${rows}</div></div>`;
+  }).join('');
+  document.getElementById('pitch').innerHTML=svg+boxes;
+}
+function slotOf(id,bySlot){for(const s of SLOTDEF){if(bySlot[s[0]].some(p=>p.id===id))return s[0];}return null;}
+function moveInSlot(id,dir){
+  const bySlot=computeSlots();const slot=slotOf(id,bySlot);if(!slot)return;
+  const list=bySlot[slot];const idx=list.findIndex(p=>p.id===id);const j=idx+dir;
+  if(j<0||j>=list.length||list[idx].status!==list[j].status)return;
+  list.forEach((p,i)=>p.ord=i);
+  const t=list[idx].ord;list[idx].ord=list[j].ord;list[j].ord=t;
+  renderDepth();render();
+}
+let dragId=null,lastDrag=0;
+function onDrag(e,id){dragId=id;lastDrag=Date.now();try{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move';}catch(_){}}
+function onDrop(e,slot){e.preventDefault();const id=dragId||+e.dataTransfer.getData('text/plain');const p=players.find(x=>x.id==id);if(p){p.slot=slot;delete p.ord;const bp=slotBasePos(slot);if(p.pos!==bp){p.pos=bp;delete p.kpiRatings;}}lastDrag=Date.now();dragId=null;renderDepth();render();}
+function pplClick(id){if(Date.now()-lastDrag<400)return;openP(id);}
+let boxDrag=null;
+function boxDown(e,slot){e.preventDefault();e.stopPropagation();boxDrag={slot,el:document.getElementById('slot-'+slot)};document.addEventListener('mousemove',boxMove);document.addEventListener('mouseup',boxUp);}
+function boxMove(e){if(!boxDrag)return;const r=document.getElementById('pitch').getBoundingClientRect();let x=((e.clientX-r.left)/r.width)*100,y=((e.clientY-r.top)/r.height)*100;x=Math.max(7,Math.min(93,x));y=Math.max(5,Math.min(95,y));SLOTPOS[boxDrag.slot]=[x,y];boxDrag.el.style.left=x+'%';boxDrag.el.style.top=y+'%';}
+function boxUp(){boxDrag=null;document.removeEventListener('mousemove',boxMove);document.removeEventListener('mouseup',boxUp);}
+function setDepthAge(a){depthAge=a;renderDepth();}
+
+let cNow=0,cCeil=0,cPress=0,cWeapons=[],cTally={},cKpi=POSKPI.CM;
+function initCap(){const sel=document.getElementById('capPlayer');sel.innerHTML='<option value="new">+ New player…</option>'+players.map(p=>`<option value="${p.id}">${p.name} · ${p.pos} · ${p.age}</option>`).join('');if(capState&&capState.preset)sel.value=capState.preset;loadCap();}
+function presetCap(id){capState={preset:String(id)};}
+function selRow(host,sel,onpick,cls){document.getElementById(host).innerHTML=[1,2,3,4,5].map(i=>`<div class="opt ${i===sel?cls:''}" onclick="${onpick}(${i})">${i}</div>`).join('');}
+function setNow(v){cNow=v;selRow('capNow',cNow,'setNow','sel-n');}
+function setCeil(v){cCeil=v;selRow('capCeil',cCeil,'setCeil','sel-c');}
+function setPress(v){cPress=v;selRow('capPress',cPress,'setPress','sel-p');}
+function loadCap(){
+  const v=document.getElementById('capPlayer').value;let p=v==='new'?null:players.find(x=>x.id==v);
+  cNow=p?p.now:0;cCeil=p?p.ceiling:0;cPress=p?p.press:0;cWeapons=p?[...p.weapons]:[];cTally={};
+  cKpi=posKpi(p?p.pos:'CM');document.getElementById('capPos').textContent=p?p.pos:'CM';
+  selRow('capNow',cNow,'setNow','sel-n');selRow('capCeil',cCeil,'setCeil','sel-c');selRow('capPress',cPress,'setPress','sel-p');
+  document.getElementById('capWith').innerHTML=cKpi.with.map(x=>tallyRow(x[0])).join('');
+  document.getElementById('capAgainst').innerHTML=cKpi.against.map(x=>tallyRow(x[0])).join('');
+  document.getElementById('capWeapons').innerHTML=WEAPONS.map(w=>`<span class="wsel ${cWeapons.includes(w)?'on':''}" onclick="togW('${w}')">${w}</span>`).join('');
+}
+function tallyRow(k){const id=k.replace(/[^a-z]/gi,'');cTally[id]=cTally[id]||0;return `<div class="tally"><span>${k}</span><span class="step"><button onclick="bump('${id}',-1)">−</button><span class="v" id="tv-${id}">${cTally[id]}</span><button onclick="bump('${id}',1)">+</button></span></div>`;}
+function bump(k,d){cTally[k]=Math.max(0,(cTally[k]||0)+d);document.getElementById('tv-'+k).textContent=cTally[k];}
+function togW(w){const i=cWeapons.indexOf(w);if(i>=0)cWeapons.splice(i,1);else cWeapons.push(w);loadCap();}
+function saveReport(){const v=document.getElementById('capPlayer').value;const ev=document.getElementById('capEvent').value||'live';if(v==='new'){toast('New player flow — demo');return;}const p=players.find(x=>x.id==v);p.now=cNow||p.now;p.ceiling=cCeil||p.ceiling;p.press=cPress||p.press;p.weapons=cWeapons;p.reports.unshift({d:'today',e:ev,c:cCeil||p.ceiling});if(p.status==='database')p.status='watchlist';toast('Report saved → '+p.name);render();openP(p.id);}
+
+let editingId=null,mKpi={},mWeapons=[];
+function fillModal(p){document.getElementById('m-name').value=p.name||'';document.getElementById('m-club').value=p.club||'';document.getElementById('m-pos').value=p.pos||'CM';document.getElementById('m-age').value=p.age||'U15';document.getElementById('m-tier').value=p.tier||1;document.getElementById('m-foot').value=p.foot||'R';document.getElementById('m-status').value=p.status||'watchlist';document.getElementById('m-now').value=p.now||0;document.getElementById('m-ceiling').value=p.ceiling||0;document.getElementById('m-press').value=p.press||0;}
+function renderModalExtras(){
+  const pos=document.getElementById('m-pos').value;document.getElementById('m-poslabel').textContent=pos;
+  const kp=posKpi(pos);
+  const opt=v=>[0,1,2,3,4,5].map(n=>`<option ${n==(v||0)?'selected':''}>${n}</option>`).join('');
+  const col=(title,arr)=>`<div class="kpi-col"><h4>${title}</h4>${arr.map(([label])=>`<div class="kpi"><span>${label}</span><select data-kpi="${label}" style="width:54px;padding:4px 6px">${opt(mKpi[label])}</select></div>`).join('')}</div>`;
+  document.getElementById('m-kpigrid').innerHTML=col('With ball',kp.with)+col('Against ball',kp.against);
+  document.getElementById('m-weapons').innerHTML=WEAPONS.map(w=>`<span class="wsel ${mWeapons.includes(w)?'on':''}" onclick="mTogW('${w}')">${w}</span>`).join('');
+}
+function captureModalKpi(){document.querySelectorAll('#m-kpigrid select').forEach(s=>{mKpi[s.dataset.kpi]=+s.value;});}
+function mTogW(w){const i=mWeapons.indexOf(w);if(i>=0)mWeapons.splice(i,1);else mWeapons.push(w);renderModalExtras();}
+function openAdd(){editingId=null;mKpi={};mWeapons=[];document.getElementById('modalTitle').textContent='Add player';fillModal({pos:'CM',age:'U15',tier:1,foot:'R',status:'watchlist'});renderModalExtras();document.getElementById('modal').style.display='flex';}
+function openEdit(id){const p=players.find(x=>x.id===id);if(!p)return;editingId=id;mKpi={...(p.kpiRatings||{})};mWeapons=[...(p.weapons||[])];document.getElementById('modalTitle').textContent='Edit player';fillModal(p);renderModalExtras();document.getElementById('modal').style.display='flex';}
+function closeModal(){document.getElementById('modal').style.display='none';}
+function saveModal(){
+  captureModalKpi();
+  const d={name:document.getElementById('m-name').value.trim()||'New player',club:document.getElementById('m-club').value.trim(),pos:document.getElementById('m-pos').value,age:document.getElementById('m-age').value,tier:+document.getElementById('m-tier').value,foot:document.getElementById('m-foot').value,status:document.getElementById('m-status').value,now:+document.getElementById('m-now').value,ceiling:+document.getElementById('m-ceiling').value,press:+document.getElementById('m-press').value,weapons:[...mWeapons]};
+  const kp=posKpi(d.pos);const kr={};[...kp.with,...kp.against].forEach(([l])=>{if(mKpi[l])kr[l]=mKpi[l];});
+  if(editingId){const p=players.find(x=>x.id===editingId);const posChanged=p.pos!==d.pos;Object.assign(p,d);if(Object.keys(kr).length)p.kpiRatings=kr;else if(posChanged)delete p.kpiRatings;closeModal();render();openP(editingId);}
+  else{const id=Math.max(0,...players.map(p=>p.id))+1;players.push({id,...d,reports:[],kpiRatings:Object.keys(kr).length?kr:undefined});closeModal();render();toast('Added '+d.name);}
+}
+function delPlayer(id){if(!confirm('Delete this player from the database?'))return;players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
+const CAPTURE_FEED=[
+ {name:'Aron Javis',club:'Sting Austin',pos:'LW',age:'U16',grade:'B'},
+ {name:'Zion Gill',club:'GSA ECNL',pos:'CB',age:'U15',grade:'B'},
+ {name:'Kai Whitman',club:'Crossfire',pos:'CM',age:'U15',grade:'C'},
+ {name:'Marcus Bell',club:'World Class',pos:'ST',age:'U14',grade:'B'}
+];
+const GRADEMAP={A:5,B:4,C:3,D:2};
+function openImport(){
+  document.getElementById('importList').innerHTML=CAPTURE_FEED.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:8px"><div><div style="font-weight:600;font-size:13px">${r.name}</div><div style="font-size:11px;color:var(--muted)">${r.club} · ${r.pos} · ${r.age} · grade ${r.grade}</div></div><button class="btn red" style="padding:6px 12px" onclick="importPlayer(${i})">Import</button></div>`).join('');
+  document.getElementById('importModal').style.display='flex';
+}
+function closeImport(){document.getElementById('importModal').style.display='none';}
+function importPlayer(i){const r=CAPTURE_FEED[i];const id=Math.max(0,...players.map(p=>p.id))+1;players.push({id,name:r.name,club:r.club,pos:r.pos,age:r.age,foot:'R',tier:2,status:'watchlist',now:GRADEMAP[r.grade]||3,ceiling:0,press:0,weapons:[],reports:[{d:'today',e:'imported from capture',c:0}]});render();toast('Imported '+r.name);}
+setAge('All');setStatus('All');setTier('All');buildHead();render();
+</script>
+</body>
+</html>
