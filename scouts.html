@@ -208,8 +208,9 @@
   .score .lab{font-size:10px;color:var(--muted);letter-spacing:0.5px;font-weight:600;text-transform:uppercase;}
   .score .val{font-size:28px;font-weight:600;margin-top:4px;}
   .score.now .val{color:var(--now);} .score.ceiling .val{color:var(--ceiling);} .score.press .val{color:var(--press);}
-  .score{cursor:pointer;transition:all 0.2s ease;} .score:hover{transform:scale(1.02);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .score.empty{border:2px dashed var(--line);background:#fff;} .score.empty .val{font-size:12px;color:var(--muted);font-weight:500;}
+  .score-sel{font-size:24px;font-weight:600;border:none;background:transparent;text-align:center;cursor:pointer;padding:4px 8px;border-radius:8px;width:70px;appearance:none;-webkit-appearance:none;}
+  .score-sel:focus{outline:none;background:rgba(0,0,0,0.05);}
+  .score.now .score-sel{color:var(--now);} .score.ceiling .score-sel{color:var(--ceiling);} .score.press .score-sel{color:var(--press);}
   .fitbar{
     display:flex;
     justify-content:space-between;
@@ -423,8 +424,6 @@
     <div class="fil" id="ageFilters"></div>
     <div class="grp">Quick · status</div>
     <div class="fil" id="statusFilters"></div>
-    <div class="grp">Quick · tier</div>
-    <div class="fil" id="tierFilters"></div>
   </aside>
 
   <main>
@@ -474,29 +473,29 @@
   </main>
 </div>
 <div id="modal" class="modal-bg" style="display:none">
-  <div class="modal" id="modalContent">
+  <div class="modal" style="width:600px">
     <h3 id="modalTitle" style="margin:0 0 6px;font-size:20px;font-weight:600">Add Player</h3>
-    <p id="modalDesc" style="font-size:13px;color:var(--muted);margin:0 0 20px">Just the basics. You'll rate them after watching.</p>
-    <div class="mform" id="basicFields">
+    <p id="modalDesc" style="font-size:13px;color:var(--muted);margin:0 0 20px">Enter player details and ratings.</p>
+    <div class="mform">
       <label>Name<input id="m-name" placeholder="Player name"></label>
       <label>Club<input id="m-club" placeholder="Current club"></label>
       <label>Position<select id="m-pos" onchange="captureModalKpi();renderModalExtras()"><option>GK</option><option>CB</option><option>LB</option><option>RB</option><option>DM</option><option>CM</option><option>AM</option><option>LW</option><option>RW</option><option>ST</option></select></label>
-      <label>Age group<select id="m-age"><option>U13</option><option>U14</option><option>U15</option><option>U16</option><option>U17</option></select></label>
+      <label>Age group<select id="m-age"><option>U13</option><option>U14</option><option>U15</option><option>U16</option><option>U17</option><option>U18</option><option>U19</option></select></label>
+      <label>Foot<select id="m-foot"><option>R</option><option>L</option><option>Both</option></select></label>
+      <label>Status<select id="m-status"><option value="database">Database</option><option value="watchlist">Watchlist</option><option value="priority">Priority</option><option value="squad">NYRB squad</option></select></label>
     </div>
-    <div id="extraFields" style="display:none">
-      <div class="mform" style="margin-top:16px">
-        <label>Foot<select id="m-foot"><option>R</option><option>L</option><option>Both</option></select></label>
-        <label>Status<select id="m-status"><option value="database">Database</option><option value="watchlist">Watchlist</option><option value="priority">Priority</option><option value="squad">NYRB squad</option></select></label>
-        <label>Now<select id="m-now"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
-        <label>Ceiling<select id="m-ceiling"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
-        <label>Pressing<select id="m-press"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+    <div style="margin-top:20px"><p class="sec-t">Core Ratings</p>
+      <div class="mform">
+        <label>Now (1-5)<select id="m-now"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label>Ceiling (1-5)<select id="m-ceiling"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label>Pressing (1-5)<select id="m-press"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
       </div>
-      <div style="margin-top:16px"><p class="sec-t">Position KPIs — <span id="m-poslabel">CM</span></p><div class="kpi-grid" id="m-kpigrid"></div></div>
-      <div style="margin-top:14px"><p class="sec-t">Special weapons</p><div class="weapons" id="m-weapons"></div></div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+    <div style="margin-top:20px"><p class="sec-t">Position KPIs — <span id="m-poslabel">CM</span></p><div class="kpi-grid" id="m-kpigrid"></div></div>
+    <div style="margin-top:16px"><p class="sec-t">Special weapons</p><div class="weapons" id="m-weapons"></div></div>
+    <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">
       <button class="btn ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn red" onclick="saveModal()" id="modalSaveBtn">Add to Database</button>
+      <button class="btn red" onclick="saveModal()" id="modalSaveBtn">Save Player</button>
     </div>
   </div>
 </div>
@@ -546,10 +545,10 @@ let players=[
  {id:15,name:'Mateo Cruz',club:'Vegas SC',pos:'AM',age:'U16',foot:'L',tier:3,status:'watchlist',now:3,ceiling:5,press:2,weapons:['Playmaker','1v1 Attacker'],reports:[{d:'May 30',e:'showcase',c:5}]},
  {id:16,name:'Owen Blake',club:'Bethesda',pos:'DM',age:'U17',foot:'R',tier:2,status:'database',now:0,ceiling:0,press:0,weapons:[],reports:[]}
 ];
-const AGES=['All','U13','U14','U15','U16','U17'];
-let af='All',sf='All',tf='All',cur=null,sortK='fit',sortDir=-1,capState=null;
-const colFilters={status:'',name:'',club:'',pos:'',age:'',tier:'',now:'',ceiling:'',press:'',priority:'',weapons:''};
-const COLS=[['status','Status'],['name','Player'],['club','Club'],['pos','Pos'],['age','Age'],['tier','Tier'],['now','Now'],['ceiling','Ceiling'],['press','Press'],['fit','Fit'],['priority','Suggested'],['weapons','Special weapons']];
+const AGES=['All','U13','U14','U15','U16','U17','U18','U19'];
+let af='All',sf='All',cur=null,sortK='fit',sortDir=-1,capState=null;
+const colFilters={status:'',name:'',club:'',pos:'',age:'',now:'',ceiling:'',press:'',priority:'',weapons:''};
+const COLS=[['status','Status'],['name','Player'],['club','Club'],['pos','Pos'],['age','Age'],['now','Now'],['ceiling','Ceiling'],['press','Press'],['fit','Fit'],['priority','Suggested'],['weapons','Special weapons']];
 
 // weighted Fit score — KPIs feed it; blank fields are skipped and weights renormalize over what's present
 const W={ceiling:.30,now:.25,press:.25,kpi:.20};
@@ -561,8 +560,8 @@ function fitParts(p){return [['ceiling',p.ceiling],['now',p.now],['press',p.pres
 function fitScore(p){let num=0,den=0;fitParts(p).forEach(([k,v])=>{if(v>0){num+=W[k]*v;den+=W[k];}});return den?Math.round(100*(num/den)/5):null;}
 function fitFields(p){return fitParts(p).filter(([k,v])=>v>0).length;}
 function ensureKpi(p){if(!p.kpiRatings){p.kpiRatings={};const kp=posKpi(p.pos);[...kp.with,...kp.against].forEach(([label])=>{p.kpiRatings[label]=ratingFor(p,label)||0;});}}
-function cycleVal(v){return v>=5?0:(v||0)+1;}
-function editScore(id,f){const p=players.find(x=>x.id===id);p[f]=cycleVal(p[f]);openP(id);render();}
+function scoreOpts(v){return ['<option value="">—</option>',...[1,2,3,4,5].map(n=>`<option value="${n}"${n==v?' selected':''}>${n}</option>`)].join('');}
+function setScore(id,f,v){const p=players.find(x=>x.id===id);p[f]=+v||0;openP(id);render();}
 function editKpi(id,label){const p=players.find(x=>x.id===id);ensureKpi(p);p.kpiRatings[label]=cycleVal(p.kpiRatings[label]);openP(id);render();}
 function suggested(p){const f=fitScore(p);if(f==null)return{key:'',label:'Unrated'};if(f>=75)return{key:'priority',label:'Priority'};if(f>=55)return{key:'watchlist',label:'Watchlist'};return{key:'database',label:'Database'};}
 
@@ -571,7 +570,6 @@ function go(s){document.querySelectorAll('.scr').forEach(x=>x.classList.remove('
 function chips(arr,active,fn,host){document.getElementById(host).innerHTML=arr.map(a=>`<div class="fchip ${a===active?'active':''}" onclick="${fn}('${a}')">${a}</div>`).join('');}
 function setAge(a){af=a;chips(AGES,af,'setAge','ageFilters');render();}
 function setStatus(s){sf=s;const items=[['All','Database'],['watchlist','Watchlist'],['priority','Priority'],['squad','NYRB squad']];document.getElementById('statusFilters').innerHTML=items.map(([k,lab])=>`<div class="fchip ${k===sf?'active':''}" onclick="setStatus('${k}')">${lab}</div>`).join('');render();}
-function setTier(t){tf=t;chips(['All','1','2','3'],tf,'setTier','tierFilters');render();}
 function sortBy(k){if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=(['now','ceiling','press','fit'].includes(k))?-1:1;}render();}
 
 function distinct(key){return [...new Set(players.map(p=>p[key]))].sort();}
@@ -580,12 +578,11 @@ function buildHead(){
   const opt=(arr)=>['<option value="">All</option>',...arr.map(v=>`<option value="${v}">${v}</option>`)].join('');
   const numOpt=['<option value="">≥</option>',...[1,2,3,4,5].map(v=>`<option value="${v}">≥ ${v}</option>`)].join('');
   const cells={
-    status:`<select onchange="setCol('status',this.value)"><option value="">Database</option><option value="Watchlist">Watchlist</option><option value="Priority">Priority</option><option value="NYRB squad">NYRB squad</option></select>`,
+    status:`<select onchange="setCol('status',this.value)"><option value="">All</option><option value="Database">Database</option><option value="Watchlist">Watchlist</option><option value="Priority">Priority</option><option value="NYRB squad">NYRB squad</option></select>`,
     name:`<input placeholder="filter" oninput="setCol('name',this.value)">`,
     club:`<select onchange="setCol('club',this.value)">${opt(distinct('club'))}</select>`,
     pos:`<select onchange="setCol('pos',this.value)">${opt(distinct('pos'))}</select>`,
     age:`<select onchange="setCol('age',this.value)">${opt(distinct('age'))}</select>`,
-    tier:`<select onchange="setCol('tier',this.value)">${opt(distinct('tier'))}</select>`,
     now:`<select onchange="setCol('now',this.value)">${numOpt}</select>`,
     ceiling:`<select onchange="setCol('ceiling',this.value)">${numOpt}</select>`,
     press:`<select onchange="setCol('press',this.value)">${numOpt}</select>`,
@@ -603,14 +600,12 @@ function render(){
   let f=players.filter(p=>{
     if(!(af==='All'||p.age===af))return false;
     if(!(sf==='All'||p.status===sf))return false;
-    if(!(tf==='All'||p.tier==tf))return false;
     if(q&&!(p.name.toLowerCase().includes(q)||p.club.toLowerCase().includes(q)))return false;
     if(colFilters.status&&STATUS[p.status].label!==colFilters.status)return false;
     if(colFilters.name&&!p.name.toLowerCase().includes(colFilters.name.toLowerCase()))return false;
     if(colFilters.club&&p.club!==colFilters.club)return false;
     if(colFilters.pos&&p.pos!==colFilters.pos)return false;
     if(colFilters.age&&p.age!==colFilters.age)return false;
-    if(colFilters.tier&&p.tier!=colFilters.tier)return false;
     if(colFilters.now&&p.now<+colFilters.now)return false;
     if(colFilters.ceiling&&p.ceiling<+colFilters.ceiling)return false;
     if(colFilters.press&&p.press<+colFilters.press)return false;
@@ -623,7 +618,7 @@ function render(){
   document.getElementById('rows').innerHTML=f.map(p=>{const sg=suggested(p);const fs=fitScore(p);return `
     <tr class="row" onclick="openP(${p.id})">
       <td><span class="stat"><span class="d" style="background:${STATUS[p.status].c}"></span>${STATUS[p.status].label}</span></td>
-      <td class="nm">${p.name}</td><td>${p.club}</td><td>${p.pos}</td><td>${p.age}</td><td>T${p.tier}</td>
+      <td class="nm">${p.name}</td><td>${p.club}</td><td>${p.pos}</td><td>${p.age}</td>
       <td class="sc ${p.now?'now-c':''}">${p.now||'–'}</td>
       <td class="sc ${p.ceiling?'ceil-c':''}">${p.ceiling||'–'}</td>
       <td class="sc ${p.press?'press-c':''}">${p.press||'–'}</td>
@@ -642,21 +637,19 @@ function openP(id){
       <div>
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div><div class="pf-name">${p.name}</div><div class="pf-meta">${p.pos} · ${p.age} · ${p.club}<br>${p.foot} foot · Catchment tier ${p.tier}</div></div>
+            <div><div class="pf-name">${p.name}</div><div class="pf-meta">${p.pos} · ${p.age} · ${p.club} · ${p.foot} foot</div></div>
             <span class="badge" style="background:${STATUS[p.status].c}">${STATUS[p.status].label}</span>
           </div>
           <div class="scores">
-            <div class="score now ${p.now?'':'empty'}" onclick="editScore(${p.id},'now')"><div class="lab">NOW</div><div class="val ed">${p.now||'Click to rate'}</div></div>
-            <div class="score ceiling ${p.ceiling?'':'empty'}" onclick="editScore(${p.id},'ceiling')"><div class="lab">CEILING</div><div class="val ed">${p.ceiling||'Click to rate'}</div></div>
-            <div class="score press ${p.press?'':'empty'}" onclick="editScore(${p.id},'press')"><div class="lab">PRESSING</div><div class="val ed">${p.press||'Click to rate'}</div></div>
+            <div class="score now"><div class="lab">NOW</div><select class="score-sel" onchange="setScore(${p.id},'now',this.value)">${scoreOpts(p.now)}</select></div>
+            <div class="score ceiling"><div class="lab">CEILING</div><select class="score-sel" onchange="setScore(${p.id},'ceiling',this.value)">${scoreOpts(p.ceiling)}</select></div>
+            <div class="score press"><div class="lab">PRESSING</div><select class="score-sel" onchange="setScore(${p.id},'press',this.value)">${scoreOpts(p.press)}</select></div>
           </div>
-          <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:6px">${(p.now&&p.ceiling&&p.press)?'Click scores to edit (cycles 1–5, then clears)':'Click each score to rate after watching'}</div>
           <div class="fitbar${fs==null?' empty':''}"><div><div class="l">FIT SCORE${fs!=null?' · '+fitFields(p)+'/4 fields':''}</div><div class="p">${fs!=null?'Suggested: '+sg.label:'Rate to calculate'}</div></div><div class="v">${fs!=null?fs:'—'}</div></div>
           <label class="fl">Change status</label>
           <div class="stsel">${Object.keys(STATUS).map(k=>`<div class="opt" style="${p.status===k?'background:'+STATUS[k].c+';color:#fff;border-color:'+STATUS[k].c:''}" onclick="setPStatus(${p.id},'${k}')">${STATUS[k].label}</div>`).join('')}</div>
           <div style="display:flex;gap:8px;margin-top:16px">
             <button class="btn red" style="flex:1" onclick="go('capture');presetCap(${p.id})">+ Add live report</button>
-            <button class="btn navy" style="flex:1">Scoutastic</button>
           </div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn ghost" style="flex:1" onclick="openEdit(${p.id})">Edit details</button>
@@ -700,7 +693,7 @@ function computeSlots(){
   return bySlot;
 }
 function renderDepth(){
-  chips(['U13','U14','U15','U16','U17'],depthAge,'setDepthAge','depthAge');
+  chips(['U13','U14','U15','U16','U17','U18','U19'],depthAge,'setDepthAge','depthAge');
   const bySlot=computeSlots();
   const svg=`<svg class="pmark" viewBox="0 0 100 130" preserveAspectRatio="none"><line x1="0" y1="65" x2="100" y2="65"/><circle cx="50" cy="65" r="9"/><circle cx="50" cy="65" r="0.8" class="spot"/><rect x="20" y="0" width="60" height="16"/><rect x="35" y="0" width="30" height="6"/><path d="M41,16 A9,9 0 0,0 59,16"/><rect x="20" y="114" width="60" height="16"/><rect x="35" y="124" width="30" height="6"/><path d="M41,114 A9,9 0 0,1 59,114"/></svg>`;
   const boxes=SLOTDEF.map(([id,label])=>{
@@ -758,9 +751,9 @@ function fillModal(p){
   document.getElementById('m-age').value=p.age||'U15';
   document.getElementById('m-foot').value=p.foot||'R';
   document.getElementById('m-status').value=p.status||'database';
-  document.getElementById('m-now').value=p.now||0;
-  document.getElementById('m-ceiling').value=p.ceiling||0;
-  document.getElementById('m-press').value=p.press||0;
+  document.getElementById('m-now').value=p.now||'';
+  document.getElementById('m-ceiling').value=p.ceiling||'';
+  document.getElementById('m-press').value=p.press||'';
 }
 function renderModalExtras(){
   const pos=document.getElementById('m-pos').value;document.getElementById('m-poslabel').textContent=pos;
@@ -775,57 +768,46 @@ function mTogW(w){const i=mWeapons.indexOf(w);if(i>=0)mWeapons.splice(i,1);else 
 function openAdd(){
   editingId=null;mKpi={};mWeapons=[];
   document.getElementById('modalTitle').textContent='Add Player';
-  document.getElementById('modalDesc').textContent="Just the basics. You'll rate them after watching.";
-  document.getElementById('modalDesc').style.display='block';
-  document.getElementById('extraFields').style.display='none';
-  document.getElementById('modalSaveBtn').textContent='Add to Database';
-  document.getElementById('modalContent').style.width='440px';
-  fillModal({pos:'CM',age:'U15',foot:'R',status:'database'});
+  document.getElementById('modalDesc').textContent='Enter player details and ratings.';
+  document.getElementById('modalSaveBtn').textContent='Save Player';
+  fillModal({pos:'CM',age:'U15',foot:'R',status:'database',now:'',ceiling:'',press:''});
+  renderModalExtras();
   document.getElementById('modal').style.display='flex';
 }
 function openEdit(id){
   const p=players.find(x=>x.id===id);if(!p)return;
   editingId=id;mKpi={...(p.kpiRatings||{})};mWeapons=[...(p.weapons||[])];
   document.getElementById('modalTitle').textContent='Edit Player';
-  document.getElementById('modalDesc').style.display='none';
-  document.getElementById('extraFields').style.display='block';
+  document.getElementById('modalDesc').textContent='Update player details and ratings.';
   document.getElementById('modalSaveBtn').textContent='Save Changes';
-  document.getElementById('modalContent').style.width='560px';
   fillModal(p);renderModalExtras();
   document.getElementById('modal').style.display='flex';
 }
 function closeModal(){document.getElementById('modal').style.display='none';}
 function saveModal(){
-  const isEditing=!!editingId;
-  if(isEditing)captureModalKpi();
-  // Basic fields always captured
+  captureModalKpi();
   const d={
     name:document.getElementById('m-name').value.trim()||'New player',
     club:document.getElementById('m-club').value.trim(),
     pos:document.getElementById('m-pos').value,
-    age:document.getElementById('m-age').value
+    age:document.getElementById('m-age').value,
+    foot:document.getElementById('m-foot').value,
+    status:document.getElementById('m-status').value,
+    now:+document.getElementById('m-now').value||0,
+    ceiling:+document.getElementById('m-ceiling').value||0,
+    press:+document.getElementById('m-press').value||0,
+    weapons:[...mWeapons]
   };
-  // Extra fields only for edit mode
-  if(isEditing){
-    d.foot=document.getElementById('m-foot').value;
-    d.status=document.getElementById('m-status').value;
-    d.now=+document.getElementById('m-now').value;
-    d.ceiling=+document.getElementById('m-ceiling').value;
-    d.press=+document.getElementById('m-press').value;
-    d.weapons=[...mWeapons];
-    const kp=posKpi(d.pos);const kr={};[...kp.with,...kp.against].forEach(([l])=>{if(mKpi[l])kr[l]=mKpi[l];});
+  const kp=posKpi(d.pos);const kr={};[...kp.with,...kp.against].forEach(([l])=>{if(mKpi[l])kr[l]=mKpi[l];});
+  if(editingId){
     const p=players.find(x=>x.id===editingId);const posChanged=p.pos!==d.pos;
     Object.assign(p,d);
     if(Object.keys(kr).length)p.kpiRatings=kr;else if(posChanged)delete p.kpiRatings;
     closeModal();render();openP(editingId);
   }else{
-    // Quick add: defaults for new player
-    d.foot='R';d.status='database';d.now=0;d.ceiling=0;d.press=0;d.weapons=[];d.tier=1;
     const id=Math.max(0,...players.map(p=>p.id))+1;
-    players.push({id,...d,reports:[]});
-    closeModal();render();
-    toast('Added '+d.name+' — click to rate');
-    openP(id); // Open profile so user can rate immediately
+    players.push({id,...d,reports:[],kpiRatings:Object.keys(kr).length?kr:undefined});
+    closeModal();render();toast('Added '+d.name);
   }
 }
 function delPlayer(id){if(!confirm('Delete this player from the database?'))return;players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
@@ -842,7 +824,7 @@ function openImport(){
 }
 function closeImport(){document.getElementById('importModal').style.display='none';}
 function importPlayer(i){const r=CAPTURE_FEED[i];const id=Math.max(0,...players.map(p=>p.id))+1;players.push({id,name:r.name,club:r.club,pos:r.pos,age:r.age,foot:'R',tier:2,status:'watchlist',now:GRADEMAP[r.grade]||3,ceiling:0,press:0,weapons:[],reports:[{d:'today',e:'imported from capture',c:0}]});render();toast('Imported '+r.name);}
-setAge('All');setStatus('All');setTier('All');buildHead();render();
+setAge('All');setStatus('All');buildHead();render();
 </script>
 </body>
 </html>
