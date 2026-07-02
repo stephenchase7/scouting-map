@@ -1203,9 +1203,91 @@ td.editable:hover::after {
 @keyframes pull-spin {
   to { transform: rotate(360deg); }
 }
+/* Multi-select checkbox */
+.select-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #cc0000;
+}
+.player-row.selected {
+  background: rgba(204,0,0,0.08);
+}
+th.select-col, td.select-col {
+  width: 40px;
+  text-align: center;
+}
+
+/* Floating action bar */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1d1d1f;
+  color: #fff;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  font-size: 14px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+}
+.action-bar.visible {
+  transform: translateY(0);
+}
+.action-bar .count {
+  color: #86868b;
+}
+.action-bar .divider {
+  width: 1px;
+  height: 20px;
+  background: #424245;
+}
+.action-bar button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.action-bar button:hover {
+  background: rgba(255,255,255,0.1);
+}
+.action-bar button.primary {
+  background: #cc0000;
+  font-weight: 600;
+}
+.action-bar button.primary:hover {
+  background: #a00000;
+}
+.action-bar button.danger {
+  color: #ff453a;
+}
+.action-bar button.danger:hover {
+  background: rgba(255,69,58,0.15);
+}
 </style>
 </head>
 <body>
+
+<!-- Floating Action Bar -->
+<div class="action-bar" id="actionBar">
+  <span class="count"><span id="selectedCount">0</span> players selected</span>
+  <span class="divider"></span>
+  <button onclick="selectAllPlayers()">Select all</button>
+  <button onclick="clearSelection()">Clear</button>
+  <span class="divider"></span>
+  <button class="primary" onclick="addSelectedToScoutDb()">Add to Scout DB</button>
+  <button class="danger" onclick="deleteSelectedPlayers()">Delete</button>
+</div>
 
 <!-- Pull-to-Refresh Indicator -->
 <div class="pull-indicator" id="pullIndicator">
@@ -2555,6 +2637,7 @@ function renderRoster() {
   html += '<table>' +
     '<thead>' +
     '<tr>' +
+    '<th class="select-col"><input type="checkbox" class="select-checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)"></th>' +
     '<th>#</th>' +
     '<th>Player</th>' +
     '<th>YOB</th>' +
@@ -2568,6 +2651,7 @@ function renderRoster() {
     '<th>SV</th>' +
     '</tr>' +
     '<tr class="filter-row">' +
+    '<th></th>' +
     '<th></th>' +
     '<th><input type="text" class="filter-input" placeholder="Filter..." oninput="setFilter(\'name\', this.value)" value="' + (activeFilters.name || '') + '"></th>' +
     '<th><select class="filter-select" onchange="setFilter(\'yob\', this.value)">' +
@@ -2630,6 +2714,7 @@ function renderRoster() {
     var d1v1 = format1v1(stats.def_1v1_won, stats.def_1v1_total);
 
     html += '<tr class="player-row" data-player="' + fullPlayerData + '" data-idx="' + idx + '" data-playerkey="' + playerKey + '">' +
+      '<td class="select-col"><input type="checkbox" class="select-checkbox row-checkbox" onchange="togglePlayerSelect(this)" data-name="' + escapeAttr(p.name) + '" data-pos="' + (displayPos || '') + '" data-yob="' + (p.yob || '') + '"></td>' +
       '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
       '<td class="player-name-cell" onclick="openPlayerDetail(this.closest(\'tr\'))"><span class="player-name">' + p.name + '</span>' + scoutBadgeHtml + '</td>' +
       '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
@@ -2674,7 +2759,7 @@ function renderRoster() {
 // AUTHENTICATION & EDITING
 // ══════════════════════════════════════════════════════════════
 
-var EDIT_PWD_HASH = '5bd887caace65b71b8056d531a5a7653986a2677f6597053c89aef0e07cb46ea';
+var EDIT_PWD_HASH = 'a12ae4f91d12bd56be3a630325222253d4ce47e2b2eda27e6be85efb1af38690';
 var isAuthenticated = false;
 
 async function hashPassword(password) {
@@ -3784,6 +3869,182 @@ document.addEventListener('visibilitychange', async function() {
     pullCurrentY = 0;
   });
 })();
+
+// ══════════════════════════════════════════════════════════════
+// MULTI-SELECT & SCOUT DB INTEGRATION
+// ══════════════════════════════════════════════════════════════
+
+var selectedPlayers = [];
+var scoutDbClient = null;
+
+// Initialize Supabase client for Scout DB
+function initScoutDb() {
+  if (!scoutDbClient && typeof supabase !== 'undefined') {
+    scoutDbClient = supabase.createClient(
+      'https://pjorqdzlzgwqpivoibyx.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q'
+    );
+  }
+}
+
+function escapeAttr(str) {
+  return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function togglePlayerSelect(checkbox) {
+  var row = checkbox.closest('tr');
+  var playerData = {
+    name: checkbox.dataset.name,
+    pos: checkbox.dataset.pos,
+    yob: checkbox.dataset.yob,
+    club: currentClub ? currentClub.name : clubId,
+    age: currentTeam ? currentTeam.toUpperCase() : ''
+  };
+
+  if (checkbox.checked) {
+    row.classList.add('selected');
+    selectedPlayers.push(playerData);
+  } else {
+    row.classList.remove('selected');
+    selectedPlayers = selectedPlayers.filter(function(p) {
+      return p.name !== playerData.name || p.pos !== playerData.pos;
+    });
+  }
+  updateActionBar();
+}
+
+function toggleSelectAll(checked) {
+  var checkboxes = document.querySelectorAll('.row-checkbox');
+  selectedPlayers = [];
+  checkboxes.forEach(function(cb) {
+    cb.checked = checked;
+    var row = cb.closest('tr');
+    if (checked) {
+      row.classList.add('selected');
+      selectedPlayers.push({
+        name: cb.dataset.name,
+        pos: cb.dataset.pos,
+        yob: cb.dataset.yob,
+        club: currentClub ? currentClub.name : clubId,
+        age: currentTeam ? currentTeam.toUpperCase() : ''
+      });
+    } else {
+      row.classList.remove('selected');
+    }
+  });
+  updateActionBar();
+}
+
+function selectAllPlayers() {
+  var selectAllCb = document.getElementById('selectAllCheckbox');
+  if (selectAllCb) {
+    selectAllCb.checked = true;
+    toggleSelectAll(true);
+  }
+}
+
+function clearSelection() {
+  var selectAllCb = document.getElementById('selectAllCheckbox');
+  if (selectAllCb) selectAllCb.checked = false;
+  toggleSelectAll(false);
+}
+
+function updateActionBar() {
+  var actionBar = document.getElementById('actionBar');
+  var countEl = document.getElementById('selectedCount');
+  if (countEl) countEl.textContent = selectedPlayers.length;
+  if (actionBar) {
+    if (selectedPlayers.length > 0) {
+      actionBar.classList.add('visible');
+    } else {
+      actionBar.classList.remove('visible');
+    }
+  }
+}
+
+async function addSelectedToScoutDb() {
+  if (selectedPlayers.length === 0) return;
+
+  initScoutDb();
+  if (!scoutDbClient) {
+    showToast('Failed to connect to database');
+    return;
+  }
+
+  var added = 0;
+  var skipped = 0;
+
+  for (var i = 0; i < selectedPlayers.length; i++) {
+    var p = selectedPlayers[i];
+
+    // Check for duplicate
+    var { data: existing } = await scoutDbClient
+      .from('database_players')
+      .select('id')
+      .eq('name', p.name)
+      .eq('club', p.club)
+      .eq('age', p.age)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      skipped++;
+      continue;
+    }
+
+    // Insert new player
+    var { error } = await scoutDbClient.from('database_players').insert({
+      id: crypto.randomUUID(),
+      name: p.name,
+      club: p.club,
+      pos: p.pos,
+      age: p.age,
+      foot: 'R',
+      status: 'database',
+      now_rating: 0,
+      ceiling: 0,
+      press: 0,
+      weapons: [],
+      kpi_ratings: {},
+      reports: []
+    });
+
+    if (!error) added++;
+  }
+
+  var msg = 'Added ' + added + ' player' + (added !== 1 ? 's' : '') + ' to Scout DB';
+  if (skipped > 0) msg += ' (' + skipped + ' already existed)';
+  showToast(msg);
+  clearSelection();
+}
+
+async function deleteSelectedPlayers() {
+  if (selectedPlayers.length === 0) return;
+  if (!isAuthenticated) {
+    pendingEdit = { type: 'bulkDelete' };
+    showPasswordModal();
+    return;
+  }
+
+  if (!confirm('Delete ' + selectedPlayers.length + ' player(s) from the roster?')) return;
+
+  // For now just clear selection - actual delete would need to integrate with existing delete logic
+  showToast('Bulk delete not yet implemented');
+  clearSelection();
+}
+
+function showToast(message) {
+  var toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.textContent = message;
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:1001;animation:fadeInOut 2.5s ease;';
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.remove(); }, 2500);
+}
+
+// Add toast animation
+var toastStyle = document.createElement('style');
+toastStyle.textContent = '@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(10px);}10%{opacity:1;transform:translateX(-50%) translateY(0);}90%{opacity:1;}100%{opacity:0;}}';
+document.head.appendChild(toastStyle);
 
 // Start
 init();
