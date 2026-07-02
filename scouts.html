@@ -208,6 +208,8 @@
   .score .lab{font-size:10px;color:var(--muted);letter-spacing:0.5px;font-weight:600;text-transform:uppercase;}
   .score .val{font-size:28px;font-weight:600;margin-top:4px;}
   .score.now .val{color:var(--now);} .score.ceiling .val{color:var(--ceiling);} .score.press .val{color:var(--press);}
+  .score{cursor:pointer;transition:all 0.2s ease;} .score:hover{transform:scale(1.02);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .score.empty{border:2px dashed var(--line);background:#fff;} .score.empty .val{font-size:12px;color:var(--muted);font-weight:500;}
   .fitbar{
     display:flex;
     justify-content:space-between;
@@ -219,6 +221,7 @@
     margin-top:14px;
   }
   .fitbar .l{font-size:12px;opacity:.8;letter-spacing:0.3px;} .fitbar .v{font-size:24px;font-weight:600;}
+  .fitbar.empty{background:var(--sidebar-bg);color:var(--muted);} .fitbar.empty .v{font-size:14px;font-weight:500;}
   .fitbar .p{font-size:12px;}
   .sec-t{font-size:11px;letter-spacing:0.5px;color:var(--muted);font-weight:600;margin:0 0 14px;text-transform:uppercase;}
   .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
@@ -471,25 +474,29 @@
   </main>
 </div>
 <div id="modal" class="modal-bg" style="display:none">
-  <div class="modal">
-    <h3 id="modalTitle" style="margin:0 0 14px;font-size:16px;font-weight:700">Add player</h3>
-    <div class="mform">
-      <label>Name<input id="m-name"></label>
-      <label>Club<input id="m-club"></label>
+  <div class="modal" id="modalContent">
+    <h3 id="modalTitle" style="margin:0 0 6px;font-size:20px;font-weight:600">Add Player</h3>
+    <p id="modalDesc" style="font-size:13px;color:var(--muted);margin:0 0 20px">Just the basics. You'll rate them after watching.</p>
+    <div class="mform" id="basicFields">
+      <label>Name<input id="m-name" placeholder="Player name"></label>
+      <label>Club<input id="m-club" placeholder="Current club"></label>
       <label>Position<select id="m-pos" onchange="captureModalKpi();renderModalExtras()"><option>GK</option><option>CB</option><option>LB</option><option>RB</option><option>DM</option><option>CM</option><option>AM</option><option>LW</option><option>RW</option><option>ST</option></select></label>
       <label>Age group<select id="m-age"><option>U13</option><option>U14</option><option>U15</option><option>U16</option><option>U17</option></select></label>
-      <label>Catchment tier<select id="m-tier"><option>1</option><option>2</option><option>3</option></select></label>
-      <label>Foot<select id="m-foot"><option>R</option><option>L</option><option>Both</option></select></label>
-      <label>Status<select id="m-status"><option value="database">Database</option><option value="watchlist">Watchlist</option><option value="priority">Priority</option><option value="squad">NYRB squad</option></select></label>
-      <label>Now<select id="m-now"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
-      <label>Ceiling<select id="m-ceiling"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
-      <label>Pressing<select id="m-press"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
     </div>
-    <div style="margin-top:16px"><p class="sec-t">Position KPIs — <span id="m-poslabel">CM</span></p><div class="kpi-grid" id="m-kpigrid"></div></div>
-    <div style="margin-top:14px"><p class="sec-t">Special weapons</p><div class="weapons" id="m-weapons"></div></div>
-    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+    <div id="extraFields" style="display:none">
+      <div class="mform" style="margin-top:16px">
+        <label>Foot<select id="m-foot"><option>R</option><option>L</option><option>Both</option></select></label>
+        <label>Status<select id="m-status"><option value="database">Database</option><option value="watchlist">Watchlist</option><option value="priority">Priority</option><option value="squad">NYRB squad</option></select></label>
+        <label>Now<select id="m-now"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label>Ceiling<select id="m-ceiling"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label>Pressing<select id="m-press"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+      </div>
+      <div style="margin-top:16px"><p class="sec-t">Position KPIs — <span id="m-poslabel">CM</span></p><div class="kpi-grid" id="m-kpigrid"></div></div>
+      <div style="margin-top:14px"><p class="sec-t">Special weapons</p><div class="weapons" id="m-weapons"></div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
       <button class="btn ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn red" onclick="saveModal()">Save</button>
+      <button class="btn red" onclick="saveModal()" id="modalSaveBtn">Add to Database</button>
     </div>
   </div>
 </div>
@@ -639,12 +646,12 @@ function openP(id){
             <span class="badge" style="background:${STATUS[p.status].c}">${STATUS[p.status].label}</span>
           </div>
           <div class="scores">
-            <div class="score now"><div class="lab">NOW</div><div class="val ed" onclick="editScore(${p.id},'now')">${p.now||'–'}</div></div>
-            <div class="score ceiling"><div class="lab">CEILING</div><div class="val ed" onclick="editScore(${p.id},'ceiling')">${p.ceiling||'–'}</div></div>
-            <div class="score press"><div class="lab">PRESSING</div><div class="val ed" onclick="editScore(${p.id},'press')">${p.press||'–'}</div></div>
+            <div class="score now ${p.now?'':'empty'}" onclick="editScore(${p.id},'now')"><div class="lab">NOW</div><div class="val ed">${p.now||'Click to rate'}</div></div>
+            <div class="score ceiling ${p.ceiling?'':'empty'}" onclick="editScore(${p.id},'ceiling')"><div class="lab">CEILING</div><div class="val ed">${p.ceiling||'Click to rate'}</div></div>
+            <div class="score press ${p.press?'':'empty'}" onclick="editScore(${p.id},'press')"><div class="lab">PRESSING</div><div class="val ed">${p.press||'Click to rate'}</div></div>
           </div>
-          <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:6px">Click any number to change (cycles 1–5, then clears)</div>
-          <div class="fitbar"><div><div class="l">FIT SCORE · weighted${fs!=null?' · '+fitFields(p)+'/4 fields':''}</div><div class="p">Suggested: ${sg.label}</div></div><div class="v">${fs!=null?fs:'–'}</div></div>
+          <div style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:6px">${(p.now&&p.ceiling&&p.press)?'Click scores to edit (cycles 1–5, then clears)':'Click each score to rate after watching'}</div>
+          <div class="fitbar${fs==null?' empty':''}"><div><div class="l">FIT SCORE${fs!=null?' · '+fitFields(p)+'/4 fields':''}</div><div class="p">${fs!=null?'Suggested: '+sg.label:'Rate to calculate'}</div></div><div class="v">${fs!=null?fs:'—'}</div></div>
           <label class="fl">Change status</label>
           <div class="stsel">${Object.keys(STATUS).map(k=>`<div class="opt" style="${p.status===k?'background:'+STATUS[k].c+';color:#fff;border-color:'+STATUS[k].c:''}" onclick="setPStatus(${p.id},'${k}')">${STATUS[k].label}</div>`).join('')}</div>
           <div style="display:flex;gap:8px;margin-top:16px">
@@ -744,7 +751,17 @@ function togW(w){const i=cWeapons.indexOf(w);if(i>=0)cWeapons.splice(i,1);else c
 function saveReport(){const v=document.getElementById('capPlayer').value;const ev=document.getElementById('capEvent').value||'live';if(v==='new'){toast('New player flow — demo');return;}const p=players.find(x=>x.id==v);p.now=cNow||p.now;p.ceiling=cCeil||p.ceiling;p.press=cPress||p.press;p.weapons=cWeapons;p.reports.unshift({d:'today',e:ev,c:cCeil||p.ceiling});if(p.status==='database')p.status='watchlist';toast('Report saved → '+p.name);render();openP(p.id);}
 
 let editingId=null,mKpi={},mWeapons=[];
-function fillModal(p){document.getElementById('m-name').value=p.name||'';document.getElementById('m-club').value=p.club||'';document.getElementById('m-pos').value=p.pos||'CM';document.getElementById('m-age').value=p.age||'U15';document.getElementById('m-tier').value=p.tier||1;document.getElementById('m-foot').value=p.foot||'R';document.getElementById('m-status').value=p.status||'watchlist';document.getElementById('m-now').value=p.now||0;document.getElementById('m-ceiling').value=p.ceiling||0;document.getElementById('m-press').value=p.press||0;}
+function fillModal(p){
+  document.getElementById('m-name').value=p.name||'';
+  document.getElementById('m-club').value=p.club||'';
+  document.getElementById('m-pos').value=p.pos||'CM';
+  document.getElementById('m-age').value=p.age||'U15';
+  document.getElementById('m-foot').value=p.foot||'R';
+  document.getElementById('m-status').value=p.status||'database';
+  document.getElementById('m-now').value=p.now||0;
+  document.getElementById('m-ceiling').value=p.ceiling||0;
+  document.getElementById('m-press').value=p.press||0;
+}
 function renderModalExtras(){
   const pos=document.getElementById('m-pos').value;document.getElementById('m-poslabel').textContent=pos;
   const kp=posKpi(pos);
@@ -755,15 +772,61 @@ function renderModalExtras(){
 }
 function captureModalKpi(){document.querySelectorAll('#m-kpigrid select').forEach(s=>{mKpi[s.dataset.kpi]=+s.value;});}
 function mTogW(w){const i=mWeapons.indexOf(w);if(i>=0)mWeapons.splice(i,1);else mWeapons.push(w);renderModalExtras();}
-function openAdd(){editingId=null;mKpi={};mWeapons=[];document.getElementById('modalTitle').textContent='Add player';fillModal({pos:'CM',age:'U15',tier:1,foot:'R',status:'watchlist'});renderModalExtras();document.getElementById('modal').style.display='flex';}
-function openEdit(id){const p=players.find(x=>x.id===id);if(!p)return;editingId=id;mKpi={...(p.kpiRatings||{})};mWeapons=[...(p.weapons||[])];document.getElementById('modalTitle').textContent='Edit player';fillModal(p);renderModalExtras();document.getElementById('modal').style.display='flex';}
+function openAdd(){
+  editingId=null;mKpi={};mWeapons=[];
+  document.getElementById('modalTitle').textContent='Add Player';
+  document.getElementById('modalDesc').textContent="Just the basics. You'll rate them after watching.";
+  document.getElementById('modalDesc').style.display='block';
+  document.getElementById('extraFields').style.display='none';
+  document.getElementById('modalSaveBtn').textContent='Add to Database';
+  document.getElementById('modalContent').style.width='440px';
+  fillModal({pos:'CM',age:'U15',foot:'R',status:'database'});
+  document.getElementById('modal').style.display='flex';
+}
+function openEdit(id){
+  const p=players.find(x=>x.id===id);if(!p)return;
+  editingId=id;mKpi={...(p.kpiRatings||{})};mWeapons=[...(p.weapons||[])];
+  document.getElementById('modalTitle').textContent='Edit Player';
+  document.getElementById('modalDesc').style.display='none';
+  document.getElementById('extraFields').style.display='block';
+  document.getElementById('modalSaveBtn').textContent='Save Changes';
+  document.getElementById('modalContent').style.width='560px';
+  fillModal(p);renderModalExtras();
+  document.getElementById('modal').style.display='flex';
+}
 function closeModal(){document.getElementById('modal').style.display='none';}
 function saveModal(){
-  captureModalKpi();
-  const d={name:document.getElementById('m-name').value.trim()||'New player',club:document.getElementById('m-club').value.trim(),pos:document.getElementById('m-pos').value,age:document.getElementById('m-age').value,tier:+document.getElementById('m-tier').value,foot:document.getElementById('m-foot').value,status:document.getElementById('m-status').value,now:+document.getElementById('m-now').value,ceiling:+document.getElementById('m-ceiling').value,press:+document.getElementById('m-press').value,weapons:[...mWeapons]};
-  const kp=posKpi(d.pos);const kr={};[...kp.with,...kp.against].forEach(([l])=>{if(mKpi[l])kr[l]=mKpi[l];});
-  if(editingId){const p=players.find(x=>x.id===editingId);const posChanged=p.pos!==d.pos;Object.assign(p,d);if(Object.keys(kr).length)p.kpiRatings=kr;else if(posChanged)delete p.kpiRatings;closeModal();render();openP(editingId);}
-  else{const id=Math.max(0,...players.map(p=>p.id))+1;players.push({id,...d,reports:[],kpiRatings:Object.keys(kr).length?kr:undefined});closeModal();render();toast('Added '+d.name);}
+  const isEditing=!!editingId;
+  if(isEditing)captureModalKpi();
+  // Basic fields always captured
+  const d={
+    name:document.getElementById('m-name').value.trim()||'New player',
+    club:document.getElementById('m-club').value.trim(),
+    pos:document.getElementById('m-pos').value,
+    age:document.getElementById('m-age').value
+  };
+  // Extra fields only for edit mode
+  if(isEditing){
+    d.foot=document.getElementById('m-foot').value;
+    d.status=document.getElementById('m-status').value;
+    d.now=+document.getElementById('m-now').value;
+    d.ceiling=+document.getElementById('m-ceiling').value;
+    d.press=+document.getElementById('m-press').value;
+    d.weapons=[...mWeapons];
+    const kp=posKpi(d.pos);const kr={};[...kp.with,...kp.against].forEach(([l])=>{if(mKpi[l])kr[l]=mKpi[l];});
+    const p=players.find(x=>x.id===editingId);const posChanged=p.pos!==d.pos;
+    Object.assign(p,d);
+    if(Object.keys(kr).length)p.kpiRatings=kr;else if(posChanged)delete p.kpiRatings;
+    closeModal();render();openP(editingId);
+  }else{
+    // Quick add: defaults for new player
+    d.foot='R';d.status='database';d.now=0;d.ceiling=0;d.press=0;d.weapons=[];d.tier=1;
+    const id=Math.max(0,...players.map(p=>p.id))+1;
+    players.push({id,...d,reports:[]});
+    closeModal();render();
+    toast('Added '+d.name+' — click to rate');
+    openP(id); // Open profile so user can rate immediately
+  }
 }
 function delPlayer(id){if(!confirm('Delete this player from the database?'))return;players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
 const CAPTURE_FEED=[
