@@ -527,24 +527,7 @@ const POSKPI={
 function posKey(p){return ({LB:'FB',RB:'FB',LW:'W',RW:'W',CF:'ST'})[p]||(POSKPI[p]?p:'CM');}
 function posKpi(p){return POSKPI[posKey(p)];}
 
-let players=[
- {id:1,name:'Jordan Romero',club:'NYRB',pos:'CM',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:4,press:5,weapons:['Playmaker','Engine'],reports:[{d:'Jun 28',e:'vs Met Oval',c:4},{d:'May 03',e:'vs Oakwood',c:4}]},
- {id:2,name:'Daniel Osei',club:'Met Oval',pos:'CB',age:'U15',foot:'R',tier:1,status:'priority',now:4,ceiling:4,press:4,weapons:['Aerial','1v1 Defender'],reports:[{d:'Jun 28',e:'vs NYRB',c:4}]},
- {id:3,name:'Sefa Adeyemi',club:'Cedar Stars',pos:'CM',age:'U15',foot:'L',tier:1,status:'priority',now:3,ceiling:4,press:4,weapons:['Press Resistant','Ball Carrier'],reports:[{d:'Jun 21',e:'vs PA Classics',c:4}]},
- {id:4,name:'Marco Silva',club:'Cedar Stars',pos:'CM',age:'U14',foot:'L',tier:1,status:'watchlist',now:2,ceiling:5,press:3,weapons:['Playmaker','Press Resistant'],reports:[{d:'Jun 28',e:'vs Met Oval',c:5},{d:'May 03',e:'vs Oakwood',c:4},{d:'Mar 11',e:'ID event',c:4}]},
- {id:5,name:'Kwame Diallo',club:'NYRB',pos:'CB',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:4,press:4,weapons:['Aerial','Game Reader'],reports:[{d:'Jun 28',e:'vs Met Oval',c:4}]},
- {id:6,name:'Pavel Nilsen',club:'Oakwood',pos:'CB',age:'U15',foot:'L',tier:2,status:'watchlist',now:3,ceiling:4,press:3,weapons:['Press Resistant'],reports:[{d:'Jun 14',e:'vs Cedar',c:4}]},
- {id:7,name:'Fabio Costa',club:'NYRB',pos:'ST',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:5,press:4,weapons:['Finisher','Speed'],reports:[{d:'Jun 28',e:'vs Met Oval',c:5}]},
- {id:8,name:'Noah Okafor',club:'PA Classics',pos:'ST',age:'U15',foot:'R',tier:2,status:'priority',now:3,ceiling:5,press:3,weapons:['Finisher','Engine'],reports:[{d:'Jun 21',e:'vs Cedar',c:5}]},
- {id:9,name:'Gabriel Park',club:'PA Classics',pos:'ST',age:'U15',foot:'L',tier:2,status:'watchlist',now:2,ceiling:4,press:2,weapons:['Speed'],reports:[{d:'Jun 07',e:'vs Oakwood',c:4}]},
- {id:10,name:'Andre Reyes',club:'NYRB',pos:'GK',age:'U15',foot:'R',tier:1,status:'squad',now:4,ceiling:4,press:3,weapons:['Game Reader'],reports:[{d:'Jun 28',e:'vs Met Oval',c:4}]},
- {id:11,name:'Tomas Boateng',club:'Met Oval',pos:'GK',age:'U15',foot:'R',tier:1,status:'watchlist',now:3,ceiling:4,press:3,weapons:['Aerial'],reports:[{d:'Jun 14',e:'vs Cedar',c:4}]},
- {id:12,name:'Luca Marsh',club:'Oakwood',pos:'GK',age:'U15',foot:'R',tier:2,status:'database',now:0,ceiling:0,press:0,weapons:[],reports:[]},
- {id:13,name:'Diego Ferreira',club:'Cedar Stars',pos:'LW',age:'U14',foot:'R',tier:1,status:'priority',now:3,ceiling:5,press:4,weapons:['1v1 Attacker','Speed'],reports:[{d:'Jun 21',e:'vs PA',c:5}]},
- {id:14,name:'Ethan Cole',club:'Met Oval',pos:'RB',age:'U16',foot:'R',tier:1,status:'watchlist',now:3,ceiling:4,press:4,weapons:['Engine'],reports:[{d:'Jun 14',e:'vs NYRB',c:4}]},
- {id:15,name:'Mateo Cruz',club:'Vegas SC',pos:'AM',age:'U16',foot:'L',tier:3,status:'watchlist',now:3,ceiling:5,press:2,weapons:['Playmaker','1v1 Attacker'],reports:[{d:'May 30',e:'showcase',c:5}]},
- {id:16,name:'Owen Blake',club:'Bethesda',pos:'DM',age:'U17',foot:'R',tier:2,status:'database',now:0,ceiling:0,press:0,weapons:[],reports:[]}
-];
+let players=[];
 const AGES=['All','U13','U14','U15','U16','U17','U18','U19'];
 let af='All',sf='All',cur=null,sortK='fit',sortDir=-1,capState=null;
 const colFilters={status:'',name:'',club:'',pos:'',age:'',now:'',ceiling:'',press:'',priority:'',weapons:''};
@@ -552,9 +535,7 @@ const COLS=[['status','Status'],['name','Player'],['club','Club'],['pos','Pos'],
 
 // weighted Fit score — KPIs feed it; blank fields are skipped and weights renormalize over what's present
 const W={ceiling:.30,now:.25,press:.25,kpi:.20};
-const KPIBASE={1:4,2:4,3:3,4:3,5:4,6:3,7:4,8:3,9:3,10:4,11:3,12:0,13:4,14:3,15:4,16:0};
-function baseLevel(p){return KPIBASE[p.id]||0;}
-function ratingFor(p,name){const b=baseLevel(p);if(!b)return 0;let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))%7;return Math.min(5,Math.max(2,b-1+(h%3)));}
+function ratingFor(p,name){return 0;}
 function kpiWeighted(p){const kp=posKpi(p.pos);let num=0,den=0;[...kp.with,...kp.against].forEach(([label,w])=>{const r=(p.kpiRatings&&p.kpiRatings[label]!=null)?p.kpiRatings[label]:ratingFor(p,label);if(r){num+=w*r;den+=w;}});return den?num/den:0;}
 function fitParts(p){return [['ceiling',p.ceiling],['now',p.now],['press',p.press],['kpi',kpiWeighted(p)]];}
 function fitScore(p){let num=0,den=0;fitParts(p).forEach(([k,v])=>{if(v>0){num+=W[k]*v;den+=W[k];}});return den?Math.round(100*(num/den)/5):null;}
@@ -811,12 +792,7 @@ function saveModal(){
   }
 }
 function delPlayer(id){if(!confirm('Delete this player from the database?'))return;players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
-const CAPTURE_FEED=[
- {name:'Aron Javis',club:'Sting Austin',pos:'LW',age:'U16',grade:'B'},
- {name:'Zion Gill',club:'GSA ECNL',pos:'CB',age:'U15',grade:'B'},
- {name:'Kai Whitman',club:'Crossfire',pos:'CM',age:'U15',grade:'C'},
- {name:'Marcus Bell',club:'World Class',pos:'ST',age:'U14',grade:'B'}
-];
+const CAPTURE_FEED=[];
 const GRADEMAP={A:5,B:4,C:3,D:2};
 function openImport(){
   document.getElementById('importList').innerHTML=CAPTURE_FEED.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:8px"><div><div style="font-weight:600;font-size:13px">${r.name}</div><div style="font-size:11px;color:var(--muted)">${r.club} · ${r.pos} · ${r.age} · grade ${r.grade}</div></div><button class="btn red" style="padding:6px 12px" onclick="importPlayer(${i})">Import</button></div>`).join('');
