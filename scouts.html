@@ -509,7 +509,13 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// Supabase config
+const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const STATUS={database:{label:'Database',c:'var(--database)'},watchlist:{label:'Watchlist',c:'var(--watchlist)'},priority:{label:'Priority',c:'var(--priority)'},squad:{label:'NYRB squad',c:'var(--squad)'}};
 const WEAPONS=['1v1 Attacker','Press Resistant','Playmaker','Finisher','Engine','Game Reader','Aerial','Speed','Ball Carrier','1v1 Defender'];
 // position KPI map (⚡ = pressing-related), shared by live capture + profile
@@ -528,6 +534,54 @@ function posKey(p){return ({LB:'FB',RB:'FB',LW:'W',RW:'W',CF:'ST'})[p]||(POSKPI[
 function posKpi(p){return POSKPI[posKey(p)];}
 
 let players=[];
+
+// Supabase CRUD functions
+async function loadPlayers(){
+  try{
+    const {data,error}=await sb.from('database_players').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    players=(data||[]).map(mapDbPlayer);
+    buildHead();render();
+    console.log('Loaded',players.length,'players from Supabase');
+  }catch(e){
+    console.error('Failed to load players:',e);
+    toast('Failed to load players');
+  }
+}
+
+async function savePlayerToDb(p){
+  try{
+    const record={
+      id:p.id,name:p.name,club:p.club,pos:p.pos,age:p.age,foot:p.foot,
+      status:p.status,now_rating:p.now,ceiling:p.ceiling,press:p.press,
+      weapons:p.weapons||[],kpi_ratings:p.kpiRatings||{},reports:p.reports||[],
+      updated_at:new Date().toISOString()
+    };
+    const {error}=await sb.from('database_players').upsert(record,{onConflict:'id'});
+    if(error)throw error;
+  }catch(e){
+    console.error('Failed to save player:',e);
+    toast('Failed to save');
+  }
+}
+
+async function deletePlayerFromDb(id){
+  try{
+    const {error}=await sb.from('database_players').delete().eq('id',id);
+    if(error)throw error;
+  }catch(e){
+    console.error('Failed to delete player:',e);
+  }
+}
+
+// Map DB fields to local player object
+function mapDbPlayer(row){
+  return {
+    id:row.id,name:row.name,club:row.club,pos:row.pos,age:row.age,foot:row.foot||'R',
+    status:row.status||'database',now:row.now_rating||0,ceiling:row.ceiling||0,press:row.press||0,
+    weapons:row.weapons||[],kpiRatings:row.kpi_ratings||{},reports:row.reports||[]
+  };
+}
 const AGES=['All','U13','U14','U15','U16','U17','U18','U19'];
 let af='All',sf='All',cur=null,sortK='fit',sortDir=-1,capState=null;
 const colFilters={status:'',name:'',club:'',pos:'',age:'',now:'',ceiling:'',press:'',priority:'',weapons:''};
@@ -542,8 +596,9 @@ function fitScore(p){let num=0,den=0;fitParts(p).forEach(([k,v])=>{if(v>0){num+=
 function fitFields(p){return fitParts(p).filter(([k,v])=>v>0).length;}
 function ensureKpi(p){if(!p.kpiRatings){p.kpiRatings={};const kp=posKpi(p.pos);[...kp.with,...kp.against].forEach(([label])=>{p.kpiRatings[label]=ratingFor(p,label)||0;});}}
 function scoreOpts(v){return ['<option value="">—</option>',...[1,2,3,4,5].map(n=>`<option value="${n}"${n==v?' selected':''}>${n}</option>`)].join('');}
-function setScore(id,f,v){const p=players.find(x=>x.id===id);p[f]=+v||0;openP(id);render();}
-function editKpi(id,label){const p=players.find(x=>x.id===id);ensureKpi(p);p.kpiRatings[label]=cycleVal(p.kpiRatings[label]);openP(id);render();}
+async function setScore(id,f,v){const p=players.find(x=>x.id===id);p[f]=+v||0;await savePlayerToDb(p);openP(id);render();}
+async function editKpi(id,label){const p=players.find(x=>x.id===id);ensureKpi(p);p.kpiRatings[label]=cycleVal(p.kpiRatings[label]);await savePlayerToDb(p);openP(id);render();}
+function cycleVal(v){return v>=5?0:(v||0)+1;}
 function suggested(p){const f=fitScore(p);if(f==null)return{key:'',label:'Unrated'};if(f>=75)return{key:'priority',label:'Priority'};if(f>=55)return{key:'watchlist',label:'Watchlist'};return{key:'database',label:'Database'};}
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
@@ -649,7 +704,7 @@ function openP(id){
     </div>`;
   go('profile');
 }
-function setPStatus(id,k){players.find(p=>p.id===id).status=k;openP(id);render();toast('Status → '+STATUS[k].label);}
+async function setPStatus(id,k){const p=players.find(x=>x.id===id);p.status=k;await savePlayerToDb(p);openP(id);render();toast('Status → '+STATUS[k].label);}
 
 let depthAge='U15';
 const STINT={squad:'#fdeaec',priority:'#eaf3de',watchlist:'#fdf6da',database:'#f1efe8'};
@@ -765,7 +820,7 @@ function openEdit(id){
   document.getElementById('modal').style.display='flex';
 }
 function closeModal(){document.getElementById('modal').style.display='none';}
-function saveModal(){
+async function saveModal(){
   captureModalKpi();
   const d={
     name:document.getElementById('m-name').value.trim()||'New player',
@@ -784,14 +839,17 @@ function saveModal(){
     const p=players.find(x=>x.id===editingId);const posChanged=p.pos!==d.pos;
     Object.assign(p,d);
     if(Object.keys(kr).length)p.kpiRatings=kr;else if(posChanged)delete p.kpiRatings;
+    await savePlayerToDb(p);
     closeModal();render();openP(editingId);
   }else{
-    const id=Math.max(0,...players.map(p=>p.id))+1;
-    players.push({id,...d,reports:[],kpiRatings:Object.keys(kr).length?kr:undefined});
+    const id=crypto.randomUUID();
+    const newPlayer={id,...d,reports:[],kpiRatings:Object.keys(kr).length?kr:undefined};
+    players.unshift(newPlayer);
+    await savePlayerToDb(newPlayer);
     closeModal();render();toast('Added '+d.name);
   }
 }
-function delPlayer(id){if(!confirm('Delete this player from the database?'))return;players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
+async function delPlayer(id){if(!confirm('Delete this player from the database?'))return;await deletePlayerFromDb(id);players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
 const CAPTURE_FEED=[];
 const GRADEMAP={A:5,B:4,C:3,D:2};
 function openImport(){
@@ -800,7 +858,7 @@ function openImport(){
 }
 function closeImport(){document.getElementById('importModal').style.display='none';}
 function importPlayer(i){const r=CAPTURE_FEED[i];const id=Math.max(0,...players.map(p=>p.id))+1;players.push({id,name:r.name,club:r.club,pos:r.pos,age:r.age,foot:'R',tier:2,status:'watchlist',now:GRADEMAP[r.grade]||3,ceiling:0,press:0,weapons:[],reports:[{d:'today',e:'imported from capture',c:0}]});render();toast('Imported '+r.name);}
-setAge('All');setStatus('All');buildHead();render();
+setAge('All');setStatus('All');loadPlayers();
 </script>
 </body>
 </html>
