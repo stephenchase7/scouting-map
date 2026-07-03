@@ -2830,8 +2830,8 @@ async function performDeleteClub(clubId, csrfToken) {
     // Race condition fix: Verify club still exists in Supabase before deletion
     var { data: existingClub, error: checkError } = await supabaseClient
       .from('clubs')
-      .select('club_id')
-      .eq('club_id', clubId)
+      .select('id')
+      .eq('id', clubId)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -2849,7 +2849,7 @@ async function performDeleteClub(clubId, csrfToken) {
       var { error } = await supabaseClient
         .from('clubs')
         .delete()
-        .eq('club_id', clubId);
+        .eq('id', clubId);
 
       if (error) {
         console.error('Supabase delete error:', error);
