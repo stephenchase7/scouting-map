@@ -1545,7 +1545,6 @@ var CLUB_NAME_MAP = {
   'the_football_academy': 'The Football Academy',
   'philly': 'Philadelphia Union',
   'mtl': 'CF Montreal',
-  'sockers_fc_chicago': 'Sockers FC Chicago',
   'sporting_athletic_club': 'Sporting Athletic Club',
   'lisc': 'Long Island Soccer Club',
   'rochester': 'Rochester NY FC',
@@ -1658,10 +1657,7 @@ var clubs = [
   {name:"Valeo Futbol Club", state:"MA", league:"HD", division:"Northeast Division", lat:42.51, lng:-71.20, logo:"MLS Logos/Valeo FC.png", website:"https://valeofc.com", driveMiles:222, driveTime:"3h 34m", initials:"VFC", isPro:false, pathway:"both", clubId:"valeo"},
   {name:"Bayside FC", state:"RI", league:"HD", division:"Northeast Division", lat:41.816, lng:-71.370, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both", clubId:"bayside"},
   {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"real_futbol_academy"},
-  {name:"Michigan Futbol Academy", state:"MI", league:"HD", division:"Mid-America Division", lat:42.96, lng:-85.66, logo:"MLS Logos/Michigan Futbol Academy.jpg", website:"https://www.michiganfutbolacademy.com", driveMiles:680, driveTime:"10h 15m", initials:"MFA", isPro:false, pathway:"both", clubId:"michigan"},
-  {name:"Sockers FC Chicago", state:"IL", league:"HD", division:"Mid-America Division", lat:42.1125, lng:-88.034, logo:"MLS Logos/Sockers FC Chicago.png", website:"", driveMiles:800, driveTime:"12h 0m", initials:"SFC", isPro:false, pathway:"both", clubId:"sockers_fc_chicago"},
   {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
-  {name:"Inter Atlanta FC", state:"GA", league:"HD", division:"Southeast Division", lat:33.7590, lng:-84.3312, logo:"MLS Logos/Inter Atlanta fc.png", website:"", driveMiles:860, driveTime:"16h 31m", initials:"IAF", isPro:false, pathway:"both", clubId:"inter_atlanta"},
   {name:"FC DELCO", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.0792766, lng:-75.3015714, logo:"MLS Logos/FC Delco.png", website:"", driveMiles:83, driveTime:"1h 25m", initials:"DEL", isPro:false, pathway:"both", clubId:"fc_delco"},
   {name:"Springfield SYC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7791227, lng:-77.1861196, logo:"MLS Logos/Springfield SYC.jpg", website:"", driveMiles:247, driveTime:"4h 10m", initials:"SS", isPro:false, pathway:"both", clubId:"springfield_syc"},
   {name:"RSL Arizona", state:"AZ", league:"HD", division:"Southwest Division", lat:33.4942189, lng:-111.926018, logo:"MLS Logos/Real Salt Lake (AZ).png", website:"", driveMiles:2401, driveTime:"43h 36m", initials:"RSL", isPro:false, pathway:"both", clubId:"real_salt_lake_az"},
@@ -1674,8 +1670,7 @@ var clubs = [
   {name:"Bethesda SC", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.1399187, lng:-77.1929215, logo:"MLS Logos/Bethesda SC.jpg", website:"", driveMiles:188, driveTime:"3h 10m", initials:"BET", isPro:false, pathway:"both", clubId:"bethesda_sc"},
   {name:"Northern Virginia Alliance", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:39.077885, lng:-77.5532296, logo:"MLS Logos/Northern Virginia Alliance.png", website:"", driveMiles:206, driveTime:"3h 30m", initials:"NVA", isPro:false, pathway:"both", clubId:"northern_virginia_alliance"},
   {name:"Alexandria SA", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7970174, lng:-77.0527447, logo:"MLS Logos/Alexandria SA.jpg", website:"", driveMiles:198, driveTime:"3h 20m", initials:"ASA", isPro:false, pathway:"both", clubId:"alexandria_sa"},
-  {name:"Achilles FC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.962983, lng:-77.0545673, logo:"MLS Logos/Achilles FC.jpg", website:"", driveMiles:190, driveTime:"3h 10m", initials:"AFC", isPro:false, pathway:"both", clubId:"achilles_fc"},
-  {name:"Chula Vista FC", state:"CA", league:"HD", division:"Southwest Division", lat:32.632, lng:-116.983, logo:"MLS Logos/Chula Vista FC.png", website:"https://chulavistafc.com", driveMiles:2400, driveTime:"40h 0m", initials:"CVFC", isPro:false, pathway:"both", clubId:"chula_vista_fc"}
+  {name:"Achilles FC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.962983, lng:-77.0545673, logo:"MLS Logos/Achilles FC.jpg", website:"", driveMiles:190, driveTime:"3h 10m", initials:"AFC", isPro:false, pathway:"both", clubId:"achilles_fc"}
 ];
 
 // Load clubs from localStorage and merge with base clubs
@@ -2071,7 +2066,6 @@ var csvTeamData = {
   "Chattanooga FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}],
   "Chicago FC United": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Chicago Fire FC": [{age: "U16", division: "Central (Pro Player Pathway)"}, {age: "U17", division: "Central (Pro Player Pathway)"}, {age: "U19", division: "Central (Pro Player Pathway)"}],
-  "Chula Vista FC": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
   "Cincinnati United Premier Soccer Club": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "City SC San Diego": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
   "City SC Southwest": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
@@ -2100,7 +2094,6 @@ var csvTeamData = {
   "IMG": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
   "IdeaSport SA": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
   "Indy Eleven": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
-  "Inter Atlanta FC": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
   "Inter Miami CF": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U16", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Southeast (Pro Player Pathway)"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Southeast (Pro Player Pathway)"}],
   "Intercontinental Football Academy of New England": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
   "Ironbound Soccer Club": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
@@ -2121,7 +2114,6 @@ var csvTeamData = {
   "Lou Fusz Athletic": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Metropolitan Oval": [{age: "U13", division: "Northeast Division"}, {age: "U14", division: "Northeast Division"}, {age: "U15", division: "Northeast Division"}, {age: "U16", division: "Northeast Division"}, {age: "U17", division: "Northeast Division"}, {age: "U19", division: "Northeast Division"}],
   "Miami Futbol Academy Rush": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
-  "Michigan Futbol Academy": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Michigan Jaguars": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Michigan Wolves": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Midwest United FC": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
@@ -2165,7 +2157,6 @@ var csvTeamData = {
   "Shattuck-St. Mary's": [{age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Silicon Valley Soccer Academy": [{age: "U13", division: "Northwest Division"}, {age: "U14", division: "Northwest Division"}, {age: "U15", division: "Northwest Division"}, {age: "U16", division: "Northwest Division"}, {age: "U17", division: "Northwest Division"}, {age: "U19", division: "Northwest Division"}],
   "SoCal Reds FC": [{age: "U13", division: "Southwest Division"}, {age: "U14", division: "Southwest Division"}, {age: "U15", division: "Southwest Division"}, {age: "U16", division: "Southwest Division"}, {age: "U17", division: "Southwest Division"}, {age: "U19", division: "Southwest Division"}],
-  "Sockers FC Chicago": [{age: "U13", division: "Mid-America Division"}, {age: "U14", division: "Mid-America Division"}, {age: "U15", division: "Mid-America Division"}, {age: "U16", division: "Mid-America Division"}, {age: "U17", division: "Mid-America Division"}, {age: "U19", division: "Mid-America Division"}],
   "Sol SC Florida": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
   "South Florida Football Academy": [{age: "U13", division: "Florida Division"}, {age: "U14", division: "Florida Division"}, {age: "U15", division: "Florida Division"}, {age: "U16", division: "Florida Division"}, {age: "U17", division: "Florida Division"}, {age: "U19", division: "Florida Division"}],
   "Southern Soccer Academy": [{age: "U13", division: "Southeast Division"}, {age: "U14", division: "Southeast Division"}, {age: "U15", division: "Southeast Division"}, {age: "U16", division: "Southeast Division"}, {age: "U17", division: "Southeast Division"}, {age: "U19", division: "Southeast Division"}],
@@ -4413,7 +4404,7 @@ loadSearchFromURL();
       <div class="modal-body">
         <div class="form-group">
           <label>Club Name (as it appears in Kitman Labs)</label>
-          <input type="text" name="name" id="clubNameInput" list="clubNameList" required placeholder="e.g., Sockers FC Chicago" autocomplete="off">
+          <input type="text" name="name" id="clubNameInput" list="clubNameList" required placeholder="e.g., FC Westchester" autocomplete="off">
           <datalist id="clubNameList">
             <!-- Populated from csvTeamData on page load -->
           </datalist>
@@ -4671,7 +4662,6 @@ const contactListData = [
   { name: "Sebastian Giraldo", email: "sebastian@chattanoogafc.com", org: "Chattanooga FC" },
   { name: "Jeff D.", email: "jeff.d@chicagofcunited.com", org: "Chicago FC United" },
   { name: "Gary Lewis", email: "glewis@chicagofirefc.com", org: "Chicago Fire FC" },
-  { name: "Hector Diaz", email: "hector.diaz@chulavistafc.com", org: "Chula Vista FC" },
   { name: "Paul Ritchie", email: "paul@ourcitysc.com", org: "City SC" },
   { name: "Matt", email: "matt@cityscsouthwest.com", org: "City SC Southwest" },
   { name: "Andrew Kewley", email: "andrew.kewley@coloradorapids.com", org: "Colorado Rapids" },
@@ -4702,7 +4692,6 @@ const contactListData = [
   { name: "Simon Collins", email: "simon.collins@imgacademy.com", org: "IMG Academy" },
   { name: "Joseph Walejko", email: "joseph.walejko@imgacademy.com", org: "IMG Academy" },
   { name: "Kiki Wallace", email: "cwallace@indianafirejuniors.com", org: "Indiana Fire Academy" },
-  { name: "Jack Curtin", email: "jcurtin@interatlantafc.com", org: "Inter Atlanta FC" },
   { name: "Victor Pastora", email: "Victor.Pastora@intermiamicf.com", org: "Inter Miami CF" },
   { name: "Brittany Waterbury", email: "brittany.waterbury@InterMiamiCF.com", org: "Inter Miami CF" },
   { name: "Guillermo Hoyos", email: "Guillermo.Hoyos@intermiamicf.com", org: "Inter Miami CF" },
@@ -4772,7 +4761,6 @@ const contactListData = [
   { name: "Sean Bushey", email: "Sean.Bushey@s-sm.org", org: "S-SM" },
   { name: "Savio Carrijo", email: "savio.carrijo@pasoccerclub.org", org: "Silicon Valley/PA Soccer" },
   { name: "Artur Jozkowicz", email: "artur.jozkowicz@socalredsfc.com", org: "SoCal Reds FC" },
-  { name: "David Richardson", email: "david@sockersfcchicago.com", org: "Sockers FC Chicago" },
   { name: "Alfonzo", email: "alfonzo@solsportsclub.org", org: "Sol Sports Club" },
   { name: "Eric Eichmann", email: "eichmann88@yahoo.com", org: "South Florida Football" },
   { name: "Roberto Sibaja", email: "robertos@ssaelite.com", org: "Southern Soccer Academy" },
