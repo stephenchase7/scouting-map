@@ -2845,7 +2845,20 @@ async function performDeleteClub(clubId, csrfToken) {
       // Club doesn't exist in Supabase - still clean up local state
       console.warn('Club ' + clubId + ' not found in Supabase, cleaning up local state only');
     } else {
-      // Club exists, proceed with deletion
+      // First delete related squad_data records (foreign key constraint)
+      var { error: squadError } = await supabaseClient
+        .from('squad_data')
+        .delete()
+        .eq('club_id', clubId);
+
+      if (squadError) {
+        console.error('Supabase squad_data delete error:', squadError);
+        alert('Database error deleting squad data: ' + squadError.message);
+        markOperationComplete('deleteClub', clubId);
+        return;
+      }
+
+      // Then delete the club
       var { error } = await supabaseClient
         .from('clubs')
         .delete()
