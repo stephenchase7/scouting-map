@@ -1619,59 +1619,9 @@ var STATE_TO_DIVISION = {
 };
 
 // ── CLUBS DATA ──
-// Northeast Division - MLS NEXT
-var clubs = [
-  // ══════════════════════════════════════════════════════════════
-  // MLS PRO CLUBS (U16-U19 Pro Pathway)
-  // ══════════════════════════════════════════════════════════════
-  {name:"New York Red Bulls", state:"NJ", league:"HD", division:"Northeast Division", lat:40.8167, lng:-74.4028, logo:"MLS Logos/NY Red Bulls.png", website:"https://www.newyorkredbulls.com", driveMiles:0, driveTime:"0m", initials:"NYRB", isPro:true, pathway:"both", clubId:"nyrb"},
-  {name:"New York City FC", state:"NY", league:"HD", division:"Northeast Division", lat:40.829, lng:-73.926, logo:"MLS Logos/NYCFC.png", website:"https://www.nycfc.com", driveMiles:28, driveTime:"45m", initials:"NYCFC", isPro:true, pathway:"both", clubId:"nycfc"},
-  {name:"New England Revolution", state:"MA", league:"HD", division:"Northeast Division", lat:42.09, lng:-71.26, logo:"MLS Logos/NE Revolution.png", website:"https://www.revolutionsoccer.net", driveMiles:210, driveTime:"3h 25m", initials:"NER", isPro:true, pathway:"both", clubId:"ne_rev"},
-  {name:"Philadelphia Union", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:39.832, lng:-75.379, logo:"MLS Logos/Philadelphia Union.jpg", website:"https://www.philadelphiaunion.com", driveMiles:95, driveTime:"1h 40m", initials:"PHI", isPro:true, pathway:"both", clubId:"philly"},
-  {name:"Toronto FC", state:"ON", league:"HD", division:"Northeast (Pro Player Pathway)", lat:43.633, lng:-79.418, logo:"MLS Logos/Toronto FC.png", website:"https://www.torontofc.ca", driveMiles:475, driveTime:"7h 30m", initials:"TFC", isPro:true, pathway:"u16-u19", clubId:"tfc"},
-  {name:"CF Montreal", state:"QC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:45.563, lng:-73.553, logo:"MLS Logos/CF Montreal.png", website:"https://www.cfmontreal.com", driveMiles:380, driveTime:"6h 0m", initials:"MTL", isPro:true, pathway:"u16-u19", clubId:"mtl"},
-  {name:"D.C. United", state:"DC", league:"HD", division:"Northeast (Pro Player Pathway)", lat:38.868, lng:-77.013, logo:"MLS Logos/DC United.png", website:"https://www.dcunited.com", driveMiles:225, driveTime:"3h 45m", initials:"DCU", isPro:true, pathway:"u16-u19", clubId:"dc-united"},
-
-  // ══════════════════════════════════════════════════════════════
-  // NORTHEAST DIVISION CLUBS (U13-U19)
-  // ══════════════════════════════════════════════════════════════
-  {name:"Beachside of Connecticut", state:"CT", league:"HD", division:"Northeast Division", lat:41.14, lng:-73.36, logo:"MLS Logos/beachside.png", website:"https://beachsidesoccer.org", driveMiles:72, driveTime:"1h 20m", initials:"BSC", isPro:false, pathway:"both", clubId:"beachside"},
-  {name:"Blau Weiss Gottschee", state:"NY", league:"HD", division:"Northeast Division", lat:40.745, lng:-73.90, logo:"MLS Logos/BW Gottschee.png", website:"https://bwgottschee.org", driveMiles:26, driveTime:"45m", initials:"BWG", isPro:false, pathway:"both", clubId:"bwg"},
-  {name:"Cedar Stars Academy Bergen", state:"NJ", league:"HD", division:"Northeast Division", lat:40.955, lng:-74.07, logo:"MLS Logos/CSA Bergen.png", website:"https://cedarstars.com", driveMiles:19, driveTime:"30m", initials:"CSA", isPro:false, pathway:"both", clubId:"csa_bergen"},
-  {name:"Cedar Stars Academy Monmouth", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:40.28, lng:-74.08, logo:"MLS Logos/CSA Monmouth.png", website:"https://cedarstars.com", driveMiles:52, driveTime:"1h 0m", initials:"CSAM", isPro:false, pathway:"both", clubId:"csa_monmouth"},
-  {name:"Connecticut United FC", state:"CT", league:"HD", division:"Northeast Division", lat:41.22, lng:-73.06, logo:"MLS Logos/ct united.png", website:"https://ctunited.com", driveMiles:85, driveTime:"1h 25m", initials:"CTU", isPro:false, pathway:"u13-u15", clubId:"ct_united"},
-  {name:"Downtown United Soccer Club", state:"NY", league:"HD", division:"Northeast Division", lat:40.762, lng:-73.98, logo:"MLS Logos/dusc.png", website:"https://dusc.net", driveMiles:30, driveTime:"50m", initials:"DUSC", isPro:false, pathway:"both", clubId:"dusc"},
-  {name:"FA Euro New York", state:"NY", league:"HD", division:"Northeast Division", lat:40.575, lng:-74.15, logo:"MLS Logos/fa euro.png", website:"https://faeuro.com", driveMiles:35, driveTime:"50m", initials:"FAE", isPro:false, pathway:"both", clubId:"fa_euro"},
-  {name:"FC Westchester", state:"NY", league:"HD", division:"Northeast Division", lat:41.055, lng:-73.82, logo:"MLS Logos/FC Westchester.png", website:"https://fcwestchester.com", driveMiles:24, driveTime:"38m", initials:"FCW", isPro:false, pathway:"both", clubId:"fc_westchester"},
-  {name:"Ironbound Soccer Club", state:"NJ", league:"HD", division:"Northeast Division", lat:40.73, lng:-74.175, logo:"MLS Logos/Ironbound SC.png", website:"https://ironboundsoccer.com", driveMiles:16, driveTime:"28m", initials:"ISC", isPro:false, pathway:"both", clubId:"ironbound_soccer_club"},
-  {name:"Long Island Soccer Club", state:"NY", league:"HD", division:"Northeast Division", lat:40.680, lng:-73.55, logo:"MLS Logos/LISC.png", website:"https://longisland-soccerclub.com", driveMiles:58, driveTime:"1h 5m", initials:"LISC", isPro:false, pathway:"both", clubId:"lisc"},
-  {name:"Metropolitan Oval", state:"NY", league:"HD", division:"Northeast Division", lat:40.872, lng:-73.89, logo:"MLS Logos/Met Oval.png", website:"https://metropolitanoval.org", driveMiles:27, driveTime:"42m", initials:"MO", isPro:false, pathway:"both", clubId:"met_oval"},
-  {name:"New York SC", state:"NY", league:"HD", division:"Northeast Division", lat:41.025, lng:-73.90, logo:"MLS Logos/NYSC.png", website:"https://newyorksoccerclub.org", driveMiles:23, driveTime:"38m", initials:"NYSC", isPro:false, pathway:"both", clubId:"nysc"},
-  {name:"TSF Academy", state:"NJ", league:"HD", division:"Northeast Division", lat:40.67, lng:-74.65, logo:"MLS Logos/TSF.png", website:"https://tsfacademy.com", driveMiles:22, driveTime:"35m", initials:"TSF", isPro:false, pathway:"both", clubId:"tsf"},
-  {name:"FC Greater Boston Bolts", state:"MA", league:"HD", division:"Northeast Division", lat:42.20, lng:-71.00, logo:"MLS Logos/FC Greater Boston Bolts.png", website:"https://bostonbolts.com", driveMiles:234, driveTime:"3h 48m", initials:"BOLT", isPro:false, pathway:"both", clubId:"bolts"},
-  {name:"Intercontinental Football Academy of New England", state:"MA", league:"HD", division:"Northeast Division", lat:42.2648, lng:-72.5201, logo:"MLS Logos/Intercontinental FA.jpg", website:"https://ifane.org", driveMiles:224, driveTime:"3h 38m", initials:"IFA", isPro:false, pathway:"both", clubId:"ifa"},
-  {name:"NEFC", state:"MA", league:"HD", division:"Northeast Division", lat:42.30, lng:-71.68, logo:"MLS Logos/NEFC.png", website:"https://nefc.us", driveMiles:202, driveTime:"3h 18m", initials:"NEFC", isPro:false, pathway:"both", clubId:"nefc"},
-  {name:"Oakwood Soccer Club", state:"CT", league:"HD", division:"Northeast Division", lat:41.285, lng:-73.03, logo:"MLS Logos/Oakwood Soccer Club.jpg", website:"https://oakwoodsoccer.com", driveMiles:91, driveTime:"1h 38m", initials:"OSC", isPro:false, pathway:"both", clubId:"oakwood"},
-  {name:"Rochester NY FC", state:"NY", league:"HD", division:"Northeast Division", lat:43.155, lng:-77.61, logo:"MLS Logos/Rochester NY FC Academy.jpg", website:"https://www.rnyfc-youth.com", driveMiles:327, driveTime:"5h 2m", initials:"ROC", isPro:false, pathway:"both", clubId:"rochester"},
-  {name:"Seacoast United", state:"NH", league:"HD", division:"Northeast Division", lat:43.07, lng:-70.76, logo:"MLS Logos/Seacoast United.jpg", website:"https://seacoastunited.com", driveMiles:314, driveTime:"4h 58m", initials:"SCU", isPro:false, pathway:"both", clubId:"seacoast"},
-  {name:"Valeo Futbol Club", state:"MA", league:"HD", division:"Northeast Division", lat:42.51, lng:-71.20, logo:"MLS Logos/Valeo FC.png", website:"https://valeofc.com", driveMiles:222, driveTime:"3h 34m", initials:"VFC", isPro:false, pathway:"both", clubId:"valeo"},
-  {name:"Bayside FC", state:"RI", league:"HD", division:"Northeast Division", lat:41.816, lng:-71.370, logo:"MLS Logos/Bayside FC.jpg", website:"https://baysidefc.com", driveMiles:185, driveTime:"3h 5m", initials:"BFC", isPro:false, pathway:"both", clubId:"bayside"},
-  {name:"Real Futbol Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:39.855, lng:-74.824, logo:"MLS Logos/RFA.jpg", website:"https://realfutbolacademy.com", driveMiles:75, driveTime:"1h 20m", initials:"RFA", isPro:false, pathway:"both", clubId:"real_futbol_academy"},
-  {name:"Baltimore Armour", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.267, lng:-76.799, logo:"MLS Logos/Baltimore Armour.png", website:"https://www.baltimorearmour.com", driveMiles:195, driveTime:"3h 15m", initials:"BA", isPro:false, pathway:"both", clubId:"baltimore_armour"},
-  {name:"FC DELCO", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.0792766, lng:-75.3015714, logo:"MLS Logos/FC Delco.png", website:"", driveMiles:83, driveTime:"1h 25m", initials:"DEL", isPro:false, pathway:"both", clubId:"fc_delco"},
-  {name:"Springfield SYC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7791227, lng:-77.1861196, logo:"MLS Logos/Springfield SYC.jpg", website:"", driveMiles:247, driveTime:"4h 10m", initials:"SS", isPro:false, pathway:"both", clubId:"springfield_syc"},
-  {name:"RSL Arizona", state:"AZ", league:"HD", division:"Southwest Division", lat:33.4942189, lng:-111.926018, logo:"MLS Logos/Real Salt Lake (AZ).png", website:"", driveMiles:2401, driveTime:"43h 36m", initials:"RSL", isPro:false, pathway:"both", clubId:"real_salt_lake_az"},
-  {name:"Sporting Athletic Club", state:"DE", league:"HD", division:"Mid-Atlantic Division", lat:39.7471805, lng:-75.5500972, logo:"MLS Logos/Sporting Athletic Club.jpg", website:"", driveMiles:120, driveTime:"2h 0m", initials:"SAC", isPro:false, pathway:"both", clubId:"sporting_athletic_club"},
-  {name:"Beadling SC", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.7022913, lng:-80.2860955, logo:"MLS Logos/Beadling SC.jpg", website:"", driveMiles:320, driveTime:"5h 10m", initials:"BDL", isPro:false, pathway:"both", clubId:"beadling_sc"},
-  {name:"Players Development Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:40.532801, lng:-74.575501, logo:"MLS Logos/Players Development Academy.png", website:"", driveMiles:22, driveTime:"43m", initials:"PDA", isPro:false, pathway:"both", clubId:"players_development_academy"},
-  {name:"The Football Academy", state:"NJ", league:"HD", division:"Mid-Atlantic Division", lat:40.7557497, lng:-74.3613575, logo:"MLS Logos/The Football Academy.jpg", website:"", driveMiles:5, driveTime:"9m", initials:"TFA", isPro:false, pathway:"both", clubId:"the_football_academy"},
-  {name:"Keystone FC", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.214, lng:-77.008, logo:"MLS Logos/Keystone Fc.jpg", website:"https://www.keystonefc.com", driveMiles:150, driveTime:"2h 30m", initials:"KFC", isPro:false, pathway:"both", clubId:"keystone_fc"},
-  {name:"PA Classics", state:"PA", league:"HD", division:"Mid-Atlantic Division", lat:40.163, lng:-76.396, logo:"MLS Logos/PA Classics .png", website:"https://www.paclassics.org", driveMiles:120, driveTime:"2h 0m", initials:"PAC", isPro:false, pathway:"both", clubId:"pa_classics"},
-  {name:"Bethesda SC", state:"MD", league:"HD", division:"Mid-Atlantic Division", lat:39.1399187, lng:-77.1929215, logo:"MLS Logos/Bethesda SC.jpg", website:"", driveMiles:188, driveTime:"3h 10m", initials:"BET", isPro:false, pathway:"both", clubId:"bethesda_sc"},
-  {name:"Northern Virginia Alliance", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:39.077885, lng:-77.5532296, logo:"MLS Logos/Northern Virginia Alliance.png", website:"", driveMiles:206, driveTime:"3h 30m", initials:"NVA", isPro:false, pathway:"both", clubId:"northern_virginia_alliance"},
-  {name:"Alexandria SA", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.7970174, lng:-77.0527447, logo:"MLS Logos/Alexandria SA.jpg", website:"", driveMiles:198, driveTime:"3h 20m", initials:"ASA", isPro:false, pathway:"both", clubId:"alexandria_sa"},
-  {name:"Achilles FC", state:"VA", league:"HD", division:"Mid-Atlantic Division", lat:38.962983, lng:-77.0545673, logo:"MLS Logos/Achilles FC.jpg", website:"", driveMiles:190, driveTime:"3h 10m", initials:"AFC", isPro:false, pathway:"both", clubId:"achilles_fc"}
-];
+// Clubs loaded from Supabase (single source of truth)
+// Empty array - populated by loadSupabaseClubs()
+var clubs = [];
 
 // Load clubs from localStorage and merge with base clubs
 try {
@@ -1826,13 +1776,13 @@ try {
 // Validate club data from Supabase
 function validateClubData(club) {
   var errors = [];
-  if (!club.club_id) errors.push('missing club_id');
+  if (!club.id) errors.push('missing id');
   if (!club.name) errors.push('missing name');
-  if (club.latitude === null || club.latitude === undefined) errors.push('missing latitude');
-  if (club.longitude === null || club.longitude === undefined) errors.push('missing longitude');
+  if (club.lat === null || club.lat === undefined) errors.push('missing lat');
+  if (club.lng === null || club.lng === undefined) errors.push('missing lng');
 
   if (errors.length > 0) {
-    console.warn('[Supabase] Invalid club data:', club.club_id || 'unknown', '-', errors.join(', '));
+    console.warn('[Supabase] Invalid club data:', club.id || 'unknown', '-', errors.join(', '));
     return false;
   }
   return true;
@@ -1867,16 +1817,13 @@ async function loadSupabaseClubs() {
   }
 
   try {
-    // Loading clubs from Supabase...
-
-    // Load all clubs from Supabase
+    // Load all clubs from Supabase (single source of truth)
     const { data: supabaseClubs, error } = await supabaseClient
       .from('clubs')
       .select('*');
 
     if (error) {
       console.warn('[Supabase] Failed to load clubs:', error);
-      // Try to load from cache on error
       var cachedData = getCachedClubData();
       if (cachedData) {
         applyClubDataFromCache(cachedData);
@@ -1887,76 +1834,39 @@ async function loadSupabaseClubs() {
     }
 
     if (supabaseClubs && supabaseClubs.length > 0) {
-      // Supabase clubs loaded
+      // Clear and replace clubs array with Supabase data
+      clubs.length = 0;
 
-      // Merge Supabase clubs with existing clubs
       supabaseClubs.forEach(function(sbClub) {
-        // Validate club data before processing
-        if (!validateClubData(sbClub)) {
-          return; // Skip invalid clubs
+        // Skip clubs without required fields
+        if (!sbClub.id || !sbClub.name || sbClub.lat === null || sbClub.lng === null) {
+          console.warn('[Supabase] Skipping invalid club:', sbClub.id || 'unknown');
+          return;
         }
 
-        // Find existing club by club_id
-        var existingIdx = clubs.findIndex(function(c) { return c.clubId === sbClub.club_id; });
-
-        // Prepare club object in the format expected by the map
+        // Transform Supabase record to map format
         var clubObj = {
           name: sbClub.name || '',
           state: sbClub.state || '',
           league: sbClub.league || 'HD',
           division: sbClub.division || '',
-          lat: sbClub.latitude || 0,
-          lng: sbClub.longitude || 0,
-          logo: sbClub.logo_path || '',
+          lat: sbClub.lat || 0,
+          lng: sbClub.lng || 0,
+          logo: sbClub.logo || '',
           website: sbClub.website || '',
           driveMiles: sbClub.drive_miles || 0,
           driveTime: sbClub.drive_time || '0m',
           initials: sbClub.initials || '',
           isPro: sbClub.is_pro || false,
           pathway: sbClub.pathway || 'both',
-          clubId: sbClub.club_id,
+          clubId: sbClub.id,
           fromSupabase: true
         };
 
-        // Use authoritative name from CLUB_NAME_MAP if available (for csvTeamData matching)
-        if (CLUB_NAME_MAP[sbClub.club_id]) {
-          clubObj.name = CLUB_NAME_MAP[sbClub.club_id];
-        }
-
-        if (existingIdx !== -1) {
-          // CRITICAL: For existing hardcoded clubs, ALWAYS keep hardcoded values
-          // Supabase data has been unreliable - only use it for NEW clubs
-          var existingClub = clubs[existingIdx];
-
-          // ALWAYS keep hardcoded coordinates - never trust Supabase coordinates
-          clubObj.lat = existingClub.lat;
-          clubObj.lng = existingClub.lng;
-          clubObj.driveMiles = existingClub.driveMiles;
-          clubObj.driveTime = existingClub.driveTime;
-
-          // ALWAYS keep hardcoded display values
-          clubObj.logo = existingClub.logo;
-          clubObj.division = existingClub.division;
-          clubObj.state = existingClub.state;
-          clubObj.initials = existingClub.initials;
-          clubObj.name = existingClub.name;
-          clubObj.league = existingClub.league;
-          clubObj.isPro = existingClub.isPro;
-          clubObj.pathway = existingClub.pathway;
-          clubObj.website = existingClub.website || clubObj.website;
-
-          // Mark as merged but keeping hardcoded data
-          clubObj.fromSupabase = false;
-
-          // Don't update - keep existing hardcoded club as-is
-          // clubs[existingIdx] = clubObj;  // REMOVED - don't overwrite
-        } else {
-          // Add new club from Supabase
-          clubs.push(clubObj);
-        }
+        clubs.push(clubObj);
       });
 
-      // Supabase merge complete
+      console.log('[Supabase] Loaded ' + clubs.length + ' clubs');
     }
 
     // Also load squad data for data freshness indicators
