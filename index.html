@@ -1811,21 +1811,21 @@ function validateSquadData(squad) {
 
 // Load clubs from Supabase and merge with existing clubs
 async function loadSupabaseClubs() {
+  // Show cached data immediately for instant render
+  var cachedData = getCachedClubData();
+  if (cachedData && clubs.length === 0) {
+    applyClubDataFromCache(cachedData);
+    supabaseDataLoaded = true;
+    refreshMap();
+  }
+
   if (!supabaseClient) {
-    // Supabase unavailable - try cache first
-    var cachedData = getCachedClubData();
-    if (cachedData) {
-      applyClubDataFromCache(cachedData);
-      supabaseDataLoaded = true;
-      showOfflineBanner();
-      return;
-    }
-    showOfflineBanner();
+    if (!cachedData) showOfflineBanner();
     return;
   }
 
   try {
-    // Load all clubs from Supabase (single source of truth)
+    // Fetch fresh data from Supabase in background
     const { data: supabaseClubs, error } = await supabaseClient
       .from('clubs')
       .select('*');
