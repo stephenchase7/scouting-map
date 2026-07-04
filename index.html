@@ -1238,6 +1238,14 @@ var playersData = {};
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
           Contact List
         </button>
+        <button class="tool-link" onclick="openClubDNAModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          Club DNA
+        </button>
+        <button class="tool-link" onclick="openHomegrownModal()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 15h8v2H8v-2zm0-4h8v2H8v-2z"/></svg>
+          Homegrown List
+        </button>
       </div>
     </div>
   </div>
@@ -4738,8 +4746,257 @@ function filterContacts() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeContactListModal();
+    closeClubDNAModal();
+    closeHomegrownModal();
   }
 });
+</script>
+
+<!-- Club DNA Modal -->
+<div id="club-dna-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeClubDNAModal()">
+  <div class="modal-container" style="width:900px; max-width:95vw;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>RBNY Club DNA</h2>
+      <button class="modal-close" onclick="closeClubDNAModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <p style="color:#666;font-size:13px;margin-bottom:16px;">5 key identifying traits that define Red Bull players — from the Scouting Pack</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:#f5f5f7;">
+            <th style="padding:12px;text-align:center;width:50px;font-size:11px;color:#666;text-transform:uppercase;">#</th>
+            <th style="padding:12px;text-align:left;width:200px;font-size:11px;color:#666;text-transform:uppercase;">DNA Trait</th>
+            <th style="padding:12px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;">Evidence from Profiles</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e5e5e7;">
+            <td style="padding:14px;text-align:center;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#c8102e;color:#fff;border-radius:50%;font-weight:700;">1</span></td>
+            <td style="padding:14px;font-weight:600;">High-Intensity Pressing</td>
+            <td style="padding:14px;color:#666;">"Front footed", "aggressive against ball", "ball oriented", "counter press immediately", "pesty and a nuisance"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e5e5e7;">
+            <td style="padding:14px;text-align:center;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#c8102e;color:#fff;border-radius:50%;font-weight:700;">2</span></td>
+            <td style="padding:14px;font-weight:600;">Vertical & Direct Play</td>
+            <td style="padding:14px;color:#666;">"Vertical and direct on the ball", "ball progression into attacking areas", "runs in behind", "channel runners"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e5e5e7;">
+            <td style="padding:14px;text-align:center;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#c8102e;color:#fff;border-radius:50%;font-weight:700;">3</span></td>
+            <td style="padding:14px;font-weight:600;">Physical Excellence</td>
+            <td style="padding:14px;color:#666;">"Explosive, good speed", "lean and toned", "high intensity fitness level", "fluid mover"</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e5e5e7;">
+            <td style="padding:14px;text-align:center;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#c8102e;color:#fff;border-radius:50%;font-weight:700;">4</span></td>
+            <td style="padding:14px;font-weight:600;">Press Resistant Technicians</td>
+            <td style="padding:14px;color:#666;">"Maneuvers tight spaces with ease", "rarely loses possession", "calm on ball", "receives under pressure"</td>
+          </tr>
+          <tr>
+            <td style="padding:14px;text-align:center;"><span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#c8102e;color:#fff;border-radius:50%;font-weight:700;">5</span></td>
+            <td style="padding:14px;font-weight:600;">Proactive Movement</td>
+            <td style="padding:14px;color:#666;">"Movement is proactive, forward and in behind", "creates overloads", "good positional awareness"</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Homegrown List Modal -->
+<div id="homegrown-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeHomegrownModal()">
+  <div class="modal-container" style="width:900px; max-width:95vw; max-height:85vh;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>MLS Homegrown List</h2>
+      <button class="modal-close" onclick="closeHomegrownModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;max-height:calc(85vh - 80px);">
+      <p style="color:#666;font-size:12px;margin-bottom:12px;">Spring 2026 · 35+5 per club · Northeast Region Focus</p>
+      <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="hgSearchInput" placeholder="Search player or club..." oninput="filterHomegrown()" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid #e5e5e7;border-radius:8px;font-size:13px;">
+        <div id="hgAgeFilters" style="display:flex;gap:6px;">
+          <span class="hg-chip active" data-age="all" onclick="setHGAgeFilter(this,'all')">All</span>
+          <span class="hg-chip" data-age="U15" onclick="setHGAgeFilter(this,'U15')">U15</span>
+          <span class="hg-chip" data-age="U17" onclick="setHGAgeFilter(this,'U17')">U17</span>
+          <span class="hg-chip" data-age="U19" onclick="setHGAgeFilter(this,'U19')">U19</span>
+          <span class="hg-chip" data-age="+5" onclick="setHGAgeFilter(this,'+5')">+5</span>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;border:1px solid #e5e5e7;border-radius:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:#f5f5f7;position:sticky;top:0;">
+              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">Club</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">Age</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">#</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">Player</th>
+              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">DOB</th>
+            </tr>
+          </thead>
+          <tbody id="hgTableBody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+        <span id="hgResultCount" style="font-size:12px;color:#666;">0 players</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.hg-chip{padding:6px 12px;border:1px solid #e5e5e7;border-radius:20px;font-size:11px;cursor:pointer;background:#fff;transition:all 0.15s;font-weight:500;}
+.hg-chip:hover{background:#f5f5f7;}
+.hg-chip.active{background:#c8102e;color:#fff;border-color:#c8102e;}
+.hg-club-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;background:#e5e5e7;}
+.hg-club-badge.nyrb{background:#c8102e;color:#fff;}
+.hg-club-badge.nycfc{background:#6CACE4;color:#fff;}
+.hg-club-badge.phi{background:#071c2c;color:#fff;}
+.hg-club-badge.ne{background:#c63323;color:#fff;}
+.hg-club-badge.dc{background:#000;color:#fff;}
+.hg-age-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500;}
+.hg-age-badge.u15{background:#dbeafe;color:#1e40af;}
+.hg-age-badge.u17{background:#dcfce7;color:#166534;}
+.hg-age-badge.u19{background:#fef3c7;color:#92400e;}
+.hg-age-badge.plus5{background:#fce7f3;color:#9d174d;}
+</style>
+
+<script>
+// Club DNA Modal
+function openClubDNAModal() {
+  document.getElementById('club-dna-modal').style.display = 'flex';
+}
+function closeClubDNAModal() {
+  document.getElementById('club-dna-modal').style.display = 'none';
+}
+
+// Homegrown List Modal
+var HG_DATA = [
+  // NYRB
+  {club:'NYRB',age:'U15',num:1,name:'Jonathan David',dob:'6/4/2012'},
+  {club:'NYRB',age:'U15',num:2,name:'Tyler Edwards',dob:'5/5/2012'},
+  {club:'NYRB',age:'U15',num:3,name:'Lee Hall',dob:'8/21/2012'},
+  {club:'NYRB',age:'U15',num:4,name:'Ben McCaughrain',dob:'8/8/2012'},
+  {club:'NYRB',age:'U15',num:5,name:'Carlos Palma',dob:'9/17/2012'},
+  {club:'NYRB',age:'U15',num:6,name:'Akwasi Afriyie',dob:'3/20/2011'},
+  {club:'NYRB',age:'U15',num:7,name:'Oscar Andrade',dob:'9/6/2011'},
+  {club:'NYRB',age:'U15',num:8,name:'Bradley Castro',dob:'3/1/2011'},
+  {club:'NYRB',age:'U15',num:9,name:'Jamie Cregan',dob:'6/29/2011'},
+  {club:'NYRB',age:'U15',num:10,name:'Austin Gonzalez',dob:'1/9/2011'},
+  {club:'NYRB',age:'U15',num:11,name:'Ben Huh',dob:'3/29/2011'},
+  {club:'NYRB',age:'U15',num:12,name:'Malachi Joseph',dob:'7/5/2011'},
+  {club:'NYRB',age:'U15',num:13,name:'Arseniy Kopytchak',dob:'3/24/2011'},
+  {club:'NYRB',age:'U15',num:14,name:'Pietro Lolos',dob:'7/19/2011'},
+  {club:'NYRB',age:'U17',num:1,name:'Jacob Bradley',dob:'5/3/2010'},
+  {club:'NYRB',age:'U17',num:2,name:'Jonathan Condor',dob:'7/16/2010'},
+  {club:'NYRB',age:'U17',num:3,name:'Tafsir Diop',dob:'10/7/2009'},
+  {club:'NYRB',age:'U17',num:4,name:'Eric Lodge',dob:'4/28/2010'},
+  {club:'NYRB',age:'U17',num:5,name:'Isaac Rakovsky',dob:'5/23/2010'},
+  {club:'NYRB',age:'U17',num:6,name:'Avery Rosado',dob:'7/2/2010'},
+  {club:'NYRB',age:'U17',num:7,name:'David Rutkowski',dob:'4/10/2010'},
+  {club:'NYRB',age:'U17',num:8,name:'Jason Bori',dob:'2/16/2009'},
+  {club:'NYRB',age:'U17',num:9,name:'Deven Cadigan',dob:'3/15/2009'},
+  {club:'NYRB',age:'U17',num:10,name:'Alex Gomez',dob:'4/27/2009'},
+  {club:'NYRB',age:'U17',num:11,name:'Josh Munson',dob:'6/6/2009'},
+  {club:'NYRB',age:'U17',num:12,name:'Caleb Simmons',dob:'5/8/2009'},
+  {club:'NYRB',age:'U19',num:1,name:'Sean Baitinger',dob:'9/11/2008'},
+  {club:'NYRB',age:'U19',num:2,name:'Sebasthian Chavez',dob:'1/3/2008'},
+  {club:'NYRB',age:'U19',num:3,name:'Connor Faello',dob:'3/11/2008'},
+  {club:'NYRB',age:'U19',num:4,name:'Christian Gallagher',dob:'11/5/2007'},
+  {club:'NYRB',age:'U19',num:5,name:'Dennis Nelich',dob:'3/3/2008'},
+  {club:'NYRB',age:'U19',num:6,name:'Benny Rodriguez',dob:'7/25/2007'},
+  {club:'NYRB',age:'U19',num:7,name:'Ryan Scuro',dob:'1/10/2008'},
+  {club:'NYRB',age:'U19',num:8,name:'Henryk Telakowski',dob:'3/28/2008'},
+  {club:'NYRB',age:'U19',num:9,name:'Eric Velasquez',dob:'1/3/2007'},
+  {club:'NYRB',age:'+5',num:1,name:'Leonardo Andrade',dob:'6/12/2012'},
+  {club:'NYRB',age:'+5',num:2,name:'Christopher Fitanidis',dob:'5/21/2011'},
+  {club:'NYRB',age:'+5',num:3,name:'Astin Mbaye',dob:'3/5/2009'},
+  {club:'NYRB',age:'+5',num:4,name:'Timothy McFarland',dob:'1/2/2009'},
+  // NYCFC
+  {club:'NYCFC',age:'U15',num:1,name:'Emmanuel Lassayo',dob:'1/19/2012'},
+  {club:'NYCFC',age:'U15',num:2,name:'Caleb Loriston',dob:'3/9/2012'},
+  {club:'NYCFC',age:'U15',num:3,name:'Enzo Mio',dob:'1/25/2012'},
+  {club:'NYCFC',age:'U15',num:4,name:'Diego Roque',dob:'4/4/2012'},
+  {club:'NYCFC',age:'U15',num:5,name:'Jaxon Vereen',dob:'1/20/2012'},
+  {club:'NYCFC',age:'U17',num:1,name:'Olumuyiwa Ajayi',dob:'3/14/2010'},
+  {club:'NYCFC',age:'U17',num:2,name:'Abner Arias',dob:'7/25/2010'},
+  {club:'NYCFC',age:'U17',num:3,name:'Yotaro Kaneko',dob:'2/9/2010'},
+  {club:'NYCFC',age:'U17',num:4,name:'Costantino Muscedere',dob:'1/21/2010'},
+  {club:'NYCFC',age:'U19',num:1,name:'Summerville Beckford',dob:'7/30/2008'},
+  {club:'NYCFC',age:'U19',num:2,name:'Adonis Campos',dob:'5/20/2008'},
+  {club:'NYCFC',age:'U19',num:3,name:'Patrick Cuneo',dob:'10/12/2007'},
+  {club:'NYCFC',age:'U19',num:4,name:'Lucas DePinho',dob:'2/15/2008'},
+  {club:'NYCFC',age:'+5',num:1,name:'Matthew Brusco',dob:'4/7/2011'},
+  {club:'NYCFC',age:'+5',num:2,name:'Christopher Fitanidis',dob:'5/21/2011'},
+  // PHI
+  {club:'PHI',age:'U15',num:1,name:'Gino Cecere',dob:'3/15/2012'},
+  {club:'PHI',age:'U15',num:2,name:'Austin Gayle',dob:'1/13/2012'},
+  {club:'PHI',age:'U15',num:3,name:'Robert Melendez',dob:'1/9/2012'},
+  {club:'PHI',age:'U15',num:4,name:'Noah Pine',dob:'9/8/2012'},
+  {club:'PHI',age:'U17',num:1,name:'Abdoulaye Diop',dob:'2/5/2010'},
+  {club:'PHI',age:'U17',num:2,name:'Samuel Gallego',dob:'3/13/2010'},
+  {club:'PHI',age:'U17',num:3,name:'Aiden Gayle',dob:'7/15/2010'},
+  {club:'PHI',age:'U19',num:1,name:'Andrew Craig',dob:'9/14/2007'},
+  {club:'PHI',age:'U19',num:2,name:'Peter Doran',dob:'2/19/2008'},
+  {club:'PHI',age:'U19',num:3,name:'Nehan Hasan',dob:'6/30/2008'},
+  // NE
+  {club:'NE',age:'U15',num:1,name:'Dylan Armah',dob:'1/18/2012'},
+  {club:'NE',age:'U15',num:2,name:'Luca Cicione',dob:'11/30/2012'},
+  {club:'NE',age:'U15',num:3,name:'Boston Kahoalii',dob:'9/27/2012'},
+  {club:'NE',age:'U17',num:1,name:'Logan Azar',dob:'6/26/2010'},
+  {club:'NE',age:'U17',num:2,name:'Kauan De Campos',dob:'1/28/2010'},
+  {club:'NE',age:'U17',num:3,name:'Christopher Scott',dob:'1/22/2010'},
+  {club:'NE',age:'U19',num:1,name:'Cristiano Carlos',dob:'1/1/2008'},
+  {club:'NE',age:'U19',num:2,name:'Grant Emerhi',dob:'1/25/2008'},
+  {club:'NE',age:'+5',num:1,name:'Rikelme De Almeida',dob:'7/7/2011'},
+  // DC
+  {club:'DC',age:'U15',num:1,name:'Maxwell Camara',dob:'1/10/2011'},
+  {club:'DC',age:'U15',num:2,name:'Ayden Harriott',dob:'4/27/2011'},
+  {club:'DC',age:'U15',num:3,name:'Bakary Kante',dob:'7/11/2011'},
+  {club:'DC',age:'U17',num:1,name:'Lincoln Robotham',dob:'12/27/2010'},
+  {club:'DC',age:'U17',num:2,name:'Mikel Akinmboni',dob:'4/8/2010'},
+  {club:'DC',age:'U17',num:3,name:'Noah Banks',dob:'4/2/2010'},
+  {club:'DC',age:'U19',num:1,name:'German Argueta',dob:'3/10/2008'},
+  {club:'DC',age:'U19',num:2,name:'Nicolas Banks',dob:'6/26/2008'},
+  {club:'DC',age:'+5',num:1,name:'Bryan Hernandez',dob:'1/29/2012'}
+];
+
+var hgCurrentAgeFilter = 'all';
+
+function openHomegrownModal() {
+  document.getElementById('homegrown-modal').style.display = 'flex';
+  renderHomegrownTable();
+}
+function closeHomegrownModal() {
+  document.getElementById('homegrown-modal').style.display = 'none';
+}
+function setHGAgeFilter(chip, age) {
+  document.querySelectorAll('#hgAgeFilters .hg-chip').forEach(function(c) { c.classList.remove('active'); });
+  chip.classList.add('active');
+  hgCurrentAgeFilter = age;
+  filterHomegrown();
+}
+function filterHomegrown() {
+  renderHomegrownTable();
+}
+function renderHomegrownTable() {
+  var query = document.getElementById('hgSearchInput').value.toLowerCase();
+  var tbody = document.getElementById('hgTableBody');
+  var filtered = HG_DATA.filter(function(p) {
+    var matchesAge = hgCurrentAgeFilter === 'all' || p.age === hgCurrentAgeFilter;
+    var matchesSearch = !query || p.name.toLowerCase().includes(query) || p.club.toLowerCase().includes(query);
+    return matchesAge && matchesSearch;
+  });
+  tbody.innerHTML = filtered.map(function(p) {
+    var clubClass = p.club.toLowerCase().replace(/\s/g,'');
+    var ageClass = p.age === '+5' ? 'plus5' : p.age.toLowerCase();
+    return '<tr style="border-bottom:1px solid #e5e5e7;">' +
+      '<td style="padding:8px 12px;"><span class="hg-club-badge ' + clubClass + '">' + p.club + '</span></td>' +
+      '<td style="padding:8px 12px;"><span class="hg-age-badge ' + ageClass + '">' + p.age + '</span></td>' +
+      '<td style="padding:8px 12px;">' + p.num + '</td>' +
+      '<td style="padding:8px 12px;font-weight:600;">' + p.name + '</td>' +
+      '<td style="padding:8px 12px;">' + p.dob + '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('hgResultCount').textContent = filtered.length + ' players';
+}
 </script>
 
 <div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#5a5a5a;font-style:italic;z-index:100;">Created by Stephen Chase</div>
