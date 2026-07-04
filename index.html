@@ -2887,6 +2887,7 @@ function rebuildMarkers() {
 function refreshMap() {
   rebuildMarkers();
   buildList();
+  updateMarkerVisibility(); // Reapply current filter after refresh
 }
 
 // Custom HTML Marker Overlay for circular logos with CSS
