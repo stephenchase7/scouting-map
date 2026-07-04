@@ -2836,6 +2836,12 @@ function rebuildMarkers() {
   });
 }
 
+// Refresh map after Supabase data loads
+function refreshMap() {
+  rebuildMarkers();
+  buildList();
+}
+
 // Custom HTML Marker Overlay for circular logos with CSS
 function ClubMarkerOverlay(club, idx, mapInstance) {
   this.club = club;
@@ -4809,24 +4815,15 @@ document.addEventListener('keydown', function(e) {
       <button class="modal-close" onclick="closeHomegrownModal()">&times;</button>
     </div>
     <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;max-height:calc(85vh - 80px);">
-      <p style="color:#666;font-size:12px;margin-bottom:12px;">Spring 2026 · 35+5 per club · Northeast Region Focus</p>
+      <p style="color:#666;font-size:12px;margin-bottom:12px;">Spring 2026 · 35+5 per club · All MLS Clubs</p>
       <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
         <input type="text" id="hgSearchInput" placeholder="Search player or club..." oninput="filterHomegrown()" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid #e5e5e7;border-radius:8px;font-size:13px;">
-        <div id="hgAgeFilters" style="display:flex;gap:6px;">
-          <span class="hg-chip active" data-age="all" onclick="setHGAgeFilter(this,'all')">All</span>
-          <span class="hg-chip" data-age="U15" onclick="setHGAgeFilter(this,'U15')">U15</span>
-          <span class="hg-chip" data-age="U17" onclick="setHGAgeFilter(this,'U17')">U17</span>
-          <span class="hg-chip" data-age="U19" onclick="setHGAgeFilter(this,'U19')">U19</span>
-          <span class="hg-chip" data-age="+5" onclick="setHGAgeFilter(this,'+5')">+5</span>
-        </div>
       </div>
       <div style="flex:1;overflow-y:auto;border:1px solid #e5e5e7;border-radius:8px;">
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead>
             <tr style="background:#f5f5f7;position:sticky;top:0;">
               <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">Club</th>
-              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">Age</th>
-              <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">#</th>
               <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">Player</th>
               <th style="padding:10px 12px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;">DOB</th>
             </tr>
@@ -4842,20 +4839,28 @@ document.addEventListener('keydown', function(e) {
 </div>
 
 <style>
-.hg-chip{padding:6px 12px;border:1px solid #e5e5e7;border-radius:20px;font-size:11px;cursor:pointer;background:#fff;transition:all 0.15s;font-weight:500;}
-.hg-chip:hover{background:#f5f5f7;}
-.hg-chip.active{background:#c8102e;color:#fff;border-color:#c8102e;}
 .hg-club-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;background:#e5e5e7;}
 .hg-club-badge.nyrb{background:#c8102e;color:#fff;}
 .hg-club-badge.nycfc{background:#6CACE4;color:#fff;}
 .hg-club-badge.phi{background:#071c2c;color:#fff;}
 .hg-club-badge.ne{background:#c63323;color:#fff;}
 .hg-club-badge.dc{background:#000;color:#fff;}
-.hg-age-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500;}
-.hg-age-badge.u15{background:#dbeafe;color:#1e40af;}
-.hg-age-badge.u17{background:#dcfce7;color:#166534;}
-.hg-age-badge.u19{background:#fef3c7;color:#92400e;}
-.hg-age-badge.plus5{background:#fce7f3;color:#9d174d;}
+.hg-club-badge.atl{background:#80000a;color:#fff;}
+.hg-club-badge.atx{background:#00b140;color:#fff;}
+.hg-club-badge.chi{background:#c2002f;color:#fff;}
+.hg-club-badge.cin{background:#f05323;color:#fff;}
+.hg-club-badge.clb{background:#fef200;color:#000;}
+.hg-club-badge.clt{background:#1a85c8;color:#fff;}
+.hg-club-badge.col{background:#862633;color:#fff;}
+.hg-club-badge.dal{background:#bf0d3e;color:#fff;}
+.hg-club-badge.hou{background:#f68712;color:#fff;}
+.hg-club-badge.lafc{background:#000;color:#c39e6d;}
+.hg-club-badge.lag{background:#00245d;color:#fff;}
+.hg-club-badge.mia{background:#f7b5cd;color:#231f20;}
+.hg-club-badge.min{background:#8cd2f4;color:#231f20;}
+.hg-club-badge.mtl{background:#0033a1;color:#fff;}
+.hg-club-badge.nsh{background:#ece83a;color:#1f1646;}
+.hg-club-badge.orl{background:#633492;color:#fff;}
 </style>
 
 <script>
@@ -4867,95 +4872,311 @@ function closeClubDNAModal() {
   document.getElementById('club-dna-modal').style.display = 'none';
 }
 
-// Homegrown List Modal
+// Homegrown List Modal - Spring 2026 (All MLS Clubs)
 var HG_DATA = [
-  // NYRB
-  {club:'NYRB',age:'U15',num:1,name:'Jonathan David',dob:'6/4/2012'},
-  {club:'NYRB',age:'U15',num:2,name:'Tyler Edwards',dob:'5/5/2012'},
-  {club:'NYRB',age:'U15',num:3,name:'Lee Hall',dob:'8/21/2012'},
-  {club:'NYRB',age:'U15',num:4,name:'Ben McCaughrain',dob:'8/8/2012'},
-  {club:'NYRB',age:'U15',num:5,name:'Carlos Palma',dob:'9/17/2012'},
-  {club:'NYRB',age:'U15',num:6,name:'Akwasi Afriyie',dob:'3/20/2011'},
-  {club:'NYRB',age:'U15',num:7,name:'Oscar Andrade',dob:'9/6/2011'},
-  {club:'NYRB',age:'U15',num:8,name:'Bradley Castro',dob:'3/1/2011'},
-  {club:'NYRB',age:'U15',num:9,name:'Jamie Cregan',dob:'6/29/2011'},
-  {club:'NYRB',age:'U15',num:10,name:'Austin Gonzalez',dob:'1/9/2011'},
-  {club:'NYRB',age:'U15',num:11,name:'Ben Huh',dob:'3/29/2011'},
-  {club:'NYRB',age:'U15',num:12,name:'Malachi Joseph',dob:'7/5/2011'},
-  {club:'NYRB',age:'U15',num:13,name:'Arseniy Kopytchak',dob:'3/24/2011'},
-  {club:'NYRB',age:'U15',num:14,name:'Pietro Lolos',dob:'7/19/2011'},
-  {club:'NYRB',age:'U17',num:1,name:'Jacob Bradley',dob:'5/3/2010'},
-  {club:'NYRB',age:'U17',num:2,name:'Jonathan Condor',dob:'7/16/2010'},
-  {club:'NYRB',age:'U17',num:3,name:'Tafsir Diop',dob:'10/7/2009'},
-  {club:'NYRB',age:'U17',num:4,name:'Eric Lodge',dob:'4/28/2010'},
-  {club:'NYRB',age:'U17',num:5,name:'Isaac Rakovsky',dob:'5/23/2010'},
-  {club:'NYRB',age:'U17',num:6,name:'Avery Rosado',dob:'7/2/2010'},
-  {club:'NYRB',age:'U17',num:7,name:'David Rutkowski',dob:'4/10/2010'},
-  {club:'NYRB',age:'U17',num:8,name:'Jason Bori',dob:'2/16/2009'},
-  {club:'NYRB',age:'U17',num:9,name:'Deven Cadigan',dob:'3/15/2009'},
-  {club:'NYRB',age:'U17',num:10,name:'Alex Gomez',dob:'4/27/2009'},
-  {club:'NYRB',age:'U17',num:11,name:'Josh Munson',dob:'6/6/2009'},
-  {club:'NYRB',age:'U17',num:12,name:'Caleb Simmons',dob:'5/8/2009'},
-  {club:'NYRB',age:'U19',num:1,name:'Sean Baitinger',dob:'9/11/2008'},
-  {club:'NYRB',age:'U19',num:2,name:'Sebasthian Chavez',dob:'1/3/2008'},
-  {club:'NYRB',age:'U19',num:3,name:'Connor Faello',dob:'3/11/2008'},
-  {club:'NYRB',age:'U19',num:4,name:'Christian Gallagher',dob:'11/5/2007'},
-  {club:'NYRB',age:'U19',num:5,name:'Dennis Nelich',dob:'3/3/2008'},
-  {club:'NYRB',age:'U19',num:6,name:'Benny Rodriguez',dob:'7/25/2007'},
-  {club:'NYRB',age:'U19',num:7,name:'Ryan Scuro',dob:'1/10/2008'},
-  {club:'NYRB',age:'U19',num:8,name:'Henryk Telakowski',dob:'3/28/2008'},
-  {club:'NYRB',age:'U19',num:9,name:'Eric Velasquez',dob:'1/3/2007'},
-  {club:'NYRB',age:'+5',num:1,name:'Leonardo Andrade',dob:'6/12/2012'},
-  {club:'NYRB',age:'+5',num:2,name:'Christopher Fitanidis',dob:'5/21/2011'},
-  {club:'NYRB',age:'+5',num:3,name:'Astin Mbaye',dob:'3/5/2009'},
-  {club:'NYRB',age:'+5',num:4,name:'Timothy McFarland',dob:'1/2/2009'},
-  // NYCFC
-  {club:'NYCFC',age:'U15',num:1,name:'Emmanuel Lassayo',dob:'1/19/2012'},
-  {club:'NYCFC',age:'U15',num:2,name:'Caleb Loriston',dob:'3/9/2012'},
-  {club:'NYCFC',age:'U15',num:3,name:'Enzo Mio',dob:'1/25/2012'},
-  {club:'NYCFC',age:'U15',num:4,name:'Diego Roque',dob:'4/4/2012'},
-  {club:'NYCFC',age:'U15',num:5,name:'Jaxon Vereen',dob:'1/20/2012'},
-  {club:'NYCFC',age:'U17',num:1,name:'Olumuyiwa Ajayi',dob:'3/14/2010'},
-  {club:'NYCFC',age:'U17',num:2,name:'Abner Arias',dob:'7/25/2010'},
-  {club:'NYCFC',age:'U17',num:3,name:'Yotaro Kaneko',dob:'2/9/2010'},
-  {club:'NYCFC',age:'U17',num:4,name:'Costantino Muscedere',dob:'1/21/2010'},
-  {club:'NYCFC',age:'U19',num:1,name:'Summerville Beckford',dob:'7/30/2008'},
-  {club:'NYCFC',age:'U19',num:2,name:'Adonis Campos',dob:'5/20/2008'},
-  {club:'NYCFC',age:'U19',num:3,name:'Patrick Cuneo',dob:'10/12/2007'},
-  {club:'NYCFC',age:'U19',num:4,name:'Lucas DePinho',dob:'2/15/2008'},
-  {club:'NYCFC',age:'+5',num:1,name:'Matthew Brusco',dob:'4/7/2011'},
-  {club:'NYCFC',age:'+5',num:2,name:'Christopher Fitanidis',dob:'5/21/2011'},
-  // PHI
-  {club:'PHI',age:'U15',num:1,name:'Gino Cecere',dob:'3/15/2012'},
-  {club:'PHI',age:'U15',num:2,name:'Austin Gayle',dob:'1/13/2012'},
-  {club:'PHI',age:'U15',num:3,name:'Robert Melendez',dob:'1/9/2012'},
-  {club:'PHI',age:'U15',num:4,name:'Noah Pine',dob:'9/8/2012'},
-  {club:'PHI',age:'U17',num:1,name:'Abdoulaye Diop',dob:'2/5/2010'},
-  {club:'PHI',age:'U17',num:2,name:'Samuel Gallego',dob:'3/13/2010'},
-  {club:'PHI',age:'U17',num:3,name:'Aiden Gayle',dob:'7/15/2010'},
-  {club:'PHI',age:'U19',num:1,name:'Andrew Craig',dob:'9/14/2007'},
-  {club:'PHI',age:'U19',num:2,name:'Peter Doran',dob:'2/19/2008'},
-  {club:'PHI',age:'U19',num:3,name:'Nehan Hasan',dob:'6/30/2008'},
-  // NE
-  {club:'NE',age:'U15',num:1,name:'Dylan Armah',dob:'1/18/2012'},
-  {club:'NE',age:'U15',num:2,name:'Luca Cicione',dob:'11/30/2012'},
-  {club:'NE',age:'U15',num:3,name:'Boston Kahoalii',dob:'9/27/2012'},
-  {club:'NE',age:'U17',num:1,name:'Logan Azar',dob:'6/26/2010'},
-  {club:'NE',age:'U17',num:2,name:'Kauan De Campos',dob:'1/28/2010'},
-  {club:'NE',age:'U17',num:3,name:'Christopher Scott',dob:'1/22/2010'},
-  {club:'NE',age:'U19',num:1,name:'Cristiano Carlos',dob:'1/1/2008'},
-  {club:'NE',age:'U19',num:2,name:'Grant Emerhi',dob:'1/25/2008'},
-  {club:'NE',age:'+5',num:1,name:'Rikelme De Almeida',dob:'7/7/2011'},
-  // DC
-  {club:'DC',age:'U15',num:1,name:'Maxwell Camara',dob:'1/10/2011'},
-  {club:'DC',age:'U15',num:2,name:'Ayden Harriott',dob:'4/27/2011'},
-  {club:'DC',age:'U15',num:3,name:'Bakary Kante',dob:'7/11/2011'},
-  {club:'DC',age:'U17',num:1,name:'Lincoln Robotham',dob:'12/27/2010'},
-  {club:'DC',age:'U17',num:2,name:'Mikel Akinmboni',dob:'4/8/2010'},
-  {club:'DC',age:'U17',num:3,name:'Noah Banks',dob:'4/2/2010'},
-  {club:'DC',age:'U19',num:1,name:'German Argueta',dob:'3/10/2008'},
-  {club:'DC',age:'U19',num:2,name:'Nicolas Banks',dob:'6/26/2008'},
-  {club:'DC',age:'+5',num:1,name:'Bryan Hernandez',dob:'1/29/2012'}
+  // ATL - Atlanta United
+  {club:'ATL',name:'Mason Cox',dob:'1/9/2012'},{club:'ATL',name:'Charles Owensby',dob:'1/22/2012'},{club:'ATL',name:'Joel Washington',dob:'3/30/2012'},
+  {club:'ATL',name:'Williver Chea',dob:'8/31/2011'},{club:'ATL',name:'Isaiah Covington',dob:'5/20/2011'},{club:'ATL',name:'Donovan Crawford',dob:'7/13/2011'},
+  {club:'ATL',name:'Oghenekevwe Emoghene',dob:'4/18/2011'},{club:'ATL',name:'Lucas Hopping',dob:'2/9/2011'},{club:'ATL',name:'Carlos Lopez',dob:'2/28/2011'},
+  {club:'ATL',name:'Eli Luster',dob:'1/14/2011'},{club:'ATL',name:'David Omerovic',dob:'3/1/2011'},{club:'ATL',name:'Colin O\'Neill',dob:'4/12/2011'},
+  {club:'ATL',name:'Jacob Rath',dob:'9/10/2011'},{club:'ATL',name:'Gunnar Vanzant',dob:'3/1/2011'},{club:'ATL',name:'Santiago Suarez',dob:'3/27/2011'},
+  {club:'ATL',name:'Jason Adeyemi',dob:'4/2/2010'},{club:'ATL',name:'Elijah Bataille',dob:'5/6/2010'},{club:'ATL',name:'Fred Bond',dob:'1/6/2010'},
+  {club:'ATL',name:'Joshua Brown',dob:'11/28/2010'},{club:'ATL',name:'Evan Coffing',dob:'8/29/2010'},{club:'ATL',name:'Oluwaseyitan Fakiyesi',dob:'8/17/2010'},
+  {club:'ATL',name:'David Ilevbare',dob:'8/6/2010'},{club:'ATL',name:'Kai Martinez',dob:'2/11/2010'},{club:'ATL',name:'Gonzalo Riveras',dob:'3/25/2010'},
+  {club:'ATL',name:'Noe Santillan',dob:'3/8/2010'},{club:'ATL',name:'Daniel Tagbo',dob:'3/29/2010'},
+  {club:'ATL',name:'Christian Akerele',dob:'4/25/2008'},{club:'ATL',name:'Adedamola Browne',dob:'6/15/2009'},{club:'ATL',name:'Amir Henry',dob:'1/25/2009'},
+  {club:'ATL',name:'Jonathan Hernandez',dob:'6/7/2008'},{club:'ATL',name:'Andrew Jardines',dob:'9/4/2007'},{club:'ATL',name:'Christian Moore',dob:'4/24/2008'},
+  {club:'ATL',name:'Mason Peacock',dob:'3/8/2008'},{club:'ATL',name:'Isaiah Vicentti',dob:'3/28/2008'},{club:'ATL',name:'Christian Williams',dob:'4/28/2009'},
+  {club:'ATL',name:'Neville Knowles',dob:'1/18/2011'},{club:'ATL',name:'Ethan Degny',dob:'1/8/2009'},{club:'ATL',name:'Jack Wayne',dob:'7/22/2008'},
+  // ATX - Austin FC
+  {club:'ATX',name:'Sebastian Gallegos',dob:'4/17/2012'},{club:'ATX',name:'Oliver Hamadi',dob:'6/28/2012'},{club:'ATX',name:'Martez Byrd',dob:'3/2/2011'},
+  {club:'ATX',name:'Alex Delgado',dob:'1/15/2011'},{club:'ATX',name:'Carlos Lopez',dob:'7/4/2011'},{club:'ATX',name:'Carmelo Lopez-Celaya',dob:'1/11/2011'},
+  {club:'ATX',name:'David Lorentz',dob:'4/25/2011'},{club:'ATX',name:'Marcelo Munoz',dob:'8/2/2011'},{club:'ATX',name:'Bryce Newbrough',dob:'9/30/2011'},
+  {club:'ATX',name:'Daniel Ramos',dob:'2/4/2011'},{club:'ATX',name:'Tobias Trujillo',dob:'1/7/2011'},{club:'ATX',name:'Aiden Vega',dob:'7/1/2011'},
+  {club:'ATX',name:'Raul Bernal',dob:'1/24/2010'},{club:'ATX',name:'Isaac Borden',dob:'8/9/2010'},{club:'ATX',name:'Xavier Brown',dob:'4/14/2010'},
+  {club:'ATX',name:'Erick Feliciano',dob:'3/24/2010'},{club:'ATX',name:'Cruz Garcia',dob:'2/18/2010'},{club:'ATX',name:'Clayton Glynn',dob:'4/13/2010'},
+  {club:'ATX',name:'Christian Ayala',dob:'1/6/2009'},{club:'ATX',name:'Jonathan Ayala',dob:'1/6/2009'},{club:'ATX',name:'Luke Chamberlain',dob:'4/23/2009'},
+  {club:'ATX',name:'Vona Dievbiere',dob:'8/25/2009'},{club:'ATX',name:'Liam Flynn',dob:'2/11/2009'},{club:'ATX',name:'Ryan Klinger',dob:'5/18/2009'},
+  {club:'ATX',name:'Jacob Peale',dob:'1/10/2009'},{club:'ATX',name:'Daniel Wright',dob:'2/26/2009'},
+  {club:'ATX',name:'Dominic Dono',dob:'1/18/2008'},{club:'ATX',name:'Aiden Hale',dob:'6/23/2008'},{club:'ATX',name:'Landry Moncrief',dob:'5/27/2008'},
+  {club:'ATX',name:'Jose Moreno',dob:'11/21/2007'},{club:'ATX',name:'Saul Perez',dob:'7/21/2007'},{club:'ATX',name:'David Romero Jr',dob:'9/21/2008'},
+  {club:'ATX',name:'Cooper Roney',dob:'8/29/2008'},{club:'ATX',name:'Sebastian Seiterle',dob:'11/24/2008'},{club:'ATX',name:'Abner Zuniga',dob:'8/18/2008'},
+  {club:'ATX',name:'Ryan Arismendiz',dob:'2/24/2010'},{club:'ATX',name:'Zeke Snow',dob:'1/3/2010'},{club:'ATX',name:'Landry Walker',dob:'5/15/2009'},
+  {club:'ATX',name:'Warren Agostoni',dob:'3/1/2009'},{club:'ATX',name:'Viggo Ortiz',dob:'5/26/2008'},
+  // CHI - Chicago Fire
+  {club:'CHI',name:'Griffin Brill',dob:'1/16/2012'},{club:'CHI',name:'Julian Rios',dob:'11/11/2012'},{club:'CHI',name:'Robert Vlad',dob:'6/9/2012'},
+  {club:'CHI',name:'Mike Zdanowski',dob:'2/6/2012'},{club:'CHI',name:'Dempsey Biller',dob:'3/23/2011'},{club:'CHI',name:'Junior Diaz',dob:'1/18/2011'},
+  {club:'CHI',name:'Francesco Gallo',dob:'1/1/2011'},{club:'CHI',name:'Jensyn Goranson',dob:'6/30/2011'},{club:'CHI',name:'Jason Pillado',dob:'2/5/2011'},
+  {club:'CHI',name:'Harrison Storey',dob:'2/21/2011'},{club:'CHI',name:'Robert Witkowski',dob:'2/14/2011'},{club:'CHI',name:'Giovanni Zambrano',dob:'4/30/2011'},
+  {club:'CHI',name:'Alex Bayraktarov',dob:'6/25/2011'},
+  {club:'CHI',name:'Deandre Beckford',dob:'12/23/2010'},{club:'CHI',name:'Edgar Campos',dob:'1/25/2010'},{club:'CHI',name:'Ibrahima Drame',dob:'1/5/2010'},
+  {club:'CHI',name:'Finn McCraney',dob:'10/25/2010'},{club:'CHI',name:'Ben Miller',dob:'6/25/2010'},{club:'CHI',name:'Christopher Morales',dob:'11/28/2010'},
+  {club:'CHI',name:'Roko Pehar',dob:'6/1/2009'},{club:'CHI',name:'Hugo Berg',dob:'4/6/2009'},{club:'CHI',name:'Harrison Bernhardt',dob:'1/20/2009'},
+  {club:'CHI',name:'Emiliano Chavez',dob:'2/7/2009'},{club:'CHI',name:'Tomas Cortes',dob:'2/18/2009'},{club:'CHI',name:'James Field',dob:'4/21/2009'},
+  {club:'CHI',name:'Jonah Giorgis',dob:'2/9/2009'},{club:'CHI',name:'David Molenda',dob:'3/11/2009'},{club:'CHI',name:'Milan Napoe',dob:'10/13/2009'},
+  {club:'CHI',name:'Ryan Hauser',dob:'5/7/2008'},{club:'CHI',name:'Kruz Held',dob:'6/21/2008'},{club:'CHI',name:'Emir Herrera',dob:'8/28/2008'},
+  {club:'CHI',name:'Chase Nagle',dob:'9/21/2008'},{club:'CHI',name:'Josue Pfrommer',dob:'7/9/2008'},{club:'CHI',name:'Oscar Pineda',dob:'7/29/2008'},
+  {club:'CHI',name:'Damyan Villanueva',dob:'8/22/2008'},
+  {club:'CHI',name:'Ivan Donchak',dob:'8/28/2011'},{club:'CHI',name:'Owen Fried',dob:'2/1/2012'},{club:'CHI',name:'Connor Curtin',dob:'11/2/2011'},
+  {club:'CHI',name:'Jayden Serrano',dob:'9/27/2011'},{club:'CHI',name:'Leon Smars',dob:'9/30/2009'},
+  // CIN - FC Cincinnati
+  {club:'CIN',name:'Jahiel Johnson',dob:'1/5/2012'},{club:'CIN',name:'Sloane Johnson',dob:'6/11/2012'},{club:'CIN',name:'Mauricio Mejia',dob:'8/16/2012'},
+  {club:'CIN',name:'Joseph Pasquarello',dob:'2/13/2012'},{club:'CIN',name:'Hassan Sakr',dob:'10/17/2012'},{club:'CIN',name:'Mateo Anderson',dob:'1/11/2011'},
+  {club:'CIN',name:'Hudson Cicala',dob:'3/9/2011'},{club:'CIN',name:'Orlando Hernandez',dob:'8/9/2011'},{club:'CIN',name:'Gabriel Jones',dob:'4/12/2011'},
+  {club:'CIN',name:'Djibril Rivera',dob:'8/11/2011'},{club:'CIN',name:'Ryan Schlotterbeck',dob:'3/31/2011'},{club:'CIN',name:'Owen White',dob:'3/28/2011'},
+  {club:'CIN',name:'Oliver Beabout',dob:'4/18/2010'},{club:'CIN',name:'Landon Born',dob:'7/12/2010'},{club:'CIN',name:'Zachary Crider',dob:'1/12/2010'},
+  {club:'CIN',name:'Connor Dale',dob:'6/29/2010'},{club:'CIN',name:'Gael Huguet',dob:'7/20/2010'},{club:'CIN',name:'Joshua Jimenez',dob:'5/8/2010'},
+  {club:'CIN',name:'Dominick Lester',dob:'6/12/2010'},{club:'CIN',name:'Simon Morell',dob:'1/31/2010'},{club:'CIN',name:'Ali Sakr',dob:'3/10/2010'},
+  {club:'CIN',name:'Jared Cardenas',dob:'2/15/2009'},{club:'CIN',name:'Chance Malilo',dob:'9/9/2009'},{club:'CIN',name:'Camden Sphire',dob:'1/20/2009'},
+  {club:'CIN',name:'Gavin Dehart',dob:'8/27/2008'},{club:'CIN',name:'Slade Hall',dob:'4/23/2008'},{club:'CIN',name:'Amin Ibrahim',dob:'6/23/2008'},
+  {club:'CIN',name:'Omasanjuwa Ileleji',dob:'4/28/2008'},{club:'CIN',name:'Brandon Kristel',dob:'12/13/2007'},{club:'CIN',name:'William Kuisel',dob:'1/16/2008'},
+  {club:'CIN',name:'Jaylen Lester',dob:'4/30/2008'},{club:'CIN',name:'Carson Locker',dob:'10/8/2007'},{club:'CIN',name:'Nicholas Rivera',dob:'12/12/2008'},
+  {club:'CIN',name:'Santiago Sanchez',dob:'1/30/2008'},
+  // CLB - Columbus Crew
+  {club:'CLB',name:'Immanuel Adewunmi',dob:'12/22/2011'},{club:'CLB',name:'Elvis Caushaj',dob:'1/27/2011'},{club:'CLB',name:'Marcos Costa',dob:'7/14/2011'},
+  {club:'CLB',name:'Rashid Gbla',dob:'4/5/2012'},{club:'CLB',name:'Gage Lewis',dob:'6/18/2011'},{club:'CLB',name:'Joseph Lindman',dob:'3/2/2011'},
+  {club:'CLB',name:'Musa Mansaray',dob:'7/7/2011'},{club:'CLB',name:'Lincoln Strohm',dob:'2/17/2011'},{club:'CLB',name:'Igor Vieira Silva',dob:'3/5/2011'},
+  {club:'CLB',name:'Leonardo Woehl',dob:'7/29/2011'},
+  {club:'CLB',name:'Jesudara Adigun',dob:'1/12/2010'},{club:'CLB',name:'Jamil Danjaji',dob:'3/2/2010'},{club:'CLB',name:'Jayden Gandu',dob:'4/6/2010'},
+  {club:'CLB',name:'Mason Hopper',dob:'1/14/2010'},{club:'CLB',name:'Victor Houston',dob:'5/6/2010'},{club:'CLB',name:'Myles Johnson',dob:'3/30/2010'},
+  {club:'CLB',name:'Kashawn Lewin',dob:'1/8/2010'},{club:'CLB',name:'Richie Luong',dob:'2/18/2010'},{club:'CLB',name:'Jorge Salmeron',dob:'1/12/2010'},
+  {club:'CLB',name:'Cedomir Stevanovic',dob:'4/5/2010'},{club:'CLB',name:'Keller Abbott',dob:'3/14/2009'},{club:'CLB',name:'Juan Arizmendi',dob:'4/17/2009'},
+  {club:'CLB',name:'Jackson Bonos',dob:'4/15/2009'},{club:'CLB',name:'Dacian Delgado',dob:'2/22/2009'},{club:'CLB',name:'Immanuel Ewing',dob:'8/19/2009'},
+  {club:'CLB',name:'Eliot Faber',dob:'10/8/2009'},{club:'CLB',name:'Lincoln Justice',dob:'8/19/2009'},{club:'CLB',name:'Zach Lloyd',dob:'1/14/2009'},
+  {club:'CLB',name:'Yuriy Rushchak',dob:'5/5/2009'},{club:'CLB',name:'Oneal Taylor',dob:'5/18/2009'},
+  {club:'CLB',name:'Riley Creel',dob:'11/21/2008'},{club:'CLB',name:'Alex Gimple',dob:'9/30/2008'},{club:'CLB',name:'Artem Grinblat',dob:'11/23/2007'},
+  {club:'CLB',name:'Lucas Kanashiro',dob:'8/25/2008'},{club:'CLB',name:'Isaac Tortola',dob:'2/21/2008'},
+  {club:'CLB',name:'Owen Britt',dob:'4/1/2012'},{club:'CLB',name:'Connor Britt',dob:'5/15/2010'},{club:'CLB',name:'Apolo Marinch',dob:'4/28/2010'},
+  {club:'CLB',name:'Joah Benjamin',dob:'3/29/2008'},{club:'CLB',name:'Austin Su',dob:'1/5/2008'},
+  // CLT - Charlotte FC
+  {club:'CLT',name:'Nathan Augustine',dob:'4/10/2012'},{club:'CLT',name:'Paulino Camacaro',dob:'2/13/2012'},{club:'CLT',name:'Victor Lambur',dob:'1/20/2012'},
+  {club:'CLT',name:'Chandler Maxwell',dob:'1/1/2012'},{club:'CLT',name:'Isaiah Reed',dob:'6/19/2012'},{club:'CLT',name:'Christopher Abdella',dob:'3/7/2011'},
+  {club:'CLT',name:'Daniel Brown',dob:'5/8/2011'},{club:'CLT',name:'Luis Etienne',dob:'5/1/2011'},{club:'CLT',name:'Winston Hoover',dob:'1/31/2011'},
+  {club:'CLT',name:'Carter Patterson',dob:'11/5/2011'},
+  {club:'CLT',name:'Oliver Cortez',dob:'5/14/2010'},{club:'CLT',name:'Adam Crawford',dob:'2/6/2010'},{club:'CLT',name:'Bryce Goodwin',dob:'7/18/2010'},
+  {club:'CLT',name:'James Haynes',dob:'12/10/2010'},{club:'CLT',name:'Archer Jaeckli',dob:'3/9/2010'},{club:'CLT',name:'Jeremiah Munoz',dob:'2/25/2010'},
+  {club:'CLT',name:'Cayden Pierre',dob:'12/30/2010'},{club:'CLT',name:'Carlos Gonzalez',dob:'3/18/2009'},{club:'CLT',name:'Wyatt Holt',dob:'5/29/2009'},
+  {club:'CLT',name:'Keegan Kerr',dob:'8/5/2009'},{club:'CLT',name:'Leo Rivas',dob:'10/22/2009'},
+  {club:'CLT',name:'Landon Alepa',dob:'5/14/2008'},{club:'CLT',name:'Jaydus Camacho',dob:'1/3/2008'},{club:'CLT',name:'Cristian Chamorro',dob:'2/23/2008'},
+  {club:'CLT',name:'Ethan Curtis',dob:'5/29/2008'},{club:'CLT',name:'Isaias Elizalde',dob:'6/21/2008'},{club:'CLT',name:'Xavier Krause',dob:'5/11/2008'},
+  {club:'CLT',name:'Kai Longanecker',dob:'7/5/2007'},{club:'CLT',name:'Adrian Mendoza',dob:'8/21/2007'},{club:'CLT',name:'Malcolm Morris',dob:'7/18/2008'},
+  {club:'CLT',name:'Steven Rivas',dob:'8/12/2008'},{club:'CLT',name:'Matteo Saffer',dob:'3/30/2008'},{club:'CLT',name:'Graham Syrett',dob:'1/23/2008'},
+  {club:'CLT',name:'Simon Tonidandel',dob:'10/12/2007'},{club:'CLT',name:'Sebastian Ventura',dob:'3/12/2008'},
+  {club:'CLT',name:'Jordan Hatchell',dob:'5/28/2012'},{club:'CLT',name:'Emmanuel Holder Jr',dob:'1/13/2011'},{club:'CLT',name:'Dillon Wilson',dob:'3/13/2012'},
+  {club:'CLT',name:'Kevin Howard',dob:'2/18/2009'},
+  // COL - Colorado Rapids
+  {club:'COL',name:'Luke Dixon',dob:'5/10/2012'},{club:'COL',name:'Giancarlo Dominguez',dob:'1/2/2012'},{club:'COL',name:'Zamir Ramirez Valenzuela',dob:'2/10/2012'},
+  {club:'COL',name:'Mason Shipley',dob:'1/29/2012'},{club:'COL',name:'Aiden Appiah',dob:'2/17/2011'},{club:'COL',name:'Carlos Chavez Gonzalez',dob:'3/1/2011'},
+  {club:'COL',name:'Peter Everett',dob:'4/14/2011'},{club:'COL',name:'Parker Henry',dob:'2/3/2011'},{club:'COL',name:'Luca Morris',dob:'6/28/2011'},
+  {club:'COL',name:'Nicolas Murgan',dob:'8/22/2011'},{club:'COL',name:'Iker Ojeda Meza',dob:'7/18/2011'},{club:'COL',name:'Rubendihno Rivera',dob:'7/2/2011'},
+  {club:'COL',name:'Joel Sanchez',dob:'1/13/2011'},{club:'COL',name:'Xavier Soria',dob:'2/18/2011'},
+  {club:'COL',name:'Greyson Codjoe',dob:'1/15/2010'},{club:'COL',name:'Zeth Esparza Garcia',dob:'2/14/2010'},{club:'COL',name:'Ezra Graham',dob:'5/4/2010'},
+  {club:'COL',name:'Victor Hart',dob:'1/15/2010'},{club:'COL',name:'Alex Hernandez',dob:'2/1/2010'},{club:'COL',name:'Dawensley Hornak',dob:'7/16/2010'},
+  {club:'COL',name:'Aiden Jimenez',dob:'5/3/2010'},{club:'COL',name:'Jax Padgett',dob:'9/27/2010'},{club:'COL',name:'Matthew Ruiz',dob:'1/26/2010'},
+  {club:'COL',name:'Jordan Camacho',dob:'6/12/2009'},{club:'COL',name:'Jonathan De La Fuente',dob:'6/13/2009'},{club:'COL',name:'Edgar Heredia',dob:'3/8/2009'},
+  {club:'COL',name:'Kamal Sawadogo',dob:'6/20/2009'},{club:'COL',name:'Sebastian Siegler',dob:'3/4/2009'},
+  {club:'COL',name:'Sebastian Bourget',dob:'1/7/2008'},{club:'COL',name:'Jaden Chan Tack',dob:'12/14/2007'},{club:'COL',name:'Andre Erickson',dob:'1/9/2008'},
+  {club:'COL',name:'Kendall Starks',dob:'3/12/2008'},{club:'COL',name:'Landon Strohmeyer',dob:'5/21/2008'},{club:'COL',name:'Pedro Venegas',dob:'2/17/2008'},
+  {club:'COL',name:'Juan Guerrero',dob:'8/13/2012'},{club:'COL',name:'Max Hawkins',dob:'12/3/2012'},{club:'COL',name:'Jayden Graciano',dob:'1/17/2011'},
+  {club:'COL',name:'Cruz Tomori',dob:'1/19/2010'},{club:'COL',name:'Luka Rosic',dob:'12/17/2008'},
+  // DAL - FC Dallas
+  {club:'DAL',name:'Dilan Almonacid',dob:'3/13/2012'},{club:'DAL',name:'Mateo Arriaga',dob:'3/28/2012'},{club:'DAL',name:'Kimani Bruno',dob:'2/15/2012'},
+  {club:'DAL',name:'Angello Pastran',dob:'4/12/2012'},{club:'DAL',name:'Miguel Coriano Alvarez',dob:'2/11/2011'},{club:'DAL',name:'Benjamin Flowers',dob:'4/14/2011'},
+  {club:'DAL',name:'David Jaimes',dob:'2/21/2011'},{club:'DAL',name:'Quincy Lamar',dob:'6/26/2011'},{club:'DAL',name:'Rowan Lester',dob:'1/16/2011'},
+  {club:'DAL',name:'Jacob Modersohn',dob:'1/14/2011'},{club:'DAL',name:'Sam Onsarigo',dob:'3/11/2011'},{club:'DAL',name:'Jackson Pea',dob:'1/24/2011'},
+  {club:'DAL',name:'Patrick Arne',dob:'7/21/2010'},{club:'DAL',name:'Seif Awad',dob:'7/5/2010'},{club:'DAL',name:'Angelo Caiafa Barrios',dob:'12/23/2010'},
+  {club:'DAL',name:'Christian Guillen Lopez',dob:'1/16/2010'},{club:'DAL',name:'Theophilus Hallie II',dob:'3/2/2010'},{club:'DAL',name:'Justus Jones',dob:'9/23/2010'},
+  {club:'DAL',name:'Robert Melvin II',dob:'6/28/2010'},{club:'DAL',name:'Johan Padilla Canales',dob:'6/2/2010'},{club:'DAL',name:'Alex Soria',dob:'12/3/2010'},
+  {club:'DAL',name:'Alvin Tabe',dob:'6/2/2010'},{club:'DAL',name:'Titus Watson',dob:'2/2/2010'},{club:'DAL',name:'Austin Chukwu',dob:'1/28/2009'},
+  {club:'DAL',name:'Jordyn Eason',dob:'4/19/2009'},{club:'DAL',name:'Trey Glosson',dob:'6/16/2009'},{club:'DAL',name:'Ahmad Odom',dob:'10/26/2009'},
+  {club:'DAL',name:'Ninor Olu',dob:'1/30/2009'},{club:'DAL',name:'Saul Rios Ponce',dob:'7/30/2009'},{club:'DAL',name:'Liam Vejrostek',dob:'12/29/2009'},
+  {club:'DAL',name:'Kyle Velazquez',dob:'7/9/2009'},{club:'DAL',name:'Christian Wygant',dob:'6/24/2009'},
+  {club:'DAL',name:'Jonathon Dozier',dob:'10/19/2007'},{club:'DAL',name:'Wyatt Easterly',dob:'4/30/2008'},{club:'DAL',name:'Aiden Jordan',dob:'7/11/2008'},
+  {club:'DAL',name:'Mason Bathurst',dob:'4/13/2012'},{club:'DAL',name:'Uriel Mendoza',dob:'10/25/2011'},{club:'DAL',name:'Heaven Musunga',dob:'11/4/2011'},
+  {club:'DAL',name:'Christopher Cook',dob:'10/13/2009'},{club:'DAL',name:'Caleb Wegman',dob:'12/27/2009'},
+  // DC - D.C. United
+  {club:'DC',name:'Maxwell Camara',dob:'1/10/2011'},{club:'DC',name:'Ayden Harriott',dob:'4/27/2011'},{club:'DC',name:'Bakary Kante',dob:'7/11/2011'},
+  {club:'DC',name:'Romer Lara Vargas',dob:'1/16/2011'},{club:'DC',name:'Paxton Loveday',dob:'4/12/2011'},{club:'DC',name:'Kieran Papillon',dob:'9/23/2011'},
+  {club:'DC',name:'Olaoluwa Sowemimo',dob:'2/10/2012'},{club:'DC',name:'Jayden Talley',dob:'3/17/2011'},{club:'DC',name:'Gabriel Vasquez',dob:'1/2/2011'},
+  {club:'DC',name:'Marco Vita',dob:'4/7/2011'},{club:'DC',name:'Isaiah Fabunmi',dob:'1/19/2011'},
+  {club:'DC',name:'Lincoln Robotham',dob:'12/27/2010'},{club:'DC',name:'Mikel Akinmboni',dob:'4/8/2010'},{club:'DC',name:'Noah Banks',dob:'4/2/2010'},
+  {club:'DC',name:'Kamil Castillo',dob:'1/3/2010'},{club:'DC',name:'Byron Davis',dob:'10/19/2010'},{club:'DC',name:'Alvaro Escobero',dob:'1/24/2010'},
+  {club:'DC',name:'Mathias Espinoza',dob:'3/16/2010'},{club:'DC',name:'Carlos Pinto',dob:'5/13/2010'},{club:'DC',name:'Mayson Barillas',dob:'6/10/2009'},
+  {club:'DC',name:'Brayden Danner',dob:'5/19/2009'},{club:'DC',name:'Cameron Mallory',dob:'7/3/2009'},{club:'DC',name:'Lohamba Okoko',dob:'7/25/2009'},
+  {club:'DC',name:'Edwin Ortiz',dob:'8/10/2009'},{club:'DC',name:'Oluwasijibomi Sowemimo',dob:'9/20/2009'},
+  {club:'DC',name:'German Argueta',dob:'3/10/2008'},{club:'DC',name:'Nicolas Banks',dob:'6/26/2008'},{club:'DC',name:'Jeremiah Boasmanboon',dob:'7/7/2008'},
+  {club:'DC',name:'Zach Cielewicz',dob:'6/6/2008'},{club:'DC',name:'Alan Flores',dob:'1/13/2008'},{club:'DC',name:'Reginald Gainer',dob:'6/14/2008'},
+  {club:'DC',name:'Brice Hall',dob:'3/3/2008'},{club:'DC',name:'Cameron Marbray',dob:'7/25/2008'},{club:'DC',name:'Judah Pritchett',dob:'10/18/2008'},
+  {club:'DC',name:'Abraham Tarawallie',dob:'3/18/2008'},
+  {club:'DC',name:'Bryan Hernandez',dob:'1/29/2012'},{club:'DC',name:'Israel Oraegbu',dob:'1/22/2012'},{club:'DC',name:'Marc Vignier',dob:'2/7/2012'},
+  {club:'DC',name:'Miller Heaven',dob:'3/15/2009'},
+  // HOU - Houston Dynamo
+  {club:'HOU',name:'Thor Moeller-Nielsen',dob:'10/4/2012'},{club:'HOU',name:'Gideon Gomez',dob:'2/19/2011'},{club:'HOU',name:'Christopher Gonzalez',dob:'11/15/2011'},
+  {club:'HOU',name:'David Herrera',dob:'12/1/2011'},{club:'HOU',name:'Peyton James',dob:'1/3/2011'},{club:'HOU',name:'Kenzynton Pierre',dob:'5/1/2011'},
+  {club:'HOU',name:'Oscar Olsen',dob:'1/18/2011'},
+  {club:'HOU',name:'Keegan Ahrens',dob:'7/30/2010'},{club:'HOU',name:'Matthew Arana',dob:'8/28/2010'},{club:'HOU',name:'Brogan Fitzsimons',dob:'10/8/2010'},
+  {club:'HOU',name:'Fernando Gutierrez',dob:'3/26/2010'},{club:'HOU',name:'Alexander Munoz',dob:'1/23/2010'},{club:'HOU',name:'Sebastiao Nzita',dob:'10/10/2010'},
+  {club:'HOU',name:'Dylan Reyes',dob:'3/4/2010'},{club:'HOU',name:'Dami Samuel',dob:'1/12/2010'},{club:'HOU',name:'Matthew Shannon',dob:'8/16/2010'},
+  {club:'HOU',name:'Ekco Yurong',dob:'10/24/2010'},{club:'HOU',name:'Daniel Barrett',dob:'4/20/2009'},{club:'HOU',name:'Tristan Cottle',dob:'10/26/2009'},
+  {club:'HOU',name:'Mattheo Dimareli',dob:'5/28/2009'},{club:'HOU',name:'Myles Gardner',dob:'4/15/2009'},{club:'HOU',name:'Matthew Hinds',dob:'3/9/2009'},
+  {club:'HOU',name:'Lucciano Pagani',dob:'2/25/2009'},{club:'HOU',name:'Kian Walsh',dob:'6/4/2009'},
+  {club:'HOU',name:'Omar Bolanos',dob:'1/13/2008'},{club:'HOU',name:'Lionel Gitau',dob:'3/1/2008'},{club:'HOU',name:'Micah Harris',dob:'2/7/2008'},
+  {club:'HOU',name:'Rafael Inojosa',dob:'3/11/2008'},{club:'HOU',name:'Roman Kerimov',dob:'2/15/2008'},{club:'HOU',name:'Samir Mohammad',dob:'2/26/2008'},
+  {club:'HOU',name:'Cristian Montenegro',dob:'10/26/2008'},{club:'HOU',name:'Isaac Mwakatuya',dob:'9/10/2007'},{club:'HOU',name:'Jayden Puna',dob:'2/29/2008'},
+  {club:'HOU',name:'Faraji Ramani',dob:'2/28/2008'},{club:'HOU',name:'Gavin Wolff',dob:'8/27/2008'},
+  {club:'HOU',name:'Johnny Cuero',dob:'1/13/2012'},{club:'HOU',name:'Gianni Hiwiller',dob:'9/22/2011'},{club:'HOU',name:'Darwin Lopez',dob:'12/2/2011'},
+  {club:'HOU',name:'Emilio Maldonado',dob:'5/18/2011'},{club:'HOU',name:'Geronimo Ritchey',dob:'4/14/2012'},
+  // LAFC - Los Angeles FC
+  {club:'LAFC',name:'Damian Chavez',dob:'11/22/2012'},{club:'LAFC',name:'Kaiyu Chi',dob:'6/18/2012'},{club:'LAFC',name:'Alessandro DelAlamo',dob:'5/24/2012'},
+  {club:'LAFC',name:'Kamdin Hernandez',dob:'3/30/2012'},{club:'LAFC',name:'Jaxsen John',dob:'2/18/2012'},{club:'LAFC',name:'Bryant Mata',dob:'10/25/2012'},
+  {club:'LAFC',name:'Anthony Nunez',dob:'8/21/2012'},{club:'LAFC',name:'Thomasio Puppe',dob:'9/18/2012'},{club:'LAFC',name:'Wesley Weinstein',dob:'10/25/2012'},
+  {club:'LAFC',name:'Julian Acuna',dob:'6/28/2011'},{club:'LAFC',name:'Shane Jagtiani',dob:'3/15/2011'},{club:'LAFC',name:'Jacob Mendoza',dob:'3/2/2011'},
+  {club:'LAFC',name:'Lucas Real',dob:'2/11/2011'},{club:'LAFC',name:'Luis Rios',dob:'12/29/2011'},{club:'LAFC',name:'Kenneth Salguero',dob:'4/24/2011'},
+  {club:'LAFC',name:'Marlon Sanchez',dob:'1/8/2011'},{club:'LAFC',name:'Mateo Urizar',dob:'8/4/2011'},{club:'LAFC',name:'Aidan Carlos',dob:'2/16/2011'},
+  {club:'LAFC',name:'Mason Washington',dob:'3/21/2011'},{club:'LAFC',name:'Levi Welch',dob:'6/4/2011'},
+  {club:'LAFC',name:'Maxwell Beuthin',dob:'6/22/2010'},{club:'LAFC',name:'Slate Collins',dob:'4/5/2010'},{club:'LAFC',name:'Adriel Duarte',dob:'1/31/2010'},
+  {club:'LAFC',name:'Felix Gomez',dob:'8/18/2010'},{club:'LAFC',name:'Abraham Prado',dob:'3/19/2010'},{club:'LAFC',name:'Andres Sanchez',dob:'1/20/2010'},
+  {club:'LAFC',name:'Benjamin Failla',dob:'9/3/2009'},{club:'LAFC',name:'Miles Ozar',dob:'2/7/2009'},{club:'LAFC',name:'Darian Rus',dob:'5/7/2009'},
+  {club:'LAFC',name:'Leo Vacca',dob:'10/4/2009'},
+  {club:'LAFC',name:'Liam Lambert',dob:'7/9/2008'},{club:'LAFC',name:'Jacob Machuca',dob:'4/11/2008'},{club:'LAFC',name:'Nathan Mardaresco',dob:'1/16/2008'},
+  {club:'LAFC',name:'Adrian Sanders',dob:'9/17/2008'},{club:'LAFC',name:'Ethan Scally',dob:'6/8/2008'},
+  {club:'LAFC',name:'Zico Sitompul',dob:'2/18/2011'},{club:'LAFC',name:'Giovanni Tamayo',dob:'7/1/2011'},{club:'LAFC',name:'Samuel Berger',dob:'1/25/2010'},
+  {club:'LAFC',name:'Tyson Espy',dob:'4/3/2009'},{club:'LAFC',name:'Renden Thomas',dob:'6/16/2009'},
+  // LAG - LA Galaxy
+  {club:'LAG',name:'Mansoor Alhassen',dob:'5/25/2011'},{club:'LAG',name:'Kylin Arbet',dob:'4/25/2011'},{club:'LAG',name:'Devrim Batur',dob:'6/23/2011'},
+  {club:'LAG',name:'Rocco Galofaro',dob:'2/27/2011'},{club:'LAG',name:'Elijah Johnson',dob:'1/26/2011'},{club:'LAG',name:'Matthew Leone',dob:'6/1/2011'},
+  {club:'LAG',name:'Christian Vanney',dob:'5/4/2011'},
+  {club:'LAG',name:'Alessio Benedetti',dob:'10/29/2010'},{club:'LAG',name:'Ikenna Chidebe',dob:'4/29/2010'},{club:'LAG',name:'Garrett Conway',dob:'1/4/2010'},
+  {club:'LAG',name:'Olawande Esan',dob:'6/18/2010'},{club:'LAG',name:'Juan Martinez',dob:'3/12/2010'},{club:'LAG',name:'Jaiden Paz',dob:'7/27/2010'},
+  {club:'LAG',name:'Mateo McLean',dob:'1/14/2009'},{club:'LAG',name:'Aaron Medina',dob:'4/16/2009'},{club:'LAG',name:'Maximus Steelman',dob:'2/6/2009'},
+  {club:'LAG',name:'Angel Villatoro',dob:'1/8/2009'},{club:'LAG',name:'Will Walker',dob:'1/23/2009'},
+  {club:'LAG',name:'Kai Aina',dob:'3/26/2008'},{club:'LAG',name:'Christian Coreas',dob:'2/1/2007'},{club:'LAG',name:'Ryan Hartley',dob:'2/13/2008'},
+  {club:'LAG',name:'Issak Luna',dob:'10/12/2008'},{club:'LAG',name:'Justin Ojo',dob:'7/28/2008'},{club:'LAG',name:'Brett Phan',dob:'8/4/2008'},
+  {club:'LAG',name:'Eric Preston',dob:'1/31/2008'},{club:'LAG',name:'James Rhodes',dob:'11/5/2007'},{club:'LAG',name:'Carson Sagely',dob:'1/29/2008'},
+  {club:'LAG',name:'Mateo Tsakiris',dob:'3/5/2008'},{club:'LAG',name:'Dylan Vanney',dob:'11/29/2007'},{club:'LAG',name:'Mason Vanney',dob:'11/29/2007'},
+  {club:'LAG',name:'Aaron Ayala',dob:'2/10/2012'},{club:'LAG',name:'Edward Chadwick',dob:'8/7/2009'},{club:'LAG',name:'Elliot Jhang',dob:'1/31/2010'},
+  {club:'LAG',name:'Mathis Albert',dob:'5/21/2009'},
+  // MIA - Inter Miami
+  {club:'MIA',name:'Sebastian Bennett',dob:'8/10/2012'},{club:'MIA',name:'Carson Starrett',dob:'5/25/2011'},{club:'MIA',name:'Aiden Wallensky',dob:'1/17/2011'},
+  {club:'MIA',name:'Julio Zabaleta',dob:'2/6/2011'},
+  {club:'MIA',name:'Zidane Cadet',dob:'11/12/2009'},{club:'MIA',name:'Matteo De Paula',dob:'2/18/2009'},{club:'MIA',name:'Nash Dearmin',dob:'10/23/2009'},
+  {club:'MIA',name:'Sean Gormley',dob:'3/13/2009'},{club:'MIA',name:'Nessim Jena',dob:'3/19/2009'},{club:'MIA',name:'Leandro Padilla',dob:'10/21/2009'},
+  {club:'MIA',name:'Matthias Vieux',dob:'6/9/2009'},{club:'MIA',name:'Rondell White',dob:'6/4/2009'},{club:'MIA',name:'Mohammed Jamhour',dob:'4/22/2010'},
+  {club:'MIA',name:'Alejandro Malave',dob:'3/20/2010'},{club:'MIA',name:'Diego Martinez',dob:'3/2/2010'},{club:'MIA',name:'Zion Salmon',dob:'9/19/2010'},
+  {club:'MIA',name:'Levi Williams',dob:'7/2/2010'},
+  {club:'MIA',name:'Sergio Perello',dob:'8/11/2008'},{club:'MIA',name:'Naej Desravins',dob:'4/22/2008'},{club:'MIA',name:'Quinton John',dob:'3/21/2008'},
+  {club:'MIA',name:'Cai-Anthony McLean',dob:'6/27/2008'},{club:'MIA',name:'Sloan Morrison',dob:'9/10/2008'},{club:'MIA',name:'Jerremy Ortela',dob:'2/23/2008'},
+  {club:'MIA',name:'Peyton Presson',dob:'1/13/2008'},{club:'MIA',name:'Arturo Querales',dob:'7/21/2008'},
+  {club:'MIA',name:'Thomas Castro Gomez',dob:'2/27/2012'},{club:'MIA',name:'Pyter Bruno',dob:'7/28/2009'},{club:'MIA',name:'David Uranga',dob:'3/4/2009'},
+  {club:'MIA',name:'Marco Simion',dob:'10/11/2008'},
+  // MIN - Minnesota United
+  {club:'MIN',name:'Nikita Bulychov',dob:'2/11/2011'},{club:'MIN',name:'Calvin Clarke',dob:'11/28/2011'},{club:'MIN',name:'Jamond Greaves',dob:'8/6/2011'},
+  {club:'MIN',name:'Jeorge Gutting',dob:'3/22/2011'},{club:'MIN',name:'Lucas Lacey',dob:'4/17/2011'},{club:'MIN',name:'Jose Orta Ruiz',dob:'7/13/2011'},
+  {club:'MIN',name:'Theodore Rozeboom',dob:'1/7/2011'},{club:'MIN',name:'Lorenzo Uribe',dob:'10/7/2011'},{club:'MIN',name:'Mario Vera-Martinez',dob:'2/6/2011'},
+  {club:'MIN',name:'Nosazena Osagie',dob:'3/31/2011'},
+  {club:'MIN',name:'Collin Barnes',dob:'6/7/2010'},{club:'MIN',name:'Aydin Begic',dob:'5/22/2010'},{club:'MIN',name:'Hector Cruz',dob:'2/17/2010'},
+  {club:'MIN',name:'Everad Gordon',dob:'3/10/2010'},{club:'MIN',name:'Maxwell Harwood',dob:'1/21/2010'},{club:'MIN',name:'Brett Isaacson',dob:'6/18/2010'},
+  {club:'MIN',name:'Carter Johnson',dob:'3/1/2010'},{club:'MIN',name:'Enzo Macau',dob:'6/30/2010'},{club:'MIN',name:'Pablo Merheb',dob:'9/8/2010'},
+  {club:'MIN',name:'Donatien Nzambimana',dob:'8/16/2010'},{club:'MIN',name:'Julian Vasquez',dob:'1/23/2010'},{club:'MIN',name:'Jadan Bernard',dob:'5/24/2009'},
+  {club:'MIN',name:'Timothy Dennis',dob:'5/17/2009'},{club:'MIN',name:'Griffin Giel',dob:'3/20/2009'},{club:'MIN',name:'Sullivan Maynes',dob:'1/5/2009'},
+  {club:'MIN',name:'Keane Perkins',dob:'2/2/2009'},{club:'MIN',name:'Brody Schauf',dob:'7/16/2009'},{club:'MIN',name:'Justin Sosnouski',dob:'9/28/2009'},
+  {club:'MIN',name:'Arvin Tabukum',dob:'5/3/2009'},
+  {club:'MIN',name:'Mohammed Bojang',dob:'2/9/2008'},{club:'MIN',name:'Calin Grulke',dob:'9/6/2008'},{club:'MIN',name:'Emory Ortwein',dob:'3/20/2008'},
+  {club:'MIN',name:'Issa Saidi',dob:'6/20/2008'},{club:'MIN',name:'Braden Schumacher',dob:'3/21/2008'},
+  {club:'MIN',name:'Dylan Connor',dob:'5/7/2011'},{club:'MIN',name:'Collin Thorpe',dob:'2/12/2011'},
+  // MTL - CF Montreal
+  {club:'MTL',name:'Reda Chekabab',dob:'5/25/2011'},{club:'MTL',name:'Cyrus He',dob:'1/22/2011'},{club:'MTL',name:'Neidy Jean-Baptiste',dob:'1/12/2011'},
+  {club:'MTL',name:'Samuel Junco Giraldo',dob:'1/3/2011'},{club:'MTL',name:'Ilyes Lachhab',dob:'9/24/2011'},{club:'MTL',name:'Nathan Laguerre',dob:'9/2/2011'},
+  {club:'MTL',name:'Khalil Souani',dob:'2/5/2011'},{club:'MTL',name:'Mohamed Toure',dob:'5/20/2011'},{club:'MTL',name:'Mohamed Yahiaoui',dob:'2/13/2011'},
+  {club:'MTL',name:'Juliano Barbieri',dob:'5/4/2010'},{club:'MTL',name:'Noah Gauthier',dob:'1/25/2010'},{club:'MTL',name:'William Karras',dob:'2/5/2010'},
+  {club:'MTL',name:'Grevice Mabika',dob:'5/1/2010'},{club:'MTL',name:'Izaiyah Onomo',dob:'12/22/2010'},{club:'MTL',name:'Patrick Arana',dob:'3/14/2009'},
+  {club:'MTL',name:'Leon Arkhurst',dob:'7/26/2009'},{club:'MTL',name:'Oliver Ekeke Essoukan',dob:'6/25/2009'},{club:'MTL',name:'Eloi Breton',dob:'2/21/2009'},
+  {club:'MTL',name:'Juan Castellanos',dob:'2/26/2009'},{club:'MTL',name:'Gabriel Hoffmeister Pandolfo',dob:'8/1/2009'},{club:'MTL',name:'Samsy Keita',dob:'7/27/2009'},
+  {club:'MTL',name:'Guillaume Kiede',dob:'6/29/2009'},{club:'MTL',name:'Myles Knelsen',dob:'8/10/2009'},{club:'MTL',name:'Zaky Lachhab',dob:'6/5/2009'},
+  {club:'MTL',name:'El Moukhtar Loukili',dob:'2/9/2009'},{club:'MTL',name:'Raphael Pascal',dob:'2/4/2009'},{club:'MTL',name:'Lucas Rheault',dob:'2/6/2009'},
+  {club:'MTL',name:'Luca St-Pierre',dob:'4/27/2009'},{club:'MTL',name:'Ulrich Zamble',dob:'2/17/2009'},
+  {club:'MTL',name:'Nataniel Dore-Belair',dob:'3/2/2008'},{club:'MTL',name:'Eliott Germain-Aubrey',dob:'1/31/2008'},{club:'MTL',name:'Alistair McFall',dob:'4/9/2008'},
+  {club:'MTL',name:'Georges Njikam',dob:'5/19/2008'},{club:'MTL',name:'Michael Peres',dob:'2/18/2008'},{club:'MTL',name:'Aghilas Sadek',dob:'7/15/2008'},
+  {club:'MTL',name:'Seri Baye',dob:'12/20/2011'},{club:'MTL',name:'Jolan Faury',dob:'2/14/2010'},{club:'MTL',name:'Christopher Lettieri',dob:'1/2/2009'},
+  {club:'MTL',name:'Daniel Panait',dob:'5/13/2008'},
+  // NE - New England Revolution
+  {club:'NE',name:'Dylan Armah',dob:'1/18/2012'},{club:'NE',name:'Luca Cicione',dob:'11/30/2012'},{club:'NE',name:'Boston Kahoalii',dob:'9/27/2012'},
+  {club:'NE',name:'Brennan McWeeny',dob:'7/13/2012'},{club:'NE',name:'Musah Adamu',dob:'3/26/2011'},{club:'NE',name:'Arthur Bernardino',dob:'1/13/2011'},
+  {club:'NE',name:'Shayne Dos Santos',dob:'1/11/2011'},{club:'NE',name:'Landon Ho Sang',dob:'6/17/2011'},{club:'NE',name:'Andrew Hsu',dob:'4/9/2011'},
+  {club:'NE',name:'Roderick Janairo',dob:'2/6/2011'},{club:'NE',name:'Zachary LaPierre',dob:'2/11/2011'},{club:'NE',name:'Kai Nielsen',dob:'7/4/2011'},
+  {club:'NE',name:'Dalu Nwazoije',dob:'1/1/2011'},{club:'NE',name:'Elijah Obayagbona',dob:'1/15/2011'},{club:'NE',name:'Davi Pereira',dob:'2/17/2011'},
+  {club:'NE',name:'Langston Powell',dob:'7/17/2011'},{club:'NE',name:'Vaughn Scholz',dob:'1/27/2011'},
+  {club:'NE',name:'Logan Azar',dob:'6/26/2010'},{club:'NE',name:'Kauan De Campos',dob:'1/28/2010'},{club:'NE',name:'Christopher Scott',dob:'1/22/2010'},
+  {club:'NE',name:'Isaac Twumasi',dob:'4/2/2010'},{club:'NE',name:'Brandon Velez',dob:'3/12/2010'},{club:'NE',name:'Alexander Bruner Louchnikov',dob:'7/7/2009'},
+  {club:'NE',name:'Ryker Fauth',dob:'3/3/2009'},{club:'NE',name:'Levi Katsell',dob:'12/16/2009'},{club:'NE',name:'Harley Kerr',dob:'3/11/2009'},
+  {club:'NE',name:'Joshua Macedo',dob:'2/13/2009'},{club:'NE',name:'Aarin Prajapati',dob:'4/23/2009'},{club:'NE',name:'Judah Siqueira',dob:'3/27/2009'},
+  {club:'NE',name:'Ivan Villalobos Lopez',dob:'5/13/2009'},{club:'NE',name:'Makai Wells',dob:'1/2/2009'},
+  {club:'NE',name:'Cristiano Carlos',dob:'1/1/2008'},{club:'NE',name:'Grant Emerhi',dob:'1/25/2008'},{club:'NE',name:'Sheridan McNish',dob:'6/25/2008'},
+  {club:'NE',name:'Robert Nichols III',dob:'10/5/2007'},
+  {club:'NE',name:'Rikelme De Almeida',dob:'7/7/2011'},{club:'NE',name:'Will Recupero',dob:'1/11/2010'},{club:'NE',name:'Julian Martinez',dob:'6/26/2009'},
+  {club:'NE',name:'Ben Quirino Silva',dob:'10/3/2010'},
+  // NSH - Nashville SC
+  {club:'NSH',name:'Blaise Blackwell',dob:'5/16/2011'},{club:'NSH',name:'Samuel Burzi',dob:'3/11/2011'},{club:'NSH',name:'Erick Garcia',dob:'4/20/2011'},
+  {club:'NSH',name:'London Lemus',dob:'1/3/2011'},{club:'NSH',name:'Matteo Mammarella',dob:'2/25/2011'},{club:'NSH',name:'Nathaniel Mitev',dob:'8/3/2011'},
+  {club:'NSH',name:'Edgar Moreno',dob:'4/1/2011'},{club:'NSH',name:'Riain O\'Connor',dob:'1/29/2011'},
+  {club:'NSH',name:'Emmanuel Arias',dob:'1/5/2010'},{club:'NSH',name:'Aiden Byasiima',dob:'5/12/2010'},{club:'NSH',name:'Jacob Mazariegos',dob:'5/27/2010'},
+  {club:'NSH',name:'Giuliano Rodrigues',dob:'10/31/2010'},{club:'NSH',name:'Jayden Sandoval',dob:'7/6/2010'},{club:'NSH',name:'Jacob Smith',dob:'2/17/2010'},
+  {club:'NSH',name:'Luca Stephan',dob:'3/1/2010'},{club:'NSH',name:'Liam Stribling',dob:'11/12/2010'},{club:'NSH',name:'Alejandro Velazquez',dob:'5/12/2010'},
+  {club:'NSH',name:'Xavier Aguilar',dob:'3/5/2009'},{club:'NSH',name:'Christopher Cerqueira',dob:'4/21/2009'},{club:'NSH',name:'Salem Chandler',dob:'3/3/2009'},
+  {club:'NSH',name:'Liam Devan',dob:'7/24/2009'},{club:'NSH',name:'Kleyber Estrada',dob:'1/25/2009'},{club:'NSH',name:'Andre Krikorian',dob:'2/19/2009'},
+  {club:'NSH',name:'Jihae Park',dob:'10/25/2009'},
+  {club:'NSH',name:'Gabriel Alonso',dob:'10/30/2007'},{club:'NSH',name:'Owen Bland',dob:'1/23/2008'},{club:'NSH',name:'Charly Dealmonte',dob:'2/26/2008'},
+  {club:'NSH',name:'Isac Enriquez',dob:'8/27/2008'},{club:'NSH',name:'Brooks Hilger',dob:'3/24/2008'},{club:'NSH',name:'Zion Jones',dob:'1/17/2008'},
+  {club:'NSH',name:'Lukas Robbins',dob:'6/24/2008'},{club:'NSH',name:'Ari Saliu',dob:'10/6/2008'},{club:'NSH',name:'Thad Sawyer',dob:'3/16/2008'},
+  {club:'NSH',name:'Joshua Swanzy',dob:'5/21/2008'},{club:'NSH',name:'Tristan Tropeano',dob:'11/28/2007'},
+  {club:'NSH',name:'Henry Rasmussen',dob:'5/14/2009'},
+  // NYCFC - New York City FC
+  {club:'NYCFC',name:'Emmanuel Lassayo',dob:'1/19/2012'},{club:'NYCFC',name:'Caleb Loriston',dob:'3/9/2012'},{club:'NYCFC',name:'Enzo Mio',dob:'1/25/2012'},
+  {club:'NYCFC',name:'Diego Roque',dob:'4/4/2012'},{club:'NYCFC',name:'Jaxon Vereen',dob:'1/20/2012'},{club:'NYCFC',name:'Yaseen Zaghdudi',dob:'6/27/2012'},
+  {club:'NYCFC',name:'Alexander Bonner',dob:'7/14/2011'},{club:'NYCFC',name:'Andrew Hayslip',dob:'1/19/2011'},{club:'NYCFC',name:'Colin Panarelli',dob:'9/12/2011'},
+  {club:'NYCFC',name:'Leonardo Reyes',dob:'5/6/2011'},{club:'NYCFC',name:'Cosimo Tristiani',dob:'5/1/2011'},
+  {club:'NYCFC',name:'Olumuyiwa Ajayi',dob:'3/14/2010'},{club:'NYCFC',name:'Abner Arias',dob:'7/25/2010'},{club:'NYCFC',name:'Yotaro Kaneko',dob:'2/9/2010'},
+  {club:'NYCFC',name:'Costantino Muscedere',dob:'1/21/2010'},{club:'NYCFC',name:'Jayson Ramirez',dob:'8/12/2010'},{club:'NYCFC',name:'Niccolo Vafiades',dob:'7/20/2010'},
+  {club:'NYCFC',name:'Henry Viggiano',dob:'3/25/2010'},{club:'NYCFC',name:'James Bilden',dob:'6/29/2009'},{club:'NYCFC',name:'Henrik Hvatum',dob:'3/12/2009'},
+  {club:'NYCFC',name:'Won Kang',dob:'6/21/2009'},{club:'NYCFC',name:'Leonardo Paletta',dob:'12/22/2009'},{club:'NYCFC',name:'El Hadji Samb',dob:'10/29/2009'},
+  {club:'NYCFC',name:'Summerville Beckford',dob:'7/30/2008'},{club:'NYCFC',name:'Adonis Campos',dob:'5/20/2008'},{club:'NYCFC',name:'Patrick Cuneo',dob:'10/12/2007'},
+  {club:'NYCFC',name:'Lucas DePinho',dob:'2/15/2008'},{club:'NYCFC',name:'Kemar Flemmings',dob:'10/3/2008'},{club:'NYCFC',name:'Jabar Johnson',dob:'6/27/2008'},
+  {club:'NYCFC',name:'Ethan Kim',dob:'4/18/2008'},{club:'NYCFC',name:'John Lynch',dob:'9/26/2008'},{club:'NYCFC',name:'Samuel Ramirez',dob:'7/30/2008'},
+  {club:'NYCFC',name:'Kieran Smith',dob:'8/23/2008'},{club:'NYCFC',name:'Anthony Suarez Gonzalez',dob:'4/20/2008'},{club:'NYCFC',name:'Dylan Thomas',dob:'2/22/2008'},
+  {club:'NYCFC',name:'Matthew Brusco',dob:'4/7/2011'},{club:'NYCFC',name:'Christopher Fitanidis',dob:'5/21/2011'},{club:'NYCFC',name:'Julien Lacher',dob:'10/1/2007'},
+  // NYRB - New York Red Bulls
+  {club:'NYRB',name:'Jonathan David',dob:'6/4/2012'},{club:'NYRB',name:'Tyler Edwards',dob:'5/5/2012'},{club:'NYRB',name:'Lee Hall',dob:'8/21/2012'},
+  {club:'NYRB',name:'Ben McCaughrain',dob:'8/8/2012'},{club:'NYRB',name:'Carlos Palma',dob:'9/17/2012'},{club:'NYRB',name:'Akwasi Afriyie',dob:'3/20/2011'},
+  {club:'NYRB',name:'Oscar Andrade',dob:'9/6/2011'},{club:'NYRB',name:'Bradley Castro',dob:'3/1/2011'},{club:'NYRB',name:'Jamie Cregan',dob:'6/29/2011'},
+  {club:'NYRB',name:'Austin Gonzalez',dob:'1/9/2011'},{club:'NYRB',name:'Ben Huh',dob:'3/29/2011'},{club:'NYRB',name:'Malachi Joseph',dob:'7/5/2011'},
+  {club:'NYRB',name:'Arseniy Kopytchak',dob:'3/24/2011'},{club:'NYRB',name:'Pietro Lolos',dob:'7/19/2011'},
+  {club:'NYRB',name:'Jacob Bradley',dob:'5/3/2010'},{club:'NYRB',name:'Jonathan Condor',dob:'7/16/2010'},{club:'NYRB',name:'Tafsir Diop',dob:'10/7/2009'},
+  {club:'NYRB',name:'Eric Lodge',dob:'4/28/2010'},{club:'NYRB',name:'Isaac Rakovsky',dob:'5/23/2010'},{club:'NYRB',name:'Avery Rosado',dob:'7/2/2010'},
+  {club:'NYRB',name:'David Rutkowski',dob:'4/10/2010'},{club:'NYRB',name:'Jason Bori',dob:'2/16/2009'},{club:'NYRB',name:'Deven Cadigan',dob:'3/15/2009'},
+  {club:'NYRB',name:'Alex Gomez',dob:'4/27/2009'},{club:'NYRB',name:'Josh Munson',dob:'6/6/2009'},{club:'NYRB',name:'Caleb Simmons',dob:'5/8/2009'},
+  {club:'NYRB',name:'Sean Baitinger',dob:'9/11/2008'},{club:'NYRB',name:'Sebasthian Chavez',dob:'1/3/2008'},{club:'NYRB',name:'Connor Faello',dob:'3/11/2008'},
+  {club:'NYRB',name:'Christian Gallagher',dob:'11/5/2007'},{club:'NYRB',name:'Dennis Nelich',dob:'3/3/2008'},{club:'NYRB',name:'Benny Rodriguez',dob:'7/25/2007'},
+  {club:'NYRB',name:'Ryan Scuro',dob:'1/10/2008'},{club:'NYRB',name:'Henryk Telakowski',dob:'3/28/2008'},{club:'NYRB',name:'Eric Velasquez',dob:'1/3/2007'},
+  {club:'NYRB',name:'Leonardo Andrade',dob:'6/12/2012'},{club:'NYRB',name:'Christopher Fitanidis',dob:'5/21/2011'},{club:'NYRB',name:'Astin Mbaye',dob:'3/5/2009'},
+  {club:'NYRB',name:'Timothy McFarland',dob:'1/2/2009'},
+  // ORL - Orlando City
+  {club:'ORL',name:'Mario Reyes',dob:'3/16/2012'},{club:'ORL',name:'Mateo Velasquez',dob:'6/12/2012'},{club:'ORL',name:'Jonas Alcala',dob:'1/28/2011'},
+  {club:'ORL',name:'Maximiliano Alvarez',dob:'11/29/2011'},{club:'ORL',name:'Rijkaard Atali',dob:'2/6/2011'},{club:'ORL',name:'Ibrahima Ba',dob:'3/9/2011'},
+  {club:'ORL',name:'Oliver Chatwal',dob:'6/28/2011'},{club:'ORL',name:'Zorion Civil',dob:'10/27/2011'},{club:'ORL',name:'Jaxon Ludwick',dob:'1/13/2011'},
+  {club:'ORL',name:'Santiago Salazar',dob:'1/25/2011'},{club:'ORL',name:'Luan Silva',dob:'6/20/2011'},{club:'ORL',name:'Paolo Venditti',dob:'3/12/2011'},
+  {club:'ORL',name:'Hector Aguirre',dob:'2/7/2010'},{club:'ORL',name:'Lennox Alvarado',dob:'4/22/2010'},{club:'ORL',name:'Mateus Cabral',dob:'2/18/2010'},
+  {club:'ORL',name:'Daniel Ewers',dob:'8/15/2010'},{club:'ORL',name:'Antoni James',dob:'5/25/2010'},{club:'ORL',name:'Deshnick Nkeh',dob:'7/24/2010'},
+  {club:'ORL',name:'Cristian Sanchez Duran',dob:'9/9/2010'},{club:'ORL',name:'Mattew Belgodere',dob:'11/6/2009'},{club:'ORL',name:'Jakob Garcia',dob:'2/8/2009'},
+  {club:'ORL',name:'Brady Kendall',dob:'6/22/2009'},{club:'ORL',name:'Tanner Miller',dob:'2/11/2009'},{club:'ORL',name:'Jacob Ramirez',dob:'8/27/2009'},
+  {club:'ORL',name:'Caleb Trombino',dob:'6/8/2009'},
+  {club:'ORL',name:'Parker Amoo-Mensah',dob:'2/12/2008'},{club:'ORL',name:'Eduardo Ayalla',dob:'9/8/2008'},{club:'ORL',name:'Dominik Baczewski',dob:'6/2/2008'},
+  {club:'ORL',name:'Albright Chukwuma Ononiwu',dob:'6/30/2008'},{club:'ORL',name:'Nicolas Lasheras',dob:'9/7/2008'},{club:'ORL',name:'Luca Maxim',dob:'4/3/2008'},
+  {club:'ORL',name:'Landon Okonski',dob:'8/20/2008'},
+  // PHI - Philadelphia Union
+  {club:'PHI',name:'Gino Cecere',dob:'3/15/2012'},{club:'PHI',name:'Austin Gayle',dob:'1/13/2012'},{club:'PHI',name:'Robert Melendez',dob:'1/9/2012'},
+  {club:'PHI',name:'Noah Pine',dob:'9/8/2012'},
+  {club:'PHI',name:'Abdoulaye Diop',dob:'2/5/2010'},{club:'PHI',name:'Samuel Gallego',dob:'3/13/2010'},{club:'PHI',name:'Aiden Gayle',dob:'7/15/2010'},
+  {club:'PHI',name:'Andrew Craig',dob:'9/14/2007'},{club:'PHI',name:'Peter Doran',dob:'2/19/2008'},{club:'PHI',name:'Nehan Hasan',dob:'6/30/2008'}
 ];
 
 var hgCurrentAgeFilter = 'all';
@@ -4980,17 +5201,13 @@ function renderHomegrownTable() {
   var query = document.getElementById('hgSearchInput').value.toLowerCase();
   var tbody = document.getElementById('hgTableBody');
   var filtered = HG_DATA.filter(function(p) {
-    var matchesAge = hgCurrentAgeFilter === 'all' || p.age === hgCurrentAgeFilter;
     var matchesSearch = !query || p.name.toLowerCase().includes(query) || p.club.toLowerCase().includes(query);
-    return matchesAge && matchesSearch;
+    return matchesSearch;
   });
   tbody.innerHTML = filtered.map(function(p) {
     var clubClass = p.club.toLowerCase().replace(/\s/g,'');
-    var ageClass = p.age === '+5' ? 'plus5' : p.age.toLowerCase();
     return '<tr style="border-bottom:1px solid #e5e5e7;">' +
       '<td style="padding:8px 12px;"><span class="hg-club-badge ' + clubClass + '">' + p.club + '</span></td>' +
-      '<td style="padding:8px 12px;"><span class="hg-age-badge ' + ageClass + '">' + p.age + '</span></td>' +
-      '<td style="padding:8px 12px;">' + p.num + '</td>' +
       '<td style="padding:8px 12px;font-weight:600;">' + p.name + '</td>' +
       '<td style="padding:8px 12px;">' + p.dob + '</td>' +
     '</tr>';
