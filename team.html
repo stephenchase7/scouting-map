@@ -1966,13 +1966,12 @@ try {
 // Validate club data from Supabase
 function validateClubData(club) {
   var errors = [];
-  if (!club.club_id) errors.push('missing club_id');
+  if (!club.id) errors.push('missing id');
   if (!club.name) errors.push('missing name');
-  if (club.latitude === null || club.latitude === undefined) errors.push('missing latitude');
-  if (club.longitude === null || club.longitude === undefined) errors.push('missing longitude');
+  // lat/lng are optional for ECNL clubs
 
   if (errors.length > 0) {
-    console.warn('[Supabase] Invalid club data:', club.club_id || 'unknown', '-', errors.join(', '));
+    console.warn('[Supabase] Invalid club data:', club.id || 'unknown', '-', errors.join(', '));
     return false;
   }
   return true;
@@ -2023,20 +2022,20 @@ async function loadSupabaseData(targetClubId) {
         console.warn('[Supabase] Skipping invalid club data for:', targetClubId);
       } else {
         // Merge club metadata (Supabase wins on conflicts)
-        if (!clubsData[club.club_id]) {
-          clubsData[club.club_id] = {};
+        if (!clubsData[club.id]) {
+          clubsData[club.id] = {};
         }
-        clubsData[club.club_id] = {
-        id: club.club_id,
-        name: club.name || clubsData[club.club_id].name || '',
-        logo: club.logo_path || clubsData[club.club_id].logo || '',
-        website: club.website || clubsData[club.club_id].website || '',
-        isPro: club.is_pro !== null ? club.is_pro : clubsData[club.club_id].isPro || false,
-        director: clubsData[club.club_id].director || { name: '', email: '', phone: '' },
+        clubsData[club.id] = {
+        id: club.id,
+        name: club.name || clubsData[club.id].name || '',
+        logo: club.logo || clubsData[club.id].logo || '',
+        website: club.website || clubsData[club.id].website || '',
+        isPro: club.is_pro !== null ? club.is_pro : clubsData[club.id].isPro || false,
+        director: clubsData[club.id].director || { name: '', email: '', phone: '' },
         state: club.state,
         division: club.division,
-        latitude: club.latitude,
-        longitude: club.longitude
+        latitude: club.lat,
+        longitude: club.lng
         };
       }
     }
@@ -2461,9 +2460,14 @@ function renderClubInfo() {
 }
 
 function renderPage() {
+  // Get initials: use stored initials, or derive from name, or fall back to club name
+  var initials = currentClub.initials ||
+    currentClub.name ||
+    clubId.replace(/^ecnl_/, '').toUpperCase();
+
   var logoHtml = currentClub.logo
     ? '<img src="' + currentClub.logo + '" alt="' + currentClub.name + '" onerror="this.style.display=\'none\'">'
-    : '<div class="header-initials">' + clubId.toUpperCase() + '</div>';
+    : '<div class="header-initials">' + initials + '</div>';
 
   var websiteHtml = currentClub.website
     ? '<a href="' + currentClub.website + '" target="_blank">' + currentClub.website.replace(/^https?:\/\/(www\.)?/, '') + '</a>'
