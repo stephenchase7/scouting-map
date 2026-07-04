@@ -1283,6 +1283,20 @@ var playersData = {};
             </div>
           </div>
         </div>
+        <div class="filter-group" id="conference-filter-group" style="display:none;">
+          <label>Conference</label>
+          <div class="dropdown-checkbox-wrapper">
+            <button type="button" class="dropdown-checkbox-btn" onclick="toggleDropdown('conference-filter')">
+              <span class="dropdown-label">All</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="dropdown-checkbox-menu" id="conference-filter" style="display:none;">
+              <label class="dropdown-checkbox-item"><input type="checkbox" value="Mid-Atlantic" onchange="applyFilters()"> <span style="color:#0066CC;">●</span> Mid-Atlantic</label>
+              <label class="dropdown-checkbox-item"><input type="checkbox" value="New England" onchange="applyFilters()"> <span style="color:#E65100;">●</span> New England</label>
+              <label class="dropdown-checkbox-item"><input type="checkbox" value="North Atlantic" onchange="applyFilters()"> <span style="color:#7B1FA2;">●</span> North Atlantic</label>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1505,7 +1519,11 @@ var DIVISION_COLORS = {
   'Northeast (Pro Player Pathway)': '#cc0000',
   'Southeast (Pro Player Pathway)': '#cc0000',
   'Central (Pro Player Pathway)': '#cc0000',
-  'West (Pro Player Pathway)': '#cc0000'
+  'West (Pro Player Pathway)': '#cc0000',
+  // ECNL Conferences
+  'Mid-Atlantic': '#0066CC',
+  'New England': '#E65100',
+  'North Atlantic': '#7B1FA2'
 };
 
 var LEAGUE_COLORS = {
@@ -1858,6 +1876,7 @@ async function loadSupabaseClubs() {
           state: sbClub.state || '',
           league: sbClub.league || 'HD',
           division: sbClub.division || '',
+          conference: sbClub.conference || sbClub.division || '',
           lat: sbClub.lat || 0,
           lng: sbClub.lng || 0,
           logo: sbClub.logo || '',
@@ -2121,7 +2140,8 @@ function getClubDivisionsByAge(clubName) {
 
 // ── FILTER STATE ──
 var filters = {
-  division: ''
+  division: '',
+  conferences: []
 };
 var currentLeagueFilter = 'all';
 
@@ -2130,7 +2150,34 @@ function setLeagueFilter(league) {
   document.querySelectorAll('.league-btn').forEach(function(btn) {
     btn.classList.toggle('active', btn.dataset.league === league);
   });
+
+  // Show/hide conference filter based on league
+  var confGroup = document.getElementById('conference-filter-group');
+  if (league === 'ecnl') {
+    confGroup.style.display = 'block';
+  } else {
+    confGroup.style.display = 'none';
+    // Clear conference filter selections when hiding
+    document.querySelectorAll('#conference-filter input[type="checkbox"]').forEach(function(cb) {
+      cb.checked = false;
+    });
+    updateConferenceLabel();
+  }
+
   applyFilters();
+}
+
+function updateConferenceLabel() {
+  var selected = Array.from(document.querySelectorAll('#conference-filter input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
+  var label = document.querySelector('#conference-filter-group .dropdown-label');
+  if (!label) return;
+  if (selected.length === 0) {
+    label.textContent = 'All';
+  } else if (selected.length === 1) {
+    label.textContent = selected[0];
+  } else {
+    label.textContent = selected.length + ' selected';
+  }
 }
 
 // ── MAP INIT (Google Maps) ──
@@ -2856,16 +2903,53 @@ ClubMarkerOverlay.prototype = new google.maps.OverlayView();
 ClubMarkerOverlay.prototype.onAdd = function() {
   var div = document.createElement('div');
   div.className = 'club-marker-overlay';
-  var size = 42;
   var color = getClubColor(this.club);
 
-  div.style.cssText = 'position:absolute;width:' + size + 'px;height:' + size + 'px;cursor:pointer;transform:translate(-50%,-50%);';
+  // Determine if this is NYRB, ECNL, or Pro club for sizing
+  var isNYRB = this.club.clubId === 'nyrb' || this.club.id === 'nyrb' || this.club.name === 'New York Red Bulls';
+  var isECNL = this.club.league === 'ECNL';
+  var isPro = this.club.isPro || this.club.is_pro;
 
-  if (this.club.logo) {
-    div.innerHTML = '<img src="' + this.club.logo + '" style="width:100%;height:100%;border-radius:50%;object-fit:contain;background:#fff;border:2px solid ' + color + ';box-shadow:0 2px 6px rgba(0,0,0,0.3);" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">' +
-      '<div style="display:none;width:100%;height:100%;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + this.club.initials + '</div>';
+  // Size hierarchy: NYRB (64px) > Pro (44px) > HD (38px) > ECNL (32px)
+  var size, borderWidth, shadow, zIndex, fontSize;
+
+  if (isNYRB) {
+    size = 64;
+    borderWidth = '4px';
+    fontSize = '16px';
+    zIndex = '1000';
+    shadow = '0 4px 16px rgba(204,0,0,0.5), 0 0 20px rgba(204,0,0,0.3)';
+  } else if (isECNL) {
+    size = 32;
+    borderWidth = '3px';
+    fontSize = '10px';
+    zIndex = '2';
+    shadow = '0 2px 6px rgba(0,0,0,0.35)';
+  } else if (isPro) {
+    size = 44;
+    borderWidth = '2px';
+    fontSize = '13px';
+    zIndex = '10';
+    shadow = '0 2px 8px rgba(0,0,0,0.3)';
   } else {
-    div.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + this.club.initials + '</div>';
+    // MLS NEXT HD
+    size = 38;
+    borderWidth = '2px';
+    fontSize = '11px';
+    zIndex = '5';
+    shadow = '0 2px 6px rgba(0,0,0,0.25)';
+  }
+
+  div.style.cssText = 'position:absolute;width:' + size + 'px;height:' + size + 'px;cursor:pointer;transform:translate(-50%,-50%);z-index:' + zIndex + ';';
+
+  // ECNL clubs get white background with colored border (no logos)
+  if (isECNL) {
+    div.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;color:' + color + ';font-size:' + fontSize + ';border:' + borderWidth + ' solid ' + color + ';box-shadow:' + shadow + ';">' + this.club.initials + '</div>';
+  } else if (this.club.logo) {
+    div.innerHTML = '<img src="' + this.club.logo + '" style="width:100%;height:100%;border-radius:50%;object-fit:contain;background:#fff;border:' + borderWidth + ' solid ' + color + ';box-shadow:' + shadow + ';" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\';">' +
+      '<div style="display:none;width:100%;height:100%;border-radius:50%;background:' + color + ';align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:' + fontSize + ';border:' + borderWidth + ' solid #fff;box-shadow:' + shadow + ';">' + this.club.initials + '</div>';
+  } else {
+    div.innerHTML = '<div style="width:100%;height:100%;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:' + fontSize + ';border:' + borderWidth + ' solid #fff;box-shadow:' + shadow + ';">' + this.club.initials + '</div>';
   }
 
   this.div = div;
@@ -2973,13 +3057,25 @@ function extractDivisionsByAge() {
 function matchesFilters(club) {
   var clubName = club.name;
 
-  // League filter check (MLS NEXT = HD/AD, ECNL = ECNL)
+  // League filter check (MLS NEXT = HD/AD/PRO, ECNL = ECNL)
   if (currentLeagueFilter !== 'all') {
     var clubLeague = club.league || '';
-    if (currentLeagueFilter === 'mls' && clubLeague !== 'HD' && clubLeague !== 'AD') {
-      return false;
+    var isPro = club.isPro || club.is_pro;
+    if (currentLeagueFilter === 'mls') {
+      // MLS NEXT includes HD, AD, and Pro clubs
+      if (clubLeague !== 'HD' && clubLeague !== 'AD' && !isPro) {
+        return false;
+      }
     }
     if (currentLeagueFilter === 'ecnl' && clubLeague !== 'ECNL') {
+      return false;
+    }
+  }
+
+  // Conference filter check (for ECNL clubs)
+  if (filters.conferences && filters.conferences.length > 0) {
+    var clubConference = club.conference || club.division || '';
+    if (!filters.conferences.includes(clubConference)) {
       return false;
     }
   }
@@ -3152,6 +3248,11 @@ function applyFilters() {
   var selectedDivisions = Array.from(document.querySelectorAll('#division-filter input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
   filters.divisions = selectedDivisions;
 
+  // Read conference filter (for ECNL)
+  var selectedConferences = Array.from(document.querySelectorAll('#conference-filter input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
+  filters.conferences = selectedConferences;
+  updateConferenceLabel();
+
   // Update active filter chips
   updateActiveFilters();
 
@@ -3177,7 +3278,22 @@ function updateActiveFilters() {
     });
   }
 
+  if (filters.conferences && filters.conferences.length > 0) {
+    hasFilters = true;
+    filters.conferences.forEach(function(conf) {
+      chips.innerHTML += '<span class="filter-chip">' + escapeHtml(conf) + '<span class="filter-chip-close" onclick="clearConferenceFilter(\'' + escapeAttr(conf) + '\')">&times;</span></span>';
+    });
+  }
+
   container.classList.toggle('visible', hasFilters);
+}
+
+function clearConferenceFilter(conference) {
+  var safeValue = CSS.escape ? CSS.escape(conference) : conference.replace(/['"\\]/g, '\\$&');
+  var checkbox = document.querySelector('#conference-filter input[value="' + safeValue + '"]');
+  if (checkbox) checkbox.checked = false;
+  updateConferenceLabel();
+  applyFilters();
 }
 
 function clearDivisionFilter(division) {
@@ -3201,7 +3317,10 @@ function clearFilter(type) {
 function clearAllFilters() {
   var checkboxes = document.querySelectorAll('#division-filter input[type="checkbox"]');
   checkboxes.forEach(function(cb) { cb.checked = false; });
+  var confCheckboxes = document.querySelectorAll('#conference-filter input[type="checkbox"]');
+  confCheckboxes.forEach(function(cb) { cb.checked = false; });
   updateSidebarDivisionLabel();
+  updateConferenceLabel();
   applyFilters();
 }
 
