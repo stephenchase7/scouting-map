@@ -518,17 +518,18 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STATUS={database:{label:'Database',c:'var(--database)'},watchlist:{label:'Watchlist',c:'var(--watchlist)'},priority:{label:'Priority',c:'var(--priority)'},squad:{label:'NYRB squad',c:'var(--squad)'}};
 const WEAPONS=['1v1 Attacker','Press Resistant','Playmaker','Finisher','Engine','Game Reader','Aerial','Speed','Ball Carrier','1v1 Defender'];
-// position KPI map (⚡ = pressing-related), shared by live capture + profile
-// each KPI = [label, weight] — placeholder RB weights, swap in ScoutGenerator's real values
+// Position KPI map — RBNY Academy profiles (June 2026)
+// Weights aligned with 1st/2nd team positional profiles from RBNY Scouting Pack
+// Note: Pressing is a separate global rating (25% of Fit), so against-ball KPIs avoid double-counting counterpress
 const POSKPI={
   GK:{with:[['Build-up distribution',1.5],['Long distribution / switch',1.2],['Composure on the ball',1.3],['Decision-making in build-up',1.4]],against:[['Shot stopping',1.5],['Sweeping / starting position',1.4],['Cross claiming',1.2],['1v1 saves',1.3]]},
-  CB:{with:[['Line-breaking pass',1.5],['Carrying out of the back',1.2],['Range / switch of play',1.2],['Composure on the ball',1.3]],against:[['1v1 defending',1.6],['Aerial duels',1.4],['Defensive positioning',1.4],['Recovery & reading',1.4]]},
-  FB:{with:[['Attacking runs',1.3],['Crossing / final ball',1.4],['Carrying ball',1.2],['Combination play',1.1]],against:[['1v1 defending',1.6],['Defensive positioning',1.3],['Recovery runs',1.4],['Aerial duels',1.0]]},
-  DM:{with:[['Press resistance',1.6],['Passing range',1.4],['Ball progression',1.4],['Receiving under pressure',1.5]],against:[['Ball-winning',1.6],['Defensive positioning',1.5],['Tackling',1.3],['Interceptions',1.4]]},
-  CM:{with:[['Press resistance',1.5],['Passing range',1.3],['Final third entries',1.4],['Dribbling / carrying',1.2]],against:[['Ball-winning',1.5],['Defensive work rate',1.5],['Positioning',1.3],['Tracking runners',1.3]]},
-  AM:{with:[['Receiving between lines',1.5],['Key pass / final ball',1.6],['1v1 / dribble',1.3],['Shot & finish',1.4]],against:[['Tracking back',1.2],['Counterpressing',1.5],['Recovery',1.2],['Cutting passing lanes',1.4]]},
-  W:{with:[['1v1 dribbling',1.6],['Final ball / crossing',1.5],['Finishing',1.3],['Movement off ball',1.2]],against:[['Defensive tracking',1.3],['Defensive work rate',1.3],['Recovery runs',1.3],['1v1 defending',1.2]]},
-  ST:{with:[['Finishing',1.7],['Movement / runs',1.4],['Link-up play',1.2],['1v1 / dribbling',1.2]],against:[['Defensive work rate',1.3],['Counterpressing',1.5],['Aerial duels',1.1],['Cutting passing lanes',1.4]]}
+  CB:{with:[['Line-breaking pass',1.5],['Carrying out of back',1.4],['Range / switch of play',1.2],['Composure under pressure',1.3]],against:[['1v1 defending',1.6],['Defensive positioning',1.5],['Aerial duels',1.4],['Recovery & reading',1.3]]},
+  FB:{with:[['Attacking runs',1.4],['Crossing / final ball',1.4],['Carrying ball',1.3],['1v1 threat',1.3]],against:[['1v1 defending',1.5],['Defensive positioning',1.3],['Recovery runs',1.4],['Front-foot defending',1.2]]},
+  DM:{with:[['Press resistance',1.6],['Passing range',1.4],['Ball progression',1.4],['Receiving under pressure',1.5]],against:[['Defensive positioning',1.6],['Ball-winning',1.5],['Interceptions',1.4],['Holding shape',1.3]]},
+  CM:{with:[['Press resistance',1.5],['Passing range',1.3],['Final third entries',1.4],['Dribbling / carrying',1.3]],against:[['Ball-winning',1.5],['Defensive work rate',1.4],['Positioning',1.3],['Tracking runners',1.3]]},
+  AM:{with:[['Receiving between lines',1.5],['Key pass / final ball',1.6],['1v1 / dribble',1.3],['Shot & finish',1.4]],against:[['Staying connected',1.3],['Cutting passing lanes',1.4],['Tracking back',1.2],['Recovery',1.2]]},
+  W:{with:[['1v1 dribbling',1.6],['Final ball / crossing',1.5],['Finishing',1.4],['Movement off ball',1.3]],against:[['Pressing angles',1.3],['Defensive work rate',1.3],['Recovery runs',1.3],['1v1 defending',1.2]]},
+  ST:{with:[['Finishing',1.7],['Movement / runs',1.5],['Link-up play',1.3],['1v1 / dribbling',1.2]],against:[['Pressing angles',1.3],['Cutting passing lanes',1.4],['Defensive work rate',1.2],['Aerial duels',1.1]]}
 };
 function posKey(p){return ({LB:'FB',RB:'FB',LW:'W',RW:'W',CF:'ST'})[p]||(POSKPI[p]?p:'CM');}
 function posKpi(p){return POSKPI[posKey(p)];}
