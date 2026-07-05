@@ -411,10 +411,10 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <script>
-        var SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
-        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
-
+        // Supabase config + shared client live in auth.js (window.sbClient)
         var currentPlayerId = new URLSearchParams(window.location.search).get('player');
         var currentScoutId = localStorage.getItem('currentScoutId');
         var playerData = null;
@@ -441,18 +441,15 @@
             }
 
             try {
-                var response = await fetch(
-                    SUPABASE_URL + '/rest/v1/scout_players?id=eq.' + currentPlayerId,
-                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-                );
+                var { data: players, error } = await window.sbClient
+                    .from('scout_players')
+                    .select('*')
+                    .eq('id', currentPlayerId);
 
-                if (response.ok) {
-                    var players = await response.json();
-                    if (players.length > 0) {
-                        playerData = players[0];
-                        renderPlayerHeader();
-                        loadReportHistory();
-                    }
+                if (!error && players && players.length > 0) {
+                    playerData = players[0];
+                    renderPlayerHeader();
+                    loadReportHistory();
                 }
             } catch (e) {
                 // Try localStorage
@@ -477,16 +474,14 @@
 
         async function loadReportHistory() {
             try {
-                var response = await fetch(
-                    SUPABASE_URL + '/rest/v1/scouting_reports?scout_player_id=eq.' + currentPlayerId + '&order=created_at.desc',
-                    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-                );
+                var { data: reports, error } = await window.sbClient
+                    .from('scout_reports')
+                    .select('*')
+                    .eq('scout_player_id', currentPlayerId)
+                    .order('created_at', { ascending: false });
 
-                if (response.ok) {
-                    var reports = await response.json();
-                    if (reports.length > 0) {
-                        renderReportHistory(reports);
-                    }
+                if (!error && reports && reports.length > 0) {
+                    renderReportHistory(reports);
                 }
             } catch (e) {
                 // No history
@@ -499,13 +494,13 @@
                 var date = new Date(r.created_at).toLocaleDateString();
                 return '<div class="history-item">' +
                     '<div class="history-header">' +
-                        '<span class="history-date">' + date + ' - ' + (r.match_info || '') + '</span>' +
-                        '<span class="history-author">' + (r.viewing_type || '') + '</span>' +
+                        '<span class="history-date">' + date + ' - ' + window.escapeHtml(r.match_info || '') + '</span>' +
+                        '<span class="history-author">' + window.escapeHtml(r.viewing_type || '') + '</span>' +
                     '</div>' +
                     '<div class="history-ratings">' +
-                        '<span>Performance: <strong>' + (r.current_performance || '—') + '/5</strong></span>' +
-                        '<span>Potential: <strong>' + (r.development_potential || '—') + '/5</strong></span>' +
-                        '<span>Action: <strong>' + (r.next_action || '—').replace(/_/g, ' ') + '</strong></span>' +
+                        '<span>Performance: <strong>' + window.escapeHtml(r.current_performance || '—') + '/5</strong></span>' +
+                        '<span>Potential: <strong>' + window.escapeHtml(r.development_potential || '—') + '/5</strong></span>' +
+                        '<span>Action: <strong>' + window.escapeHtml(String(r.next_action || '—').replace(/_/g, ' ')) + '</strong></span>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -547,25 +542,18 @@
             };
 
             try {
-                var response = await fetch(SUPABASE_URL + '/rest/v1/scouting_reports', {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': 'Bearer ' + SUPABASE_KEY,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify(report)
-                });
+                var { error } = await window.sbClient
+                    .from('scout_reports')
+                    .insert(report);
 
-                if (response.ok) {
+                if (!error) {
                     showSuccess();
                 } else {
-                    throw new Error('Failed');
+                    throw new Error(error.message || 'Failed');
                 }
             } catch (e) {
                 // Fallback to localStorage
-                report.id = 'local_' + Date.now();
+                report.id = 'local_' + crypto.randomUUID();
                 report.created_at = new Date().toISOString();
                 var reports = JSON.parse(localStorage.getItem('reports_' + currentPlayerId) || '[]');
                 reports.push(report);
@@ -586,8 +574,17 @@
             loadReportHistory();
         }
 
-        // Initialize
-        loadPlayer();
+        // Initialize — scout reports are authenticated-only
+        (async function init() {
+            var user = await Auth.requireAuth();
+            if (!user) {
+                document.getElementById('playerName').textContent = 'Sign In Required';
+                document.getElementById('playerMeta').textContent = 'Scout reports are only available to authorized accounts. Reload the page to sign in.';
+                document.getElementById('reportForm').style.display = 'none';
+                return;
+            }
+            loadPlayer();
+        })();
     </script>
 
 <div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#888;font-style:italic;z-index:100;">Created by Stephen Chase</div>

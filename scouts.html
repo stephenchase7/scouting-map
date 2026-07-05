@@ -510,11 +510,10 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <script>
-// Supabase config
-const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Supabase config + shared client live in auth.js
+const sb = window.sbClient;
 
 const STATUS={database:{label:'Database',c:'var(--database)'},watchlist:{label:'Watchlist',c:'var(--watchlist)'},priority:{label:'Priority',c:'var(--priority)'},squad:{label:'NYRB squad',c:'var(--squad)'}};
 const WEAPONS=['1v1 Attacker','Press Resistant','Playmaker','Finisher','Engine','Game Reader','Aerial','Speed','Ball Carrier','1v1 Defender'];
@@ -543,7 +542,6 @@ async function loadPlayers(){
     if(error)throw error;
     players=(data||[]).map(mapDbPlayer);
     buildHead();render();
-    console.log('Loaded',players.length,'players from Supabase');
   }catch(e){
     console.error('Failed to load players:',e);
     toast('Failed to load players');
@@ -584,12 +582,14 @@ function mapDbPlayer(row){
   };
 }
 const AGES=['All','U13','U14','U15','U16','U17','U18','U19'];
-let af='All',sf='All',cur=null,sortK='fit',sortDir=-1,capState=null;
+let af='All',sf='All',cur=null,sortK='fit',sortDir=-1;
 const colFilters={status:'',name:'',club:'',pos:'',age:'',now:'',ceiling:'',press:'',priority:'',weapons:''};
 const COLS=[['status','Status'],['name','Player'],['club','Club'],['pos','Pos'],['age','Age'],['now','Now'],['ceiling','Ceiling'],['press','Press'],['fit','Fit'],['priority','Suggested'],['weapons','Special weapons']];
 
 // weighted Fit score — KPIs feed it; blank fields are skipped and weights renormalize over what's present
 const W={ceiling:.30,now:.25,press:.25,kpi:.20};
+// ratingFor: placeholder for future KPI inference from reports/history
+// Currently returns 0 (no inference); KPIs are set manually via editKpi()
 function ratingFor(p,name){return 0;}
 function kpiWeighted(p){const kp=posKpi(p.pos);let num=0,den=0;[...kp.with,...kp.against].forEach(([label,w])=>{const r=(p.kpiRatings&&p.kpiRatings[label]!=null)?p.kpiRatings[label]:ratingFor(p,label);if(r){num+=w*r;den+=w;}});return den?num/den:0;}
 function fitParts(p){return [['ceiling',p.ceiling],['now',p.now],['press',p.press],['kpi',kpiWeighted(p)]];}
@@ -603,8 +603,8 @@ function cycleVal(v){return v>=5?0:(v||0)+1;}
 function suggested(p){const f=fitScore(p);if(f==null)return{key:'',label:'Unrated'};if(f>=75)return{key:'priority',label:'Priority'};if(f>=55)return{key:'watchlist',label:'Watchlist'};return{key:'database',label:'Database'};}
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
-function go(s){document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));document.getElementById(s).classList.add('on');document.querySelectorAll('aside .nav button').forEach(b=>b.classList.remove('on'));const nb=document.getElementById('nav-'+s);if(nb)nb.classList.add('on');if(s==='depth')renderDepth();if(s==='capture'&&document.getElementById('capPlayer'))initCap();window.scrollTo(0,0);}
-function chips(arr,active,fn,host){document.getElementById(host).innerHTML=arr.map(a=>`<div class="fchip ${a===active?'active':''}" onclick="${fn}('${a}')">${a}</div>`).join('');}
+function go(s){document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));document.getElementById(s).classList.add('on');document.querySelectorAll('aside .nav button').forEach(b=>b.classList.remove('on'));const nb=document.getElementById('nav-'+s);if(nb)nb.classList.add('on');if(s==='depth')renderDepth();window.scrollTo(0,0);}
+function chips(arr,active,fn,host){document.getElementById(host).innerHTML=arr.map(a=>`<div class="fchip ${a===active?'active':''}" onclick="${fn}('${escapeHtml(a)}')">${escapeHtml(a)}</div>`).join('');}
 function setAge(a){af=a;chips(AGES,af,'setAge','ageFilters');render();}
 function setStatus(s){sf=s;const items=[['All','Database'],['watchlist','Watchlist'],['priority','Priority'],['squad','NYRB squad']];document.getElementById('statusFilters').innerHTML=items.map(([k,lab])=>`<div class="fchip ${k===sf?'active':''}" onclick="setStatus('${k}')">${lab}</div>`).join('');render();}
 function sortBy(k){if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=(['now','ceiling','press','fit'].includes(k))?-1:1;}render();}
@@ -612,7 +612,7 @@ function sortBy(k){if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=(['now','ceilin
 function distinct(key){return [...new Set(players.map(p=>p[key]))].sort();}
 function buildHead(){
   document.getElementById('headRow').innerHTML=COLS.map(c=>`<th onclick="sortBy('${c[0]}')">${c[1]} <span class="ar">${sortK===c[0]?(sortDir<0?'▼':'▲'):'⇅'}</span></th>`).join('');
-  const opt=(arr)=>['<option value="">All</option>',...arr.map(v=>`<option value="${v}">${v}</option>`)].join('');
+  const opt=(arr)=>['<option value="">All</option>',...arr.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join('');
   const numOpt=['<option value="">≥</option>',...[1,2,3,4,5].map(v=>`<option value="${v}">≥ ${v}</option>`)].join('');
   const cells={
     status:`<select onchange="setCol('status',this.value)"><option value="">All</option><option value="Database">Database</option><option value="Watchlist">Watchlist</option><option value="Priority">Priority</option><option value="NYRB squad">NYRB squad</option></select>`,
@@ -655,13 +655,13 @@ function render(){
   document.getElementById('rows').innerHTML=f.map(p=>{const sg=suggested(p);const fs=fitScore(p);return `
     <tr class="row" onclick="openP(${p.id})">
       <td><span class="stat"><span class="d" style="background:${STATUS[p.status].c}"></span>${STATUS[p.status].label}</span></td>
-      <td class="nm">${p.name}</td><td>${p.club}</td><td>${p.pos}</td><td>${p.age}</td>
+      <td class="nm">${escapeHtml(p.name)}</td><td>${escapeHtml(p.club)}</td><td>${escapeHtml(p.pos)}</td><td>${escapeHtml(p.age)}</td>
       <td class="sc ${p.now?'now-c':''}">${p.now||'–'}</td>
       <td class="sc ${p.ceiling?'ceil-c':''}">${p.ceiling||'–'}</td>
       <td class="sc ${p.press?'press-c':''}">${p.press||'–'}</td>
       <td class="fit">${fs!=null?fs:'–'}</td>
       <td>${sg.key?`<span class="stat"><span class="d" style="background:${STATUS[sg.key].c}"></span>${sg.label}</span>`:'<span style="color:var(--muted);font-size:12px">—</span>'}</td>
-      <td class="wlist">${p.weapons.join(', ')||'—'}</td>
+      <td class="wlist">${escapeHtml(p.weapons.join(', '))||'—'}</td>
     </tr>`;}).join('');
 }
 
@@ -674,7 +674,7 @@ function openP(id){
       <div>
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div><div class="pf-name">${p.name}</div><div class="pf-meta">${p.pos} · ${p.age} · ${p.club} · ${p.foot} foot</div></div>
+            <div><div class="pf-name">${escapeHtml(p.name)}</div><div class="pf-meta">${escapeHtml(p.pos)} · ${escapeHtml(p.age)} · ${escapeHtml(p.club)} · ${escapeHtml(p.foot)} foot</div></div>
             <span class="badge" style="background:${STATUS[p.status].c}">${STATUS[p.status].label}</span>
           </div>
           <div class="scores">
@@ -686,7 +686,7 @@ function openP(id){
           <label class="fl">Change status</label>
           <div class="stsel">${Object.keys(STATUS).map(k=>`<div class="opt" style="${p.status===k?'background:'+STATUS[k].c+';color:#fff;border-color:'+STATUS[k].c:''}" onclick="setPStatus(${p.id},'${k}')">${STATUS[k].label}</div>`).join('')}</div>
           <div style="display:flex;gap:8px;margin-top:16px">
-            <button class="btn red" style="flex:1" onclick="go('capture');presetCap(${p.id})">+ Add live report</button>
+            <button class="btn red" style="flex:1" onclick="go('capture')">+ Add live report</button>
           </div>
           <div style="display:flex;gap:8px;margin-top:8px">
             <button class="btn ghost" style="flex:1" onclick="openEdit(${p.id})">Edit details</button>
@@ -699,8 +699,8 @@ function openP(id){
           <p class="sec-t">Position KPIs (${p.pos}) — same set as live capture · click a number to edit</p>
           <div class="kpi-grid"><div class="kpi-col with"><h4>With ball</h4>${kpiHtml(kp.with)}</div><div class="kpi-col against"><h4>Against ball</h4>${kpiHtml(kp.against)}</div></div>
         </div>
-        <div class="card"><p class="sec-t">Special weapons</p><div class="weapons">${p.weapons.length?p.weapons.map(w=>`<span class="wpn">${w}</span>`).join(''):'<span style="font-size:12px;color:var(--muted)">none logged</span>'}</div></div>
-        <div class="card"><p class="sec-t">Report history</p><div class="hist">${p.reports.length?p.reports.map((r,i)=>`<div class="h"><span class="d">${r.d}</span><span style="flex:1">${r.e}</span><span class="${i===0?'up':''}">ceil ${r.c}${i===0?' ↑':''}</span></div>`).join(''):'<span style="font-size:12px;color:var(--muted)">no reports yet</span>'}</div></div>
+        <div class="card"><p class="sec-t">Special weapons</p><div class="weapons">${p.weapons.length?p.weapons.map(w=>`<span class="wpn">${escapeHtml(w)}</span>`).join(''):'<span style="font-size:12px;color:var(--muted)">none logged</span>'}</div></div>
+        <div class="card"><p class="sec-t">Report history</p><div class="hist">${p.reports.length?p.reports.map((r,i)=>`<div class="h"><span class="d">${escapeHtml(r.d)}</span><span style="flex:1">${escapeHtml(r.e)}</span><span class="${i===0?'up':''}">ceil ${escapeHtml(r.c)}${i===0?' ↑':''}</span></div>`).join(''):'<span style="font-size:12px;color:var(--muted)">no reports yet</span>'}</div></div>
       </div>
     </div>`;
   go('profile');
@@ -735,7 +735,7 @@ function renderDepth(){
   const svg=`<svg class="pmark" viewBox="0 0 100 130" preserveAspectRatio="none"><line x1="0" y1="65" x2="100" y2="65"/><circle cx="50" cy="65" r="9"/><circle cx="50" cy="65" r="0.8" class="spot"/><rect x="20" y="0" width="60" height="16"/><rect x="35" y="0" width="30" height="6"/><path d="M41,16 A9,9 0 0,0 59,16"/><rect x="20" y="114" width="60" height="16"/><rect x="35" y="124" width="30" height="6"/><path d="M41,114 A9,9 0 0,1 59,114"/></svg>`;
   const boxes=SLOTDEF.map(([id,label])=>{
     const [x,y]=SLOTPOS[id];const list=bySlot[id];
-    const rows=list.length?list.map(p=>`<div class="ppl" draggable="true" ondragstart="onDrag(event,${p.id})" onclick="pplClick(${p.id})" style="background:${STINT[p.status]};border-left:3px solid ${STATUS[p.status].c}"><span class="ppl-nm">${p.name}${p.status==='squad'?' ●':''}</span><span class="ppl-r"><span class="ppl-age">${p.age}</span><span class="ord-btns"><span onclick="event.stopPropagation();moveInSlot(${p.id},-1)" title="rank up">▲</span><span onclick="event.stopPropagation();moveInSlot(${p.id},1)" title="rank down">▼</span></span></span></div>`).join(''):'<div class="ppl empty">drop here</div>';
+    const rows=list.length?list.map(p=>`<div class="ppl" draggable="true" ondragstart="onDrag(event,${p.id})" onclick="pplClick(${p.id})" style="background:${STINT[p.status]};border-left:3px solid ${STATUS[p.status].c}"><span class="ppl-nm">${escapeHtml(p.name)}${p.status==='squad'?' ●':''}</span><span class="ppl-r"><span class="ppl-age">${escapeHtml(p.age)}</span><span class="ord-btns"><span onclick="event.stopPropagation();moveInSlot(${p.id},-1)" title="rank up">▲</span><span onclick="event.stopPropagation();moveInSlot(${p.id},1)" title="rank down">▼</span></span></span></div>`).join(''):'<div class="ppl empty">drop here</div>';
     return `<div class="ppos" id="slot-${id}" style="left:${x}%;top:${y}%" ondragover="event.preventDefault()" ondrop="onDrop(event,'${id}')"><div class="ppos-h" onmousedown="boxDown(event,'${id}')" title="drag to move this position">${label}</div><div class="ppos-list">${rows}</div></div>`;
   }).join('');
   document.getElementById('pitch').innerHTML=svg+boxes;
@@ -759,26 +759,7 @@ function boxMove(e){if(!boxDrag)return;const r=document.getElementById('pitch').
 function boxUp(){boxDrag=null;document.removeEventListener('mousemove',boxMove);document.removeEventListener('mouseup',boxUp);}
 function setDepthAge(a){depthAge=a;renderDepth();}
 
-let cNow=0,cCeil=0,cPress=0,cWeapons=[],cTally={},cKpi=POSKPI.CM;
-function initCap(){const sel=document.getElementById('capPlayer');sel.innerHTML='<option value="new">+ New player…</option>'+players.map(p=>`<option value="${p.id}">${p.name} · ${p.pos} · ${p.age}</option>`).join('');if(capState&&capState.preset)sel.value=capState.preset;loadCap();}
-function presetCap(id){capState={preset:String(id)};}
-function selRow(host,sel,onpick,cls){document.getElementById(host).innerHTML=[1,2,3,4,5].map(i=>`<div class="opt ${i===sel?cls:''}" onclick="${onpick}(${i})">${i}</div>`).join('');}
-function setNow(v){cNow=v;selRow('capNow',cNow,'setNow','sel-n');}
-function setCeil(v){cCeil=v;selRow('capCeil',cCeil,'setCeil','sel-c');}
-function setPress(v){cPress=v;selRow('capPress',cPress,'setPress','sel-p');}
-function loadCap(){
-  const v=document.getElementById('capPlayer').value;let p=v==='new'?null:players.find(x=>x.id==v);
-  cNow=p?p.now:0;cCeil=p?p.ceiling:0;cPress=p?p.press:0;cWeapons=p?[...p.weapons]:[];cTally={};
-  cKpi=posKpi(p?p.pos:'CM');document.getElementById('capPos').textContent=p?p.pos:'CM';
-  selRow('capNow',cNow,'setNow','sel-n');selRow('capCeil',cCeil,'setCeil','sel-c');selRow('capPress',cPress,'setPress','sel-p');
-  document.getElementById('capWith').innerHTML=cKpi.with.map(x=>tallyRow(x[0])).join('');
-  document.getElementById('capAgainst').innerHTML=cKpi.against.map(x=>tallyRow(x[0])).join('');
-  document.getElementById('capWeapons').innerHTML=WEAPONS.map(w=>`<span class="wsel ${cWeapons.includes(w)?'on':''}" onclick="togW('${w}')">${w}</span>`).join('');
-}
-function tallyRow(k){const id=k.replace(/[^a-z]/gi,'');cTally[id]=cTally[id]||0;return `<div class="tally"><span>${k}</span><span class="step"><button onclick="bump('${id}',-1)">−</button><span class="v" id="tv-${id}">${cTally[id]}</span><button onclick="bump('${id}',1)">+</button></span></div>`;}
-function bump(k,d){cTally[k]=Math.max(0,(cTally[k]||0)+d);document.getElementById('tv-'+k).textContent=cTally[k];}
-function togW(w){const i=cWeapons.indexOf(w);if(i>=0)cWeapons.splice(i,1);else cWeapons.push(w);loadCap();}
-function saveReport(){const v=document.getElementById('capPlayer').value;const ev=document.getElementById('capEvent').value||'live';if(v==='new'){toast('New player flow — demo');return;}const p=players.find(x=>x.id==v);p.now=cNow||p.now;p.ceiling=cCeil||p.ceiling;p.press=cPress||p.press;p.weapons=cWeapons;p.reports.unshift({d:'today',e:ev,c:cCeil||p.ceiling});if(p.status==='database')p.status='watchlist';toast('Report saved → '+p.name);render();openP(p.id);}
+// (Legacy in-page Live Capture form removed — live capture is the embedded ScoutGenerator iframe.)
 
 let editingId=null,mKpi={},mWeapons=[];
 function fillModal(p){
@@ -851,15 +832,24 @@ async function saveModal(){
   }
 }
 async function delPlayer(id){if(!confirm('Delete this player from the database?'))return;await deletePlayerFromDb(id);players=players.filter(p=>p.id!==id);closeModal();go('database');render();toast('Player deleted');}
-const CAPTURE_FEED=[];
-const GRADEMAP={A:5,B:4,C:3,D:2};
+// Legacy import functions removed - live capture uses embedded ScoutGenerator iframe instead
 function openImport(){
-  document.getElementById('importList').innerHTML=CAPTURE_FEED.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:8px"><div><div style="font-weight:600;font-size:13px">${r.name}</div><div style="font-size:11px;color:var(--muted)">${r.club} · ${r.pos} · ${r.age} · grade ${r.grade}</div></div><button class="btn red" style="padding:6px 12px" onclick="importPlayer(${i})">Import</button></div>`).join('');
+  document.getElementById('importList').innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Use the Live Capture tab with ScoutGenerator for scouting reports.</p>';
   document.getElementById('importModal').style.display='flex';
 }
 function closeImport(){document.getElementById('importModal').style.display='none';}
-function importPlayer(i){const r=CAPTURE_FEED[i];const id=Math.max(0,...players.map(p=>p.id))+1;players.push({id,name:r.name,club:r.club,pos:r.pos,age:r.age,foot:'R',tier:2,status:'watchlist',now:GRADEMAP[r.grade]||3,ceiling:0,press:0,weapons:[],reports:[{d:'today',e:'imported from capture',c:0}]});render();toast('Imported '+r.name);}
-setAge('All');setStatus('All');loadPlayers();
+setAge('All');setStatus('All');
+// Scout data contains reports on minors — require sign-in before loading anything.
+(async function(){
+  buildHead();
+  const user=await Auth.requireAuth();
+  if(!user){
+    document.getElementById('rows').innerHTML='<tr><td colspan="11" style="text-align:center;padding:48px;color:var(--muted)">Sign in required to view the scout database.<br><br><button class="btn red" onclick="location.reload()">Sign in</button></td></tr>';
+    document.getElementById('cnt').textContent='';
+    return;
+  }
+  loadPlayers();
+})();
 </script>
 </body>
 </html>
