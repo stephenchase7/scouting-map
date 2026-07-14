@@ -55,8 +55,8 @@
       '<h3 style="margin:0 0 4px;font-size:18px;color:#1a1a2e;">Scout Access</h3>' +
       '<p style="margin:0 0 16px;font-size:13px;color:#666;">Enter password to continue.</p>' +
       '<input id="auth-pw" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px;margin-bottom:8px;border:1px solid #ccc;border-radius:6px;font-size:14px;">' +
-      '<div id="auth-err" style="color:#c8102e;font-size:12px;min-height:16px;margin-bottom:8px;"></div>' +
-      '<button id="auth-submit" style="width:100%;padding:10px;background:#c8102e;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">Sign In</button>' +
+      '<div id="auth-err" style="color:#0071e3;font-size:12px;min-height:16px;margin-bottom:8px;"></div>' +
+      '<button id="auth-submit" style="width:100%;padding:10px;background:#0071e3;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">Sign In</button>' +
       '<button id="auth-cancel" style="width:100%;padding:8px;margin-top:6px;background:none;color:#666;border:none;font-size:13px;cursor:pointer;">Cancel</button>' +
       '</div>';
     document.body.appendChild(overlay);

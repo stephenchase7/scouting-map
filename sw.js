@@ -1,5 +1,5 @@
 // NYRB Scouting Service Worker
-const CACHE_NAME = 'nyrb-scouting-v3';
+const CACHE_NAME = 'nyrb-scouting-v4';
 const OFFLINE_URL = '/scouts.html';
 
 // Files to cache for offline use
@@ -8,35 +8,28 @@ const STATIC_ASSETS = [
   '/scouts.html',
   '/index.html',
   '/team.html',
+  '/auth.js',
   '/manifest.json',
   '/MLS Logos/NYRB.png'
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
+      .then(cache => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
           .filter(name => name !== CACHE_NAME)
-          .map(name => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .map(name => caches.delete(name))
       );
     }).then(() => self.clients.claim())
   );
@@ -51,7 +44,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
 
   // Skip cross-origin requests (except Supabase which we want to handle)
-  if (!url.origin.includes(self.location.origin) &&
+  if (url.origin !== self.location.origin &&
       !url.origin.includes('supabase')) {
     return;
   }
@@ -61,7 +54,6 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .catch(() => {
-          console.log('[SW] Supabase request failed, offline mode');
           return new Response(JSON.stringify({ error: 'offline' }), {
             status: 503,
             headers: { 'Content-Type': 'application/json' }
@@ -72,20 +64,19 @@ self.addEventListener('fetch', event => {
   }
 
   // For HTML pages - network first with cache fallback
-  if (request.headers.get('accept').includes('text/html')) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Clone and cache successful responses
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, responseClone));
-          return response;
-        })
-        .catch(() => {
-          console.log('[SW] Serving cached HTML:', request.url);
-          return caches.match(request) || caches.match(OFFLINE_URL);
-        })
-    );
+  if ((request.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request);
+        // Clone and cache successful responses
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, responseClone));
+        return response;
+      } catch (e) {
+        const cached = await caches.match(request);
+        return cached || await caches.match(OFFLINE_URL);
+      }
+    })());
     return;
   }
 
@@ -123,7 +114,6 @@ self.addEventListener('message', event => {
 // Background sync for offline actions
 self.addEventListener('sync', event => {
   if (event.tag === 'sync-observations') {
-    console.log('[SW] Background sync triggered');
     event.waitUntil(syncPendingData());
   }
 });

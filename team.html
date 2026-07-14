@@ -9,7 +9,7 @@
 body { font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; background:#f5f5f7; color:#1d1d1f; min-height:100vh; -webkit-font-smoothing:antialiased; }
 
 .header {
-  background:linear-gradient(135deg,#8B0000 0%,#cc0000 50%,#8B0000 100%);
+  background:#161617;
   padding:26px 39px;
   display:flex;
   align-items:center;
@@ -54,7 +54,7 @@ body { font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe U
 }
 .info-block h3 { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#86868b; margin-bottom:8px; }
 .info-block p { font-size:14px; color:#1d1d1f; }
-.info-block a { color:#cc0000; text-decoration:none; transition:opacity 0.2s ease; }
+.info-block a { color:#0071e3; text-decoration:none; transition:opacity 0.2s ease; }
 .info-block a:hover { text-decoration:underline; opacity:0.8; }
 
 .tabs {
@@ -74,7 +74,7 @@ body { font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe U
   transition:all 0.2s ease;
 }
 .tab:hover { color:#1d1d1f; background:#f5f5f7; }
-.tab.active { color:#cc0000; border-bottom-color:#cc0000; }
+.tab.active { color:#0071e3; border-bottom-color:#0071e3; }
 .tab.disabled { color:#d2d2d7; cursor:not-allowed; }
 .tab.disabled:hover { background:transparent; color:#d2d2d7; }
 
@@ -103,7 +103,7 @@ body { font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe U
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.season-select:hover { border-color: #cc0000; }
+.season-select:hover { border-color: #0071e3; }
 
 .header-season-selector {
   display: flex;
@@ -184,7 +184,7 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
 .jersey {
   display:inline-block;
   width:32px; height:32px;
-  background:#cc0000;
+  background:#0071e3;
   color:#fff;
   border-radius:50%;
   text-align:center;
@@ -201,7 +201,7 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
   font-weight:600;
   color:#86868b;
 }
-.goals { color:#cc0000; font-weight:700; }
+.goals { color:#0071e3; font-weight:700; }
 .cards-yellow { color:#f1c40f; }
 .cards-red { color:#e74c3c; }
 .link-btn {
@@ -253,7 +253,7 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
   color:#1d1d1f;
 }
 .stat-item .value.goals {
-  color:#cc0000;
+  color:#0071e3;
 }
 .stat-item .sub {
   font-size:11px;
@@ -270,9 +270,9 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
   text-align:center;
   padding:52px;
 }
-.error-page h1 { font-size:24px; color:#cc0000; margin-bottom:13px; }
+.error-page h1 { font-size:24px; color:#0071e3; margin-bottom:13px; }
 .error-page p { color:#86868b; margin-bottom:26px; }
-.error-page a { color:#cc0000; transition:opacity 0.2s ease; }
+.error-page a { color:#0071e3; transition:opacity 0.2s ease; }
 .error-page a:hover { opacity:0.8; }
 
 /* Filter row styles */
@@ -291,7 +291,7 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
 }
 .filter-input:focus {
   outline:none;
-  border-color:#cc0000;
+  border-color:#0071e3;
 }
 .filter-select {
   width:100%;
@@ -330,7 +330,7 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
 }
 .date-filter input[type="date"]:focus {
   outline:none;
-  border-color:#cc0000;
+  border-color:#0071e3;
 }
 .date-filter button {
   padding:8px 16px;
@@ -344,10 +344,10 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
   transition:all 0.2s ease;
 }
 .date-filter .apply-btn {
-  background:#cc0000;
+  background:#0071e3;
   color:#fff;
 }
-.date-filter .apply-btn:hover { background:#aa0000; }
+.date-filter .apply-btn:hover { background:#0060c9; }
 .date-filter .clear-btn {
   background:#e5e5e7;
   color:#86868b;
@@ -361,7 +361,7 @@ td.editable {
   transition:background 0.2s ease;
 }
 td.editable:hover {
-  background:#fff8f8;
+  background:#f2f7fd;
 }
 td.editable:hover::after {
   content:'✎';
@@ -370,7 +370,7 @@ td.editable:hover::after {
   top:50%;
   transform:translateY(-50%);
   font-size:10px;
-  color:#cc0000;
+  color:#0071e3;
   opacity:0.6;
 }
 
@@ -417,7 +417,7 @@ td.editable:hover::after {
 }
 .modal input:focus {
   outline:none;
-  border-color:#cc0000;
+  border-color:#0071e3;
 }
 .modal-buttons {
   display:flex;
@@ -434,17 +434,17 @@ td.editable:hover::after {
   transition:all 0.2s ease;
 }
 .modal-btn.primary {
-  background:#cc0000;
+  background:#0071e3;
   color:#fff;
 }
-.modal-btn.primary:hover { background:#aa0000; }
+.modal-btn.primary:hover { background:#0060c9; }
 .modal-btn.secondary {
   background:#f5f5f7;
   color:#86868b;
 }
 .modal-btn.secondary:hover { background:#e5e5e7; }
 .modal .error {
-  color:#cc0000;
+  color:#0071e3;
   font-size:12px;
   margin-top:-13px;
   margin-bottom:13px;
@@ -529,7 +529,7 @@ td.editable:hover::after {
   transition:background 0.2s ease;
 }
 .directors-table .editable-cell:hover {
-  background:#fff8f8;
+  background:#f2f7fd;
 }
 .directors-table .editable-cell.empty {
   color:#86868b;
@@ -547,7 +547,7 @@ td.editable:hover::after {
 }
 .remove-director-btn:hover {
   background:#fee;
-  color:#cc0000;
+  color:#0071e3;
 }
 .add-director-btn {
   background:#f5f5f7;
@@ -587,7 +587,7 @@ td.editable:hover::after {
 }
 .type-select:focus {
   outline:none;
-  border-color:#cc0000;
+  border-color:#0071e3;
 }
 
 /* Import Missing Data Button & Modal */
@@ -634,7 +634,7 @@ td.editable:hover::after {
 }
 
 .import-modal-header {
-  background:linear-gradient(135deg, #8B0000 0%, #cc0000 50%, #8B0000 100%);
+  background:linear-gradient(135deg, #004a99 0%, #0071e3 50%, #004a99 100%);
   padding:26px;
   border-radius:20px 20px 0 0;
   color:#fff;
@@ -653,7 +653,7 @@ td.editable:hover::after {
   gap:16px;
 }
 .missing-group.has-file {
-  background:#fff5f5;
+  background:#f2f7fd;
   border:1px solid #ffdddd;
 }
 .existing-group {
@@ -664,7 +664,7 @@ td.editable:hover::after {
 .age-badge {
   font-weight:700;
   font-size:14px;
-  color:#cc0000;
+  color:#0071e3;
   min-width:40px;
 }
 
@@ -676,7 +676,7 @@ td.editable:hover::after {
 }
 
 .copy-btn {
-  background:#cc0000;
+  background:#0071e3;
   color:#fff;
   border:none;
   padding:10px 20px;
@@ -686,7 +686,7 @@ td.editable:hover::after {
   font-weight:600;
   transition:all 0.2s ease;
 }
-.copy-btn:hover { background:#a00000; }
+.copy-btn:hover { background:#0060c9; }
 
 .command-box {
   background:#1d1d1f;
@@ -788,7 +788,7 @@ td.editable:hover::after {
   align-items: flex-start;
   padding: 26px;
   border-bottom: 1px solid #e5e5e7;
-  background: linear-gradient(135deg, #8B0000 0%, #cc0000 100%);
+  background: linear-gradient(135deg, #004a99 0%, #0071e3 100%);
   color: #fff;
   border-radius: 20px 20px 0 0;
 }
@@ -819,7 +819,7 @@ td.editable:hover::after {
   border-radius: 16px;
   text-align: center;
 }
-.player-stat-box .value { font-size: 24px; font-weight: 700; color: #cc0000; }
+.player-stat-box .value { font-size: 24px; font-weight: 700; color: #0071e3; }
 .player-stat-box .label { font-size: 11px; text-transform: uppercase; color: #86868b; margin-top: 5px; }
 .player-detail-section {
   margin-bottom: 26px;
@@ -842,7 +842,7 @@ td.editable:hover::after {
 }
 .goals-chart-bar {
   flex: 1;
-  background: #cc0000;
+  background: #0071e3;
   border-radius: 6px 6px 0 0;
   min-height: 4px;
   position: relative;
@@ -886,7 +886,7 @@ td.editable:hover::after {
   border-radius: 12px;
 }
 .opponent-name { font-size: 13px; color: #1d1d1f; }
-.opponent-goals { font-weight: 600; color: #cc0000; }
+.opponent-goals { font-weight: 600; color: #0071e3; }
 .goal-log {
   max-height: 200px;
   overflow-y: auto;
@@ -900,7 +900,7 @@ td.editable:hover::after {
 }
 .goal-log-date { color: #86868b; }
 .goal-log-opponent { color: #1d1d1f; }
-.goal-log-goals { font-weight: 600; color: #cc0000; }
+.goal-log-goals { font-weight: 600; color: #0071e3; }
 .player-name-cell { cursor: pointer; transition: background 0.2s ease; }
 .player-name-cell:hover { background: #f5f5f7; }
 .player-name-cell .player-name { color: #1976d2; }
@@ -960,7 +960,7 @@ td.editable:hover::after {
 .section-header-row h3 { margin: 0; color: #1d1d1f; }
 .btn-add-match {
   padding: 8px 16px;
-  background: #cc0000;
+  background: #0071e3;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -969,7 +969,7 @@ td.editable:hover::after {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.btn-add-match:hover { background: #a00000; }
+.btn-add-match:hover { background: #0060c9; }
 .btn-add-player {
   padding: 8px 16px;
   background: #1a73e8;
@@ -1001,7 +1001,7 @@ td.editable:hover::after {
 .match-stat-opponent { color: #86868b; flex: 1; margin-left: 16px; }
 .match-stat-values { display: flex; gap: 13px; color: #1d1d1f; }
 .match-stat-values span { min-width: 30px; text-align: center; }
-.match-stat-video a { color: #cc0000; text-decoration: none; transition: opacity 0.2s ease; }
+.match-stat-video a { color: #0071e3; text-decoration: none; transition: opacity 0.2s ease; }
 .match-stat-video a:hover { text-decoration: underline; opacity: 0.8; }
 .match-stat-actions {
   display: flex;
@@ -1056,7 +1056,7 @@ td.editable:hover::after {
 }
 .form-row input:focus {
   outline: none;
-  border-color: #cc0000;
+  border-color: #0071e3;
 }
 .stats-grid {
   display: grid;
@@ -1086,7 +1086,7 @@ td.editable:hover::after {
 }
 .stat-input input[type="number"]:focus {
   outline: none;
-  border-color: #cc0000;
+  border-color: #0071e3;
 }
 .modal-actions {
   display: flex;
@@ -1096,7 +1096,7 @@ td.editable:hover::after {
 .btn-save-stats {
   flex: 1;
   padding: 16px;
-  background: #cc0000;
+  background: #0071e3;
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -1105,7 +1105,7 @@ td.editable:hover::after {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.btn-save-stats:hover { background: #a00000; }
+.btn-save-stats:hover { background: #0060c9; }
 .btn-cancel {
   flex: 1;
   padding: 16px;
@@ -1176,7 +1176,7 @@ td.editable:hover::after {
   top: 0;
   left: 50%;
   transform: translateX(-50%) translateY(-100%);
-  background: #cc0000;
+  background: #0071e3;
   color: white;
   padding: 16px 31px;
   border-radius: 0 0 16px 16px;
@@ -1208,10 +1208,10 @@ td.editable:hover::after {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #cc0000;
+  accent-color: #0071e3;
 }
 .player-row.selected {
-  background: rgba(204,0,0,0.08);
+  background: rgba(0,113,227,0.08);
 }
 th.select-col, td.select-col {
   width: 40px;
@@ -1262,11 +1262,11 @@ th.select-col, td.select-col {
   background: rgba(255,255,255,0.1);
 }
 .action-bar button.primary {
-  background: #cc0000;
+  background: #0071e3;
   font-weight: 600;
 }
 .action-bar button.primary:hover {
-  background: #a00000;
+  background: #0060c9;
 }
 .action-bar button.danger {
   color: #ff453a;
@@ -2716,7 +2716,7 @@ function renderRoster() {
 
   if (data.notes) {
     var noteText = data.notes.startsWith('Note:') ? data.notes : 'Note: ' + data.notes;
-    html += '<div class="updated" style="color:#cc0000;margin-top:15px;">' + escapeHtml(noteText) + '</div>';
+    html += '<div class="updated" style="color:#0071e3;margin-top:15px;">' + escapeHtml(noteText) + '</div>';
   }
 
   html += '<div class="updated">Last updated: ' + escapeHtml(data.lastUpdated || 'Unknown') + '</div>';
@@ -3890,8 +3890,8 @@ init();
 
 <!-- ══════════ Academy chart integration (depth chart / succession) ══════════ -->
 <style>
-  .academy-chart-btn{border:0;background:#cc0000;color:#fff;border-radius:6px;width:22px;height:22px;font-size:13px;font-weight:700;cursor:pointer;line-height:1}
-  .academy-chart-btn:hover{background:#a00000}
+  .academy-chart-btn{border:0;background:#0071e3;color:#fff;border-radius:6px;width:22px;height:22px;font-size:13px;font-weight:700;cursor:pointer;line-height:1}
+  .academy-chart-btn:hover{background:#0060c9}
   #academyChartModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center;padding:16px}
   #academyChartModal.open{display:flex}
   #academyChartModal .acm{background:#fff;border-radius:14px;padding:24px;width:400px;max-width:94vw;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
@@ -3901,9 +3901,9 @@ init();
   #academyChartModal select{width:100%;border:1px solid #e5e5e7;border-radius:8px;padding:9px 10px;font-size:13px}
   #academyChartModal .acm-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
   #academyChartModal button{border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
-  #academyChartModal .acm-save{background:#cc0000;color:#fff}
+  #academyChartModal .acm-save{background:#0071e3;color:#fff}
   #academyChartModal .acm-cancel{background:#fff;border:1px solid #e5e5e7}
-  #academyChartModal .acm-err{color:#cc0000;font-size:12px;min-height:16px;margin-top:8px}
+  #academyChartModal .acm-err{color:#0071e3;font-size:12px;min-height:16px;margin-top:8px}
 </style>
 <div id="academyChartModal">
   <div class="acm">

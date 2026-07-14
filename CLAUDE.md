@@ -10,7 +10,8 @@ Static web application for MLS NEXT and ECNL youth soccer scouting. Displays clu
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Leaflet.js map with club markers, catchment areas, Add/Delete Club |
+| `index.html` | Google Maps map with club markers, catchment areas, Add/Delete Club |
+| `auth.js` | Shared Supabase config + Auth (sign-in modal, `window.sbClient`, `escapeHtml`) — single source of truth |
 | `team.html` | Team rosters by age group (U13-U19), player stats tables |
 | `scouts.html` | Scout database, player watchlists, scouting reports, player comparison |
 | `live.html` | Live scouting with pitch tracking, player cards, action counters |

@@ -27,3 +27,10 @@ node_modules/
 
 # Logs
 *.log
+
+# Never commit data snapshots or bytecode
+playersData.json
+data/
+__pycache__/
+*.pyc
+*preview*.html
