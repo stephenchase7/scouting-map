@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Live Scouting — NYRB Academy</title>
+<style>
+  :root{
+    --blue:#0071e3; --blue-h:#0077ed; --ink:#1d1d1f; --muted:#6e6e73;
+    --line:#d2d2d7; --hair:#e8e8ed; --bg:#f5f5f7; --card:#fff;
+    --c-red:#fde8e7; --c-red-b:#cc0000;
+    --c-green:#e3f6e8; --c-green-b:#2e9e4f;
+    --c-yellow:#fdf6dd; --c-yellow-b:#d9a400;
+    --c-grey:#eef0f2; --c-grey-b:#9aa1ab;
+    --below:#ff9500; --at:#0071e3; --above:#34c759;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+  .top{position:sticky;top:0;z-index:60;background:rgba(22,22,23,.8);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);color:#f5f5f7;height:48px;display:flex;align-items:center;gap:12px;padding:0 18px}
+  .crest{width:26px;height:26px;border-radius:7px;background:#fff;color:#cc0000;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none}
+  .top h1{font-size:15px;margin:0;font-weight:600}
+  .top .right{margin-left:auto;display:flex;align-items:center;gap:18px;font-size:12px}
+  .top .right a{color:rgba(255,255,255,.8);text-decoration:none}
+  .page{max-width:600px;margin:0 auto;padding:20px 14px 80px}
+  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 14px rgba(0,0,0,.08);margin-bottom:16px}
+  label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin:14px 0 6px}
+  label:first-child{margin-top:0}
+  input,textarea,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;font-size:16px;font-family:inherit;transition:all .2s;background:#fff}
+  input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,125,250,.18)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+  .grid3{display:grid;grid-template-columns:80px 1fr 1fr;gap:0 10px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .pills button{border:1px solid var(--line);background:#fff;border-radius:980px;padding:10px 16px;font-size:14px;cursor:pointer;font-family:inherit;transition:all .15s;color:var(--ink)}
+  .pills button.sel{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
+  .bench-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .bench-row .area{flex:1;font-size:13px;font-weight:500}
+  .bench-row .opts{display:flex;background:var(--bg);border-radius:980px;padding:3px}
+  .bench-row .opts button{border:0;background:transparent;border-radius:980px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .15s;white-space:nowrap}
+  .bench-row .opts button.sel{color:#fff;font-weight:600}
+  .bench-row .opts button.sel.below{background:var(--below)}
+  .bench-row .opts button.sel.at{background:var(--at)}
+  .bench-row .opts button.sel.above{background:var(--above)}
+  .bench-hint{font-size:11px;color:var(--muted);margin:2px 0 12px}
+  .routing{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .routing button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 4px;cursor:pointer;font-family:inherit;text-align:center;transition:all .15s}
+  .routing button b{display:block;font-size:20px;font-weight:600}
+  .routing button span{font-size:11px;color:var(--muted)}
+  .routing button.sel{border-width:2px}
+  .routing button.sel[data-v="A"]{border-color:var(--c-green-b);background:var(--c-green)}
+  .routing button.sel[data-v="B"]{border-color:var(--c-yellow-b);background:var(--c-yellow)}
+  .routing button.sel[data-v="C"]{border-color:var(--c-grey-b);background:var(--c-grey)}
+  .routing button.sel[data-v="D"]{border-color:#8e8e93;background:#f2f2f7}
+  .routing button.sel span{color:var(--ink)}
+  .savebar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--hair);padding:12px max(14px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-bottom));display:flex;gap:10px;z-index:50}
+  .btn{border:0;border-radius:980px;padding:14px 18px;font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s}
+  .btn.primary{background:var(--blue);color:#fff;flex:1}
+  .btn.primary:hover{background:var(--blue-h)}
+  .btn.primary:disabled{opacity:.4}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .session-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .session-head h2{margin:0;font-size:26px;font-weight:600;letter-spacing:-.015em}
+  .session-head .count{font-size:12px;color:var(--muted)}
+  .captured{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .cap-chip{display:flex;align-items:center;gap:8px;border-radius:980px;padding:7px 14px;font-size:13px;font-weight:500;border-left:4px solid}
+  .cap-chip.green{background:var(--c-green);border-color:var(--c-green-b)}
+  .cap-chip.yellow{background:var(--c-yellow);border-color:var(--c-yellow-b)}
+  .cap-chip.grey{background:var(--c-grey);border-color:var(--c-grey-b)}
+  .cap-chip .r{font-size:11px;color:var(--muted)}
+  .suggest{position:relative}
+  .suggest-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--hair);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:20;max-height:180px;overflow:auto}
+  .suggest-list div{padding:10px 13px;font-size:14px;cursor:pointer}
+  .suggest-list div:hover{background:var(--bg)}
+  .suggest-list small{color:var(--muted)}
+  .err{color:#ff3b30;font-size:13px;min-height:18px;margin-top:8px}
+  #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(22,22,23,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#fff;padding:12px 20px;border-radius:980px;font-size:13px;display:none;z-index:200;white-space:nowrap}
+  details.session{margin-bottom:16px}
+  details.session summary{list-style:none;cursor:pointer}
+  details.session summary::-webkit-details-marker{display:none}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="crest">RB</div>
+  <h1>Live Scouting</h1>
+  <div class="right">
+    <a href="players.html">Database</a>
+    <a href="roster.html">Depth Charts</a>
+    <a href="index.html">Map</a>
+  </div>
+</div>
+
+<div class="page">
+  <div class="session-head">
+    <h2>Live capture</h2>
+    <span class="count" id="sessionCount"></span>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Every save goes straight into the Player Database.</p>
+
+  <details class="session card" open id="sessionCard">
+    <summary>
+      <label style="margin:0;display:flex;justify-content:space-between;align-items:center">MATCH / EVENT <span id="sessionSummary" style="font-weight:400"></span></label>
+    </summary>
+    <div class="grid2" style="margin-top:10px">
+      <div><label style="margin-top:0">Event</label><input id="sEvent" placeholder="e.g. EDP Classic"></div>
+      <div><label style="margin-top:0">Date</label><input id="sDate" type="date"></div>
+    </div>
+    <label>Fixture / teams (optional)</label>
+    <input id="sFixture" placeholder="e.g. CSA Bergen vs Ironbound U14">
+  </details>
+
+  <div class="card">
+    <div class="grid3">
+      <div><label style="margin-top:0">#</label><input id="pJersey" type="number" inputmode="numeric" placeholder="7"></div>
+      <div class="suggest"><label style="margin-top:0">Player name *</label><input id="pName" placeholder="First Last" autocomplete="off" oninput="suggest(this.value)"><div class="suggest-list" id="suggestList" style="display:none"></div></div>
+      <div><label style="margin-top:0">Birth year</label><input id="pYob" type="number" inputmode="numeric" placeholder="2012"></div>
+    </div>
+    <label>Club</label>
+    <input id="pClub" placeholder="e.g. CSA Bergen">
+    <label>Position</label>
+    <div class="pills" id="pPos">
+      <button>GK</button><button>RB</button><button>CB</button><button>LB</button><button>CDM</button><button>CM</button><button>LM</button><button>RM</button><button>LW</button><button>RW</button><button>ST</button>
+    </div>
+    <div class="grid2">
+      <div>
+        <label>Foot</label>
+        <div class="pills" id="pFoot"><button>Right</button><button>Left</button><button>Both</button></div>
+      </div>
+      <div>
+        <label>Physical profile</label>
+        <div class="pills" id="pPhys"><button>Early</button><button>On age</button><button>Late</button></div>
+      </div>
+    </div>
+
+    <label style="margin-top:18px">vs Red Bulls standard <span style="font-weight:400;color:var(--muted)">— only rate what you saw</span></label>
+    <div id="bench"></div>
+
+    <label style="margin-top:16px">Overall — the routing call</label>
+    <div class="routing" id="routing">
+      <button data-v="A" onclick="pickRoute(this)"><b>A</b><span>Priority</span></button>
+      <button data-v="B" onclick="pickRoute(this)"><b>B</b><span>Monitor</span></button>
+      <button data-v="C" onclick="pickRoute(this)"><b>C</b><span>Database</span></button>
+      <button data-v="D" onclick="pickRoute(this)"><b>D</b><span>Pass</span></button>
+    </div>
+
+    <label>Notes</label>
+    <textarea id="pNote" rows="3" placeholder="What you saw — quick words are fine"></textarea>
+    <div class="err" id="pErr"></div>
+  </div>
+
+  <div class="card" id="capturedCard" style="display:none">
+    <label style="margin:0">Captured this session</label>
+    <div class="captured" id="capturedList"></div>
+  </div>
+</div>
+
+<div class="savebar">
+  <button class="btn ghost" onclick="resetPlayer()">Clear</button>
+  <button class="btn primary" id="saveBtn" onclick="savePlayer()">Save player</button>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+'use strict';
+const db = window.sbClient;
+const esc = window.escapeHtml;
+const AREAS = [
+  ['gamesense','Game understanding'],
+  ['technical','Technical execution'],
+  ['physical','Physical'],
+  ['mentality','Mentality / intensity']
+];
+const ROUTE_MAP = {
+  A:{rating_status:'green', priority:'high', next_action:'Watchlist'},
+  B:{rating_status:'yellow', priority:'medium', next_action:'Monitor'},
+  C:{rating_status:'grey', priority:null, next_action:null},
+  D:{rating_status:'grey', priority:'low', next_action:'Pass'}
+};
+let allPlayers = [];   // for name suggestions / dedupe
+let captured = [];
+
+// build benchmark rows
+document.getElementById('bench').innerHTML = AREAS.map(([k,name])=>`
+  <div class="bench-row" data-k="${k}">
+    <span class="area">${name}</span>
+    <div class="opts">
+      <button class="below" data-v="below" onclick="pickBench(this)">Below RB</button>
+      <button class="at" data-v="at" onclick="pickBench(this)">RB level</button>
+      <button class="above" data-v="above" onclick="pickBench(this)">Above RB</button>
+    </div>
+  </div>`).join('') + '<p class="bench-hint">Tap again to clear an area you didn\'t see.</p>';
+
+document.getElementById('sDate').value = new Date().toISOString().slice(0,10);
+
+// pill groups (single-select, tap again to clear)
+document.querySelectorAll('#pPos button, #pFoot button, #pPhys button').forEach(b=>{
+  b.onclick = ()=>{
+    const was = b.classList.contains('sel');
+    b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+    if (!was) b.classList.add('sel');
+  };
+});
+function pickBench(btn){
+  const was = btn.classList.contains('sel');
+  btn.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+  if (!was) btn.classList.add('sel');
+}
+function pickRoute(btn){
+  document.querySelectorAll('#routing button').forEach(x=>x.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function selVal(id){ const b=document.querySelector('#'+id+' button.sel'); return b ? b.textContent : null; }
+
+async function load(){
+  const { data } = await db.from('academy_players').select('id,name,yob,club,position,rating_status');
+  allPlayers = data||[];
+}
+
+function suggest(q){
+  const list = document.getElementById('suggestList');
+  if (!q || q.length<2){ list.style.display='none'; return; }
+  const hits = allPlayers.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())).slice(0,5);
+  if (!hits.length){ list.style.display='none'; return; }
+  list.innerHTML = hits.map(p=>`<div onclick='useExisting(${JSON.stringify(p.id)})'>${esc(p.name)} <small>${p.yob||''} · ${esc(p.club||'')} — already in database</small></div>`).join('');
+  list.style.display='block';
+}
+function useExisting(id){
+  const p = allPlayers.find(x=>x.id===id);
+  document.getElementById('pName').value = p.name;
+  document.getElementById('pYob').value = p.yob||'';
+  document.getElementById('pClub').value = p.club||'';
+  if (p.position) document.querySelectorAll('#pPos button').forEach(b=>b.classList.toggle('sel', b.textContent===p.position));
+  document.getElementById('suggestList').style.display='none';
+}
+document.addEventListener('click', e=>{ if(!e.target.closest('.suggest')) document.getElementById('suggestList').style.display='none'; });
+
+function sessionSummary(){
+  const ev = document.getElementById('sEvent').value.trim();
+  const dt = document.getElementById('sDate').value;
+  document.getElementById('sessionSummary').textContent = ev ? `${ev} · ${dt}` : '';
+}
+document.getElementById('sEvent').addEventListener('input', sessionSummary);
+
+async function savePlayer(){
+  const err = document.getElementById('pErr');
+  err.textContent='';
+  const name = document.getElementById('pName').value.trim();
+  if (!name){ err.textContent='Player name is required.'; return; }
+  const route = document.querySelector('#routing button.sel');
+  if (!route){ err.textContent='Make the routing call — A, B, C or D.'; return; }
+  if (!await Auth.requireAuth()) return;
+  document.getElementById('saveBtn').disabled = true;
+  try {
+    const yob = document.getElementById('pYob').value ? parseInt(document.getElementById('pYob').value) : null;
+    const club = document.getElementById('pClub').value.trim() || null;
+    const position = selVal('pPos');
+    const foot = (selVal('pFoot')||'').toLowerCase() || null;
+    const routing = ROUTE_MAP[route.dataset.v];
+
+    // find or create player
+    let player = allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase() && (p.yob||null)===(yob||p.yob||null));
+    if (player){
+      const upd = { updated_at:new Date().toISOString() };
+      // upgrade status only (never downgrade a green to grey from a quick look; D always allowed to set Pass action)
+      const rank = {grey:0, yellow:1, green:2, red:3};
+      if (rank[routing.rating_status] > rank[player.rating_status]) upd.rating_status = routing.rating_status;
+      if (routing.next_action) upd.next_action = routing.next_action;
+      if (routing.priority) upd.priority = routing.priority;
+      if (club && !player.club) upd.club = club;
+      if (position && !player.position) upd.position = position;
+      if (foot) upd.foot = foot;
+      const r = await db.from('academy_players').update(upd).eq('id', player.id).select().single();
+      if (r.error) throw r.error;
+      Object.assign(player, r.data);
+    } else {
+      const r = await db.from('academy_players').insert({
+        name, yob, club, position, foot,
+        rating_status: routing.rating_status, priority: routing.priority,
+        next_action: routing.next_action, source: 'live_scout'
+      }).select().single();
+      if (r.error) throw r.error;
+      player = r.data;
+      allPlayers.push(player);
+    }
+
+    // benchmarks
+    const benchmarks = {};
+    document.querySelectorAll('#bench .bench-row').forEach(row=>{
+      const sel = row.querySelector('button.sel');
+      if (sel) benchmarks[row.dataset.k] = sel.dataset.v;
+    });
+
+    const rep = await db.from('live_reports').insert({
+      player_id: player.id,
+      event: document.getElementById('sEvent').value.trim() || null,
+      match_date: document.getElementById('sDate').value || null,
+      position, physical: selVal('pPhys'),
+      benchmarks: Object.keys(benchmarks).length ? benchmarks : null,
+      overall: route.dataset.v,
+      note: [document.getElementById('sFixture').value.trim(), document.getElementById('pNote').value.trim()].filter(Boolean).join(' — ') || null
+    });
+    if (rep.error) throw rep.error;
+
+    captured.push({name: player.name, route: route.dataset.v, status: ROUTE_MAP[route.dataset.v].rating_status});
+    renderCaptured();
+    toast(`${player.name} saved · ${route.dataset.v} → Database`);
+    resetPlayer();
+  } catch(e){
+    err.textContent = e.message || 'Save failed.';
+  } finally {
+    document.getElementById('saveBtn').disabled = false;
+  }
+}
+
+function renderCaptured(){
+  document.getElementById('capturedCard').style.display = captured.length ? '' : 'none';
+  document.getElementById('sessionCount').textContent = captured.length ? captured.length+' captured' : '';
+  document.getElementById('capturedList').innerHTML = captured.map(c=>
+    `<span class="cap-chip ${c.status==='green'?'green':c.status==='yellow'?'yellow':'grey'}">${esc(c.name)} <span class="r">${c.route}</span></span>`).join('');
+}
+
+function resetPlayer(){
+  ['pJersey','pName','pYob','pClub','pNote'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('#pPos button.sel, #pFoot button.sel, #pPhys button.sel, #routing button.sel, #bench button.sel').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('pErr').textContent='';
+  document.getElementById('pName').focus();
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2800);
+}
+
+load();
+</script>
+</body>
+</html>
