@@ -73,6 +73,15 @@
   .suggest-list small{color:var(--muted)}
   .err{color:#ff3b30;font-size:13px;min-height:18px;margin-top:8px}
   #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(22,22,23,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#fff;padding:12px 20px;border-radius:980px;font-size:13px;display:none;z-index:200;white-space:nowrap}
+
+  .tabbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .tabbar .pchip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:14px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s;position:relative}
+  .tabbar .pchip.active{border-color:var(--blue);border-width:2px;box-shadow:0 2px 8px rgba(0,113,227,.18)}
+  .tabbar .pchip .j{background:var(--ink);color:#fff;border-radius:8px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;padding:0 4px}
+  .tabbar .pchip .x{color:var(--muted);font-size:14px;padding:0 2px;border-radius:50%}
+  .tabbar .pchip .x:hover{color:#ff3b30}
+  .tabbar .addtab{border:1.5px dashed var(--line);background:transparent;border-radius:14px;width:40px;height:40px;font-size:18px;color:var(--muted);cursor:pointer;font-family:inherit}
+  .tabbar .addtab:hover{border-color:var(--blue);color:var(--blue)}
   details.session{margin-bottom:16px}
   details.session summary{list-style:none;cursor:pointer}
   details.session summary::-webkit-details-marker{display:none}
@@ -108,6 +117,8 @@
     <label>Fixture / teams (optional)</label>
     <input id="sFixture" placeholder="e.g. CSA Bergen vs Ironbound U14">
   </details>
+
+  <div class="tabbar" id="tabbar"></div>
 
   <div class="card">
     <div class="grid3">
@@ -155,8 +166,9 @@
 </div>
 
 <div class="savebar">
-  <button class="btn ghost" onclick="resetPlayer()">Clear</button>
-  <button class="btn primary" id="saveBtn" onclick="savePlayer()">Save player</button>
+  <button class="btn ghost" onclick="clearDraft()">Clear</button>
+  <button class="btn ghost" id="saveAllBtn" onclick="saveAll()" style="display:none">Save all</button>
+  <button class="btn primary" id="saveBtn" onclick="saveActive()">Save player</button>
 </div>
 
 <div id="toast"></div>
@@ -179,8 +191,13 @@ const ROUTE_MAP = {
   C:{rating_status:'grey', priority:null, next_action:null},
   D:{rating_status:'grey', priority:'low', next_action:'Pass'}
 };
-let allPlayers = [];   // for name suggestions / dedupe
+const LS_KEY = 'live_scout_session_v1';
+let allPlayers = [];
 let captured = [];
+let drafts = [];
+let cur = 0;
+
+function newDraft(){ return {jersey:'',name:'',yob:'',club:'',pos:null,foot:null,phys:null,bench:{},route:null,note:''}; }
 
 // build benchmark rows
 document.getElementById('bench').innerHTML = AREAS.map(([k,name])=>`
@@ -201,18 +218,119 @@ document.querySelectorAll('#pPos button, #pFoot button, #pPhys button').forEach(
     const was = b.classList.contains('sel');
     b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
     if (!was) b.classList.add('sel');
+    onFormChange();
   };
 });
 function pickBench(btn){
   const was = btn.classList.contains('sel');
   btn.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
   if (!was) btn.classList.add('sel');
+  onFormChange();
 }
 function pickRoute(btn){
   document.querySelectorAll('#routing button').forEach(x=>x.classList.remove('sel'));
   btn.classList.add('sel');
+  onFormChange();
 }
 function selVal(id){ const b=document.querySelector('#'+id+' button.sel'); return b ? b.textContent : null; }
+
+// ── form <-> draft state ──
+function captureForm(){
+  const d = drafts[cur];
+  d.jersey = document.getElementById('pJersey').value;
+  d.name = document.getElementById('pName').value;
+  d.yob = document.getElementById('pYob').value;
+  d.club = document.getElementById('pClub').value;
+  d.note = document.getElementById('pNote').value;
+  d.pos = selVal('pPos'); d.foot = selVal('pFoot'); d.phys = selVal('pPhys');
+  const r = document.querySelector('#routing button.sel');
+  d.route = r ? r.dataset.v : null;
+  d.bench = {};
+  document.querySelectorAll('#bench .bench-row').forEach(row=>{
+    const sel = row.querySelector('button.sel');
+    if (sel) d.bench[row.dataset.k] = sel.dataset.v;
+  });
+}
+function writeForm(d){
+  document.getElementById('pJersey').value = d.jersey||'';
+  document.getElementById('pName').value = d.name||'';
+  document.getElementById('pYob').value = d.yob||'';
+  document.getElementById('pClub').value = d.club||'';
+  document.getElementById('pNote').value = d.note||'';
+  document.querySelectorAll('#pPos button').forEach(b=>b.classList.toggle('sel', b.textContent===d.pos));
+  document.querySelectorAll('#pFoot button').forEach(b=>b.classList.toggle('sel', b.textContent===d.foot));
+  document.querySelectorAll('#pPhys button').forEach(b=>b.classList.toggle('sel', b.textContent===d.phys));
+  document.querySelectorAll('#routing button').forEach(b=>b.classList.toggle('sel', b.dataset.v===d.route));
+  document.querySelectorAll('#bench .bench-row').forEach(row=>{
+    row.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', (d.bench||{})[row.dataset.k]===b.dataset.v));
+  });
+  document.getElementById('pErr').textContent='';
+}
+
+// ── tabs ──
+function renderTabs(){
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = drafts.map((d,i)=>`
+    <span class="pchip ${i===cur?'active':''}" onclick="switchTo(${i})">
+      ${d.jersey?`<span class="j">${esc(d.jersey)}</span>`:''}
+      <span>${esc(d.name)||'New player'}</span>
+      ${drafts.length>1?`<span class="x" onclick="event.stopPropagation();discardDraft(${i})">✕</span>`:''}
+    </span>`).join('') +
+    `<button class="addtab" onclick="addDraft()" title="Scout another player in this game">＋</button>`;
+  document.getElementById('saveAllBtn').style.display = drafts.length>1 ? '' : 'none';
+  document.getElementById('saveAllBtn').textContent = `Save all (${drafts.length})`;
+}
+function switchTo(i){
+  if (i===cur){ return; }
+  captureForm(); cur = i; writeForm(drafts[cur]); renderTabs(); persist();
+}
+function addDraft(){
+  captureForm();
+  drafts.push(newDraft());
+  cur = drafts.length-1;
+  writeForm(drafts[cur]); renderTabs(); persist();
+  document.getElementById('pName').focus();
+}
+function discardDraft(i){
+  const d = drafts[i];
+  if ((d.name||d.note) && !confirm(`Discard ${d.name||'this player'}? Unsaved notes will be lost.`)) return;
+  drafts.splice(i,1);
+  if (!drafts.length) drafts = [newDraft()];
+  if (cur >= drafts.length) cur = drafts.length-1;
+  writeForm(drafts[cur]); renderTabs(); persist();
+}
+function clearDraft(){
+  drafts[cur] = newDraft();
+  writeForm(drafts[cur]); renderTabs(); persist();
+  document.getElementById('pName').focus();
+}
+
+// ── persistence (survive refresh at pitchside) ──
+function persist(){
+  captureForm();
+  try { localStorage.setItem(LS_KEY, JSON.stringify({
+    event: document.getElementById('sEvent').value,
+    date: document.getElementById('sDate').value,
+    fixture: document.getElementById('sFixture').value,
+    drafts, cur, captured
+  })); } catch(e){}
+}
+let _pt = null;
+function onFormChange(){ clearTimeout(_pt); _pt = setTimeout(persist, 400); }
+['pJersey','pName','pYob','pClub','pNote','sEvent','sDate','sFixture'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', onFormChange);
+});
+function restore(){
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY)||'null');
+    if (!s) return;
+    document.getElementById('sEvent').value = s.event||'';
+    if (s.date) document.getElementById('sDate').value = s.date;
+    document.getElementById('sFixture').value = s.fixture||'';
+    if (Array.isArray(s.drafts) && s.drafts.length){ drafts = s.drafts; cur = Math.min(s.cur||0, drafts.length-1); }
+    if (Array.isArray(s.captured)) captured = s.captured;
+  } catch(e){}
+}
 
 async function load(){
   const { data } = await db.from('academy_players').select('id,name,yob,club,position,rating_status');
@@ -234,8 +352,12 @@ function useExisting(id){
   document.getElementById('pClub').value = p.club||'';
   if (p.position) document.querySelectorAll('#pPos button').forEach(b=>b.classList.toggle('sel', b.textContent===p.position));
   document.getElementById('suggestList').style.display='none';
+  onFormChange(); renderTabsSoon();
 }
+function renderTabsSoon(){ captureForm(); renderTabs(); }
 document.addEventListener('click', e=>{ if(!e.target.closest('.suggest')) document.getElementById('suggestList').style.display='none'; });
+document.getElementById('pName').addEventListener('input', ()=>{ captureForm(); renderTabs(); });
+document.getElementById('pJersey').addEventListener('input', ()=>{ captureForm(); renderTabs(); });
 
 function sessionSummary(){
   const ev = document.getElementById('sEvent').value.trim();
@@ -244,70 +366,66 @@ function sessionSummary(){
 }
 document.getElementById('sEvent').addEventListener('input', sessionSummary);
 
-async function savePlayer(){
+// ── saving ──
+async function saveDraft(d){
+  const name = (d.name||'').trim();
+  if (!name) throw new Error('Player name is required.');
+  if (!d.route) throw new Error('Make the routing call — A, B, C or D.');
+  const yob = d.yob ? parseInt(d.yob) : null;
+  const club = (d.club||'').trim() || null;
+  const foot = (d.foot||'').toLowerCase() || null;
+  const routing = ROUTE_MAP[d.route];
+
+  let player = allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase() && (p.yob||null)===(yob||p.yob||null));
+  if (player){
+    const upd = { updated_at:new Date().toISOString() };
+    const rank = {grey:0, yellow:1, green:2, red:3};
+    if (rank[routing.rating_status] > rank[player.rating_status]) upd.rating_status = routing.rating_status;
+    if (routing.next_action) upd.next_action = routing.next_action;
+    if (routing.priority) upd.priority = routing.priority;
+    if (club && !player.club) upd.club = club;
+    if (d.pos && !player.position) upd.position = d.pos;
+    if (foot) upd.foot = foot;
+    const r = await db.from('academy_players').update(upd).eq('id', player.id).select().single();
+    if (r.error) throw r.error;
+    Object.assign(player, r.data);
+  } else {
+    const r = await db.from('academy_players').insert({
+      name, yob, club, position: d.pos, foot,
+      rating_status: routing.rating_status, priority: routing.priority,
+      next_action: routing.next_action, source: 'live_scout'
+    }).select().single();
+    if (r.error) throw r.error;
+    player = r.data;
+    allPlayers.push(player);
+  }
+  const rep = await db.from('live_reports').insert({
+    player_id: player.id,
+    event: document.getElementById('sEvent').value.trim() || null,
+    match_date: document.getElementById('sDate').value || null,
+    position: d.pos, physical: d.phys,
+    benchmarks: Object.keys(d.bench||{}).length ? d.bench : null,
+    overall: d.route,
+    note: [document.getElementById('sFixture').value.trim(), (d.note||'').trim()].filter(Boolean).join(' — ') || null
+  });
+  if (rep.error) throw rep.error;
+  captured.push({name: player.name, route: d.route, status: routing.rating_status});
+}
+
+async function saveActive(){
   const err = document.getElementById('pErr');
   err.textContent='';
-  const name = document.getElementById('pName').value.trim();
-  if (!name){ err.textContent='Player name is required.'; return; }
-  const route = document.querySelector('#routing button.sel');
-  if (!route){ err.textContent='Make the routing call — A, B, C or D.'; return; }
+  captureForm();
   if (!await Auth.requireAuth()) return;
   document.getElementById('saveBtn').disabled = true;
   try {
-    const yob = document.getElementById('pYob').value ? parseInt(document.getElementById('pYob').value) : null;
-    const club = document.getElementById('pClub').value.trim() || null;
-    const position = selVal('pPos');
-    const foot = (selVal('pFoot')||'').toLowerCase() || null;
-    const routing = ROUTE_MAP[route.dataset.v];
-
-    // find or create player
-    let player = allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase() && (p.yob||null)===(yob||p.yob||null));
-    if (player){
-      const upd = { updated_at:new Date().toISOString() };
-      // upgrade status only (never downgrade a green to grey from a quick look; D always allowed to set Pass action)
-      const rank = {grey:0, yellow:1, green:2, red:3};
-      if (rank[routing.rating_status] > rank[player.rating_status]) upd.rating_status = routing.rating_status;
-      if (routing.next_action) upd.next_action = routing.next_action;
-      if (routing.priority) upd.priority = routing.priority;
-      if (club && !player.club) upd.club = club;
-      if (position && !player.position) upd.position = position;
-      if (foot) upd.foot = foot;
-      const r = await db.from('academy_players').update(upd).eq('id', player.id).select().single();
-      if (r.error) throw r.error;
-      Object.assign(player, r.data);
-    } else {
-      const r = await db.from('academy_players').insert({
-        name, yob, club, position, foot,
-        rating_status: routing.rating_status, priority: routing.priority,
-        next_action: routing.next_action, source: 'live_scout'
-      }).select().single();
-      if (r.error) throw r.error;
-      player = r.data;
-      allPlayers.push(player);
-    }
-
-    // benchmarks
-    const benchmarks = {};
-    document.querySelectorAll('#bench .bench-row').forEach(row=>{
-      const sel = row.querySelector('button.sel');
-      if (sel) benchmarks[row.dataset.k] = sel.dataset.v;
-    });
-
-    const rep = await db.from('live_reports').insert({
-      player_id: player.id,
-      event: document.getElementById('sEvent').value.trim() || null,
-      match_date: document.getElementById('sDate').value || null,
-      position, physical: selVal('pPhys'),
-      benchmarks: Object.keys(benchmarks).length ? benchmarks : null,
-      overall: route.dataset.v,
-      note: [document.getElementById('sFixture').value.trim(), document.getElementById('pNote').value.trim()].filter(Boolean).join(' — ') || null
-    });
-    if (rep.error) throw rep.error;
-
-    captured.push({name: player.name, route: route.dataset.v, status: ROUTE_MAP[route.dataset.v].rating_status});
-    renderCaptured();
-    toast(`${player.name} saved · ${route.dataset.v} → Database`);
-    resetPlayer();
+    const d = drafts[cur];
+    await saveDraft(d);
+    toast(`${d.name} saved · ${d.route} → Database`);
+    drafts.splice(cur,1);
+    if (!drafts.length) drafts = [newDraft()];
+    if (cur >= drafts.length) cur = drafts.length-1;
+    writeForm(drafts[cur]); renderTabs(); renderCaptured(); persist();
   } catch(e){
     err.textContent = e.message || 'Save failed.';
   } finally {
@@ -315,18 +433,31 @@ async function savePlayer(){
   }
 }
 
+async function saveAll(){
+  const err = document.getElementById('pErr');
+  err.textContent='';
+  captureForm();
+  if (!await Auth.requireAuth()) return;
+  document.getElementById('saveAllBtn').disabled = true;
+  let saved = 0, failed = [];
+  for (let i = drafts.length-1; i >= 0; i--){
+    try { await saveDraft(drafts[i]); drafts.splice(i,1); saved++; }
+    catch(e){ failed.push(`${drafts[i].name||'Unnamed'}: ${e.message}`); }
+  }
+  if (!drafts.length) drafts = [newDraft()];
+  cur = 0;
+  writeForm(drafts[cur]); renderTabs(); renderCaptured(); persist();
+  document.getElementById('saveAllBtn').disabled = false;
+  if (failed.length) err.textContent = failed.join(' · ');
+  toast(`Saved ${saved} player${saved!==1?'s':''}${failed.length?` — ${failed.length} need attention`:''}`);
+}
+
 function renderCaptured(){
   document.getElementById('capturedCard').style.display = captured.length ? '' : 'none';
   document.getElementById('sessionCount').textContent = captured.length ? captured.length+' captured' : '';
   document.getElementById('capturedList').innerHTML = captured.map(c=>
-    `<span class="cap-chip ${c.status==='green'?'green':c.status==='yellow'?'yellow':'grey'}">${esc(c.name)} <span class="r">${c.route}</span></span>`).join('');
-}
-
-function resetPlayer(){
-  ['pJersey','pName','pYob','pClub','pNote'].forEach(id=>document.getElementById(id).value='');
-  document.querySelectorAll('#pPos button.sel, #pFoot button.sel, #pPhys button.sel, #routing button.sel, #bench button.sel').forEach(b=>b.classList.remove('sel'));
-  document.getElementById('pErr').textContent='';
-  document.getElementById('pName').focus();
+    `<span class="cap-chip ${c.status==='green'?'green':c.status==='yellow'?'yellow':'grey'}">${esc(c.name)} <span class="r">${c.route}</span></span>`).join('') +
+    `<a href="players.html" style="font-size:12px;color:var(--blue);text-decoration:none;align-self:center">View in Database →</a>`;
 }
 
 function toast(msg){
@@ -335,6 +466,13 @@ function toast(msg){
   clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2800);
 }
 
+// init
+drafts = [newDraft()];
+restore();
+writeForm(drafts[cur]);
+renderTabs();
+renderCaptured();
+sessionSummary();
 load();
 </script>
 </body>

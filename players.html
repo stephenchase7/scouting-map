@@ -233,6 +233,19 @@
   </div>
 </div>
 
+<!-- Scouting reports modal -->
+<div class="overlay" id="reportsModal">
+  <div class="modal" style="width:520px">
+    <h3 id="rpTitle">Scouting reports</h3>
+    <div class="sub" id="rpSub" style="font-size:13px;color:var(--muted);margin-bottom:10px"></div>
+    <div id="rpList"></div>
+    <div class="foot">
+      <a class="btn ghost" href="live.html" style="text-decoration:none;display:inline-block">＋ New live report</a>
+      <button class="btn red" onclick="closeModal('reportsModal')">Done</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -309,6 +322,7 @@ function render(){
         <div class="menu">
           <button onclick="openChartModal('${p.id}','depth')">＋ Add to Depth Chart</button>
           <button onclick="openChartModal('${p.id}','succession')">＋ Add to Succession Plan</button>
+          <button onclick="openReports('${p.id}')">View scouting reports</button>
           <button onclick="openPlayerModal('${p.id}')">Edit player</button>
           <button class="danger" onclick="deletePlayer('${p.id}')">Delete</button>
         </div>
@@ -547,6 +561,35 @@ async function runTeamImport(){
   } finally {
     document.getElementById('tiGo').disabled = false;
   }
+}
+
+// ── Scouting reports viewer ──
+const BENCH_NAMES = {gamesense:'Game understanding', technical:'Technical', physical:'Physical', mentality:'Mentality'};
+const BENCH_STYLE = {below:'background:#fdf0dd;color:#b36b00', at:'background:#e3effd;color:#0059b3', above:'background:#e3f6e8;color:#1e7a3c'};
+const BENCH_LABEL = {below:'Below RB', at:'RB level', above:'Above RB'};
+const OVERALL_LABEL = {A:'A · Priority', B:'B · Monitor', C:'C · Database', D:'D · Pass'};
+async function openReports(pid){
+  const p = players.find(x=>x.id===pid);
+  document.getElementById('rpTitle').textContent = p.name;
+  document.getElementById('rpSub').textContent = [p.yob, p.club, p.position].filter(Boolean).join(' · ');
+  document.getElementById('rpList').innerHTML = '<div class="empty" style="padding:20px">Loading…</div>';
+  document.getElementById('reportsModal').classList.add('open');
+  const { data, error } = await db.from('live_reports').select('*').eq('player_id', pid).order('created_at', {ascending:false});
+  if (error){ document.getElementById('rpList').innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
+  if (!data.length){ document.getElementById('rpList').innerHTML = '<div class="empty" style="padding:24px">No live reports yet for this player.</div>'; return; }
+  document.getElementById('rpList').innerHTML = data.map(r=>{
+    const bench = Object.entries(r.benchmarks||{}).map(([k,v])=>
+      `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:980px;${BENCH_STYLE[v]||''}">${BENCH_NAMES[k]||k}: ${BENCH_LABEL[v]||v}</span>`).join(' ');
+    return `<div style="border:1px solid var(--hair);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <b style="font-size:13px">${esc(r.event||'Match')}</b>
+        <span class="yob">${r.match_date||''} ${r.position?'· '+esc(r.position):''} ${r.physical?'· '+esc(r.physical):''}</span>
+      </div>
+      ${r.overall?`<div style="margin-top:6px;font-size:12px;font-weight:600">${OVERALL_LABEL[r.overall]||r.overall}</div>`:''}
+      ${bench?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${bench}</div>`:''}
+      ${r.note?`<div style="font-size:13px;margin-top:8px;color:#3a3a3c">${esc(r.note)}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 // ── CSV import ──
