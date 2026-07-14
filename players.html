@@ -452,9 +452,9 @@ async function openTeamImport(){
   document.getElementById('tiErr').textContent='';
   document.getElementById('teamImportModal').classList.add('open');
   if (!tiClubs.length){
-    const { data, error } = await db.from('clubs').select('club_id, name').order('name');
+    const { data, error } = await db.from('clubs').select('id, name').order('name');
     if (error){ document.getElementById('tiErr').textContent = 'Could not load clubs: '+error.message; return; }
-    tiClubs = data||[];
+    tiClubs = (data||[]).map(c=>({club_id: c.id, name: c.name}));
   }
   document.getElementById('tiClub').innerHTML = '<option value="">Select club…</option>' +
     tiClubs.map(c=>`<option value="${esc(c.club_id)}">${esc(c.name)}</option>`).join('');
