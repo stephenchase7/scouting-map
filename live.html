@@ -416,7 +416,7 @@ async function saveActive(){
   const err = document.getElementById('pErr');
   err.textContent='';
   captureForm();
-  if (!await Auth.requireAuth()) return;
+  if (!await Auth.requireAuth()){ err.textContent='Sign-in required — save cancelled. Tap Save and enter the scout password.'; return; }
   document.getElementById('saveBtn').disabled = true;
   try {
     const d = drafts[cur];
@@ -437,7 +437,7 @@ async function saveAll(){
   const err = document.getElementById('pErr');
   err.textContent='';
   captureForm();
-  if (!await Auth.requireAuth()) return;
+  if (!await Auth.requireAuth()){ err.textContent='Sign-in required — save cancelled. Tap Save and enter the scout password.'; return; }
   document.getElementById('saveAllBtn').disabled = true;
   let saved = 0, failed = [];
   for (let i = drafts.length-1; i >= 0; i--){
