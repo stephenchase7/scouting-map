@@ -4721,10 +4721,14 @@ function showDNATab(tabId,btn){
       <button class="modal-close" onclick="closeHomegrownModal()">&times;</button>
     </div>
     <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;max-height:calc(85vh - 80px);">
-      <p style="color:#666;font-size:12px;margin-bottom:12px;">Spring 2026 · 35+5 per club · All MLS Clubs</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <p id="hgListInfo" style="color:#666;font-size:12px;margin:0;">Loading...</p>
+        <button onclick="openHGUpload()" style="padding:8px 14px;background:#007aff;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Upload New List</button>
+      </div>
       <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
         <input type="text" id="hgSearchInput" placeholder="Search player or club..." oninput="filterHomegrown()" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid #e5e5e7;border-radius:8px;font-size:13px;">
       </div>
+      <input type="file" id="hgFileInput" accept=".json" style="display:none;" onchange="handleHGUpload(event)">
       <div id="hgAgeFilters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <button class="hg-chip active" onclick="setHGAgeFilter(this,'all')">All</button>
         <button class="hg-chip" onclick="setHGAgeFilter(this,'U15')">U15</button>
@@ -4832,6 +4836,7 @@ async function openHomegrownModal() {
         dob: r.dob || '', org: r.org || '', year: r.year || ''
       };
     });
+    document.getElementById('hgListInfo').textContent = '35+5 per club · ' + hgPlayersCache.length + ' players · All MLS Clubs';
     renderHomegrownTable();
   } catch (e) {
     console.error('[Homegrown] Load failed:', e);
@@ -4882,6 +4887,54 @@ function renderHomegrownTable() {
     '</tr>';
   }).join('');
   document.getElementById('hgResultCount').textContent = filtered.length + ' players';
+}
+
+// Upload new homegrown list
+function openHGUpload() {
+  if (!confirm('This will replace the current homegrown list with a new one.\n\nUpload a JSON file with format:\n[{"club":"ATL","age":"U15","name":"Player Name","dob":"1/1/2012","org":"","year":""}]\n\nContinue?')) return;
+  document.getElementById('hgFileInput').click();
+}
+
+async function handleHGUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!Array.isArray(data) || data.length === 0) {
+        alert('Invalid file format. Must be a JSON array.');
+        return;
+      }
+
+      document.getElementById('hgListInfo').textContent = 'Uploading ' + data.length + ' players...';
+
+      // Delete existing data
+      var deleteResp = await sbClient.from('homegrown_players').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+      // Upload in batches of 500
+      var batchSize = 500;
+      for (var i = 0; i < data.length; i += batchSize) {
+        var batch = data.slice(i, i + batchSize);
+        var resp = await sbClient.from('homegrown_players').insert(batch);
+        if (resp.error) throw resp.error;
+        document.getElementById('hgListInfo').textContent = 'Uploaded ' + Math.min(i + batchSize, data.length) + ' of ' + data.length + '...';
+      }
+
+      // Refresh cache
+      hgPlayersCache = data;
+      renderHomegrownTable();
+      document.getElementById('hgListInfo').textContent = 'Updated: ' + new Date().toLocaleDateString() + ' · ' + data.length + ' players';
+      alert('Homegrown list updated successfully!');
+    } catch (err) {
+      console.error('[Homegrown] Upload failed:', err);
+      alert('Upload failed: ' + err.message);
+      document.getElementById('hgListInfo').textContent = 'Upload failed';
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 </script>
 
