@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Depth Charts — NYRB Academy</title>
+<style>
+  :root{
+    --red:#cc0000; --red-dark:#a00000; --ink:#1d1d1f; --muted:#86868b;
+    --line:#e5e5e7; --bg:#f5f5f7; --card:#fff;
+    --c-red:#fde8e7; --c-red-b:#cc0000;
+    --c-green:#e3f6e8; --c-green-b:#2e9e4f;
+    --c-yellow:#fdf6dd; --c-yellow-b:#d9a400;
+    --c-grey:#eef0f2; --c-grey-b:#9aa1ab;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+  .top{background:var(--red);color:#fff;height:64px;display:flex;align-items:center;gap:16px;padding:0 24px}
+  .crest{width:36px;height:36px;border-radius:10px;background:#fff;color:var(--red);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+  .top h1{font-size:20px;margin:0;font-weight:600}
+  .top .sub{font-size:13px;opacity:.8}
+  .top .right{margin-left:auto;display:flex;align-items:center;gap:18px;font-size:12px}
+  .top .right a{color:rgba(255,255,255,.85);text-decoration:none}
+  .top .right a:hover{color:#fff}
+  .agebar{display:flex;gap:8px;padding:14px 24px;align-items:center;flex-wrap:wrap}
+  .agebar .age{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;position:relative}
+  .agebar .age.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .agebar .up{font-size:9px;background:var(--red);color:#fff;border-radius:8px;padding:1px 6px;position:absolute;top:-8px;right:-6px}
+  .agebar .note{font-size:12px;color:var(--muted);margin-left:auto}
+  .wrap{display:flex;gap:16px;padding:0 24px 24px;align-items:flex-start}
+  .pitch-panel{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .toolbar select{border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:#fff;cursor:pointer}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:#fff;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)}
+  .seg button.active{background:var(--red);color:#fff}
+  .hinttext{font-size:12px;color:var(--muted)}
+  .pitch{position:relative;background:linear-gradient(#2f9e44,#2b8a3e);border-radius:10px;height:920px;overflow:hidden}
+  .pitch .line{position:absolute;border:2px solid rgba(255,255,255,.55)}
+  .slot{position:absolute;width:160px;transform:translateX(-50%);background:rgba(255,255,255,.96);border-radius:8px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+  .slot h4{font-size:12px;font-weight:700;padding:2px 4px 6px;margin:0;display:flex;justify-content:space-between;align-items:center}
+  .slot h4 .cnt{font-size:10px;color:var(--muted);font-weight:600}
+  .slot.gap{outline:2px solid var(--red)}
+  .slot .gap-msg{font-size:10px;color:var(--red);font-weight:700;padding:4px;text-align:center}
+  .cards{min-height:26px;display:flex;flex-direction:column;gap:4px}
+  .pcard{border-radius:6px;padding:6px 8px;font-size:12px;font-weight:600;cursor:grab;display:flex;justify-content:space-between;align-items:center;border-left:4px solid;background:#fff}
+  .pcard .meta{font-size:10px;color:#555;font-weight:500}
+  .pcard .dots{color:#888;cursor:pointer;padding:0 3px;border-radius:4px}
+  .pcard .dots:hover{background:rgba(0,0,0,.08)}
+  .pcard.red{background:var(--c-red);border-color:var(--c-red-b)}
+  .pcard.green{background:var(--c-green);border-color:var(--c-green-b)}
+  .pcard.yellow{background:var(--c-yellow);border-color:var(--c-yellow-b)}
+  .pcard.grey{background:var(--c-grey);border-color:var(--c-grey-b)}
+  .pcard.ghost{opacity:.4}
+  .legend{position:absolute;bottom:12px;left:12px;background:rgba(15,17,23,.85);color:#fff;border-radius:8px;padding:10px 14px;font-size:11px;display:flex;flex-direction:column;gap:6px;z-index:5}
+  .legend b{font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .legend .row{display:flex;align-items:center;gap:8px}
+  .legend .sw{width:12px;height:12px;border-radius:3px;border-left:3px solid}
+  .side{width:280px;flex:none;display:flex;flex-direction:column;gap:16px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .box h3{font-size:13px;font-weight:700;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+  .box h3 span{font-size:11px;color:var(--muted);font-weight:500}
+  .search{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:8px}
+  .hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .result{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+  .result .pcard{flex:1;cursor:pointer}
+  .result select{border:1px solid var(--line);border-radius:6px;font-size:11px;padding:4px;max-width:78px}
+  #gapList{font-size:12px;line-height:2}
+  #gapList b{color:var(--red)}
+  .cardmenu{position:fixed;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.16);z-index:50;width:210px;overflow:hidden;display:none}
+  .cardmenu button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 14px;font-size:12.5px;cursor:pointer}
+  .cardmenu button:hover{background:#f4f5f7}
+  .cardmenu button.danger{color:var(--red)}
+  #toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;display:none;z-index:200;max-width:340px}
+  .loading{padding:60px;text-align:center;color:var(--muted)}
+  @media (max-width:900px){ .wrap{flex-direction:column} .side{width:100%} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="crest">RB</div>
+  <div><h1>Depth Charts &amp; Succession</h1><div class="sub">NY Red Bulls Academy · roster planning</div></div>
+  <div class="right">
+    <a href="index.html">← Map</a>
+    <a href="players.html">Database</a>
+    <a href="scouts.html">Scout Hub</a>
+  </div>
+</div>
+
+<div class="agebar" id="agebar">
+  <button class="age" data-age="U12">U12 <span style="font-size:10px;color:inherit;opacity:.6">9v9</span></button>
+  <button class="age active" data-age="U13">U13</button>
+  <button class="age" data-age="U14">U14<span class="up">plays up</span></button>
+  <button class="age" data-age="U15">U15<span class="up">plays up</span></button>
+  <button class="age" data-age="U16">U16<span class="up">plays up</span></button>
+  <button class="age" data-age="U18">U18<span class="up">plays up</span></button>
+  <span class="note">U14–U18 compete a year up vs. non-MLS pro academies</span>
+</div>
+
+<div class="wrap">
+  <div class="pitch-panel">
+    <div class="toolbar">
+      <select id="formationSel" onchange="changeFormation(this.value)"></select>
+      <div class="seg">
+        <button id="segDepth" class="active" onclick="setChart('depth')">Depth</button>
+        <button id="segSucc" onclick="setChart('succession')">Succession</button>
+      </div>
+      <span class="hinttext" id="chartHint">Drag cards between positions — changes save automatically</span>
+    </div>
+    <div class="pitch" id="pitch">
+      <div class="line" style="left:5%;top:2%;width:90%;height:96%"></div>
+      <div class="line" style="left:5%;top:50%;width:90%;height:0"></div>
+      <div class="line" style="left:50%;top:50%;width:110px;height:110px;border-radius:50%;transform:translate(-50%,-50%)"></div>
+      <div class="line" style="left:30%;top:2%;width:40%;height:11%"></div>
+      <div class="line" style="left:30%;bottom:2%;width:40%;height:11%"></div>
+      <div class="legend">
+        <b>Key</b>
+        <div class="row"><span class="sw" style="background:var(--c-red);border-color:var(--c-red-b)"></span> Red Bulls player</div>
+        <div class="row"><span class="sw" style="background:var(--c-green);border-color:var(--c-green-b)"></span> Highly rated / bring in</div>
+        <div class="row"><span class="sw" style="background:var(--c-yellow);border-color:var(--c-yellow-b)"></span> Monitor</div>
+        <div class="row"><span class="sw" style="background:var(--c-grey);border-color:var(--c-grey-b)"></span> Database</div>
+      </div>
+      <div id="slots"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="box">
+      <h3>Add from database</h3>
+      <input class="search" id="searchBox" placeholder="Search all players…" oninput="searchDB(this.value)">
+      <div id="searchResults"></div>
+      <p class="hint">Searches the full player database — academy, trialists, watchlist, map imports. Pick a position to drop them onto this chart. Missing someone? <a href="players.html">Add them in the Database</a>.</p>
+    </div>
+    <div class="box" id="benchBox">
+      <h3>Substitutes <span id="subCount"></span></h3>
+      <div class="cards" data-slot="BENCH" id="benchCards"></div>
+      <p class="hint">Drag between the pitch and bench.</p>
+    </div>
+    <div class="box" id="trayBox" style="display:none">
+      <h3>Unassigned <span>not in this formation</span></h3>
+      <div class="cards" data-slot="TRAY" id="trayCards"></div>
+      <p class="hint">These players are pinned to positions that don't exist in the current formation. Drag them onto the pitch.</p>
+    </div>
+    <div class="box" id="gapBox">
+      <h3>Succession gaps <span id="gapAge"></span></h3>
+      <div id="gapList"></div>
+      <p class="hint">Positions with fewer than 4 succession candidates — the recruitment priority list.</p>
+    </div>
+  </div>
+</div>
+
+<div class="cardmenu" id="cardMenu"></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script src="auth.js"></script>
+<script>
+'use strict';
+const db = window.sbClient;
+const esc = window.escapeHtml;
+
+// ── Formations: slot → [x%, y%] ──
+const FORMATIONS = {
+  '433': { name:'4-3-3', v11:true, slots:[
+    ['GK',50,87],['RB',84,68],['RCB',64,74],['LCB',36,74],['LB',16,68],
+    ['CDM',50,55],['CM1',32,40],['CM2',68,40],
+    ['LW',16,16],['ST',50,9],['RW',84,16]]},
+  '4231': { name:'4-2-3-1', v11:true, slots:[
+    ['GK',50,87],['RB',84,68],['RCB',64,74],['LCB',36,74],['LB',16,68],
+    ['CDM',38,56],['CM1',62,56],['AM',50,36],
+    ['LW',16,20],['ST',50,9],['RW',84,20]]},
+  '2141': { name:'2-1-4-1 (9v9)', v11:false, slots:[
+    ['GK',50,87],['RCB',63,72],['LCB',37,72],
+    ['CDM',50,56],
+    ['LM',14,34],['CM1',37,38],['CM2',63,38],['RM',86,34],
+    ['ST',50,11]]},
+  '323': { name:'3-2-3 (9v9)', v11:false, slots:[
+    ['GK',50,87],['RCB',70,72],['CB',50,76],['LCB',30,72],
+    ['CM1',37,48],['CM2',63,48],
+    ['LW',16,20],['ST',50,11],['RW',84,20]]}
+};
+const LABEL = {CM1:'CM', CM2:'CM'};
+const DEFAULT_FORMATION = age => age==='U12' ? '2141' : '433';
+const AGE_GROUPS = ['U12','U13','U14','U15','U16','U18'];
+
+let currentAge = 'U13';
+let chartType = 'depth';
+let formations = {};       // age → formation key (from academy_settings)
+let playersById = {};      // id → player
+let assignments = [];      // rows for current age group (both chart types)
+let sortables = [];
+
+// ── Load ──
+async function init(){
+  const [p, s] = await Promise.all([
+    db.from('academy_players').select('id,name,yob,club,position,rating_status'),
+    db.from('academy_settings').select('*')
+  ]);
+  if (p.error){ document.getElementById('slots').innerHTML = `<div class="loading">Could not load: ${esc(p.error.message)}<br><br>Has supabase_academy_schema.sql been run in Supabase?</div>`; return; }
+  (p.data||[]).forEach(x=>playersById[x.id]=x);
+  (s.data||[]).forEach(x=>{
+    const m = x.key.match(/^formation:(U\d+)$/);
+    if (m){ let val = x.value; if (typeof val === 'string') val = val.replace(/"/g,''); formations[m[1]] = val; }
+  });
+  AGE_GROUPS.forEach(a=>{ if(!formations[a]||!FORMATIONS[formations[a]]) formations[a]=DEFAULT_FORMATION(a); });
+  await loadAge();
+}
+
+async function loadAge(){
+  const { data, error } = await db.from('depth_assignments').select('*').eq('age_group', currentAge).order('sort_order');
+  if (error){ toast('Load failed: '+error.message); return; }
+  assignments = data || [];
+  render();
+}
+
+// ── Render ──
+function cardHTML(a){
+  const p = playersById[a.player_id];
+  if (!p) return '';
+  return `<div class="pcard ${p.rating_status}" data-aid="${a.id}">
+    <span>${esc(p.name)}<div class="meta">${esc(p.club||'')}${p.yob?' · '+p.yob:''}</div></span>
+    <span class="dots" onclick="openCardMenu(event,'${a.id}')">⋮</span></div>`;
+}
+
+function render(){
+  sortables.forEach(s=>s.destroy()); sortables=[];
+  const fKey = formations[currentAge];
+  const layout = FORMATIONS[fKey].slots;
+  const slotNames = layout.map(s=>s[0]);
+  const mine = assignments.filter(a=>a.chart_type===chartType);
+  const succ = assignments.filter(a=>a.chart_type==='succession');
+
+  // formation dropdown (9v9 options for U12, 11v11 elsewhere)
+  const sel = document.getElementById('formationSel');
+  sel.innerHTML = Object.entries(FORMATIONS)
+    .filter(([k,f])=> currentAge==='U12' ? !f.v11 : f.v11)
+    .map(([k,f])=>`<option value="${k}" ${k===fKey?'selected':''}>${f.name}</option>`).join('');
+
+  // pitch slots
+  const wrap = document.getElementById('slots');
+  wrap.innerHTML='';
+  layout.forEach(([slot,x,y])=>{
+    const list = mine.filter(a=>a.position_slot===slot);
+    const isGap = chartType==='succession' && list.length<4;
+    const div = document.createElement('div');
+    div.className = 'slot'+(isGap?' gap':'');
+    div.style.left = x+'%'; div.style.top = y+'%';
+    div.innerHTML = `<h4>${LABEL[slot]||slot} <span class="cnt">${list.length}${chartType==='succession'?'/4':''}</span></h4>
+      <div class="cards" data-slot="${slot}">${list.map(cardHTML).join('')}</div>
+      ${isGap?`<div class="gap-msg">needs ${4-list.length} more</div>`:''}`;
+    wrap.appendChild(div);
+  });
+
+  // bench (depth only)
+  const bench = mine.filter(a=>a.position_slot==='BENCH');
+  document.getElementById('benchBox').style.display = chartType==='depth' ? '' : 'none';
+  document.getElementById('benchCards').innerHTML = bench.map(cardHTML).join('');
+  document.getElementById('subCount').textContent = bench.length ? bench.length+' players' : '';
+
+  // unassigned tray (slots not in this formation)
+  const tray = mine.filter(a=>!slotNames.includes(a.position_slot) && a.position_slot!=='BENCH');
+  document.getElementById('trayBox').style.display = tray.length ? '' : 'none';
+  document.getElementById('trayCards').innerHTML = tray.map(cardHTML).join('');
+
+  // succession gaps
+  document.getElementById('gapAge').textContent = currentAge;
+  const gaps = layout.filter(([s])=> succ.filter(a=>a.position_slot===s).length<4)
+    .map(([s])=>`<b>${LABEL[s]||s}</b> — ${succ.filter(a=>a.position_slot===s).length}/4`);
+  document.getElementById('gapList').innerHTML = gaps.length ? gaps.join('<br>') : '<span style="color:var(--c-green-b);font-weight:700">✓ All positions covered</span>';
+
+  // drag & drop
+  document.querySelectorAll('#pitch .cards, #benchCards, #trayCards').forEach(el=>{
+    sortables.push(new Sortable(el,{group:'players',animation:150,ghostClass:'ghost',onEnd:onDrop}));
+  });
+}
+
+// ── Drag persistence ──
+async function onDrop(e){
+  const aid = e.item.dataset.aid;
+  const toSlot = e.to.dataset.slot;
+  const fromSlot = e.from.dataset.slot;
+  if (toSlot==='TRAY') { render(); return; } // can't drop INTO the tray
+  if (!await Auth.requireAuth()){ render(); return; }
+  const a = assignments.find(x=>x.id===aid);
+  a.position_slot = toSlot;
+  // persist moved card + resequence the target list
+  const targetIds = [...e.to.children].map(c=>c.dataset.aid);
+  const updates = targetIds.map((id,i)=>{
+    const row = assignments.find(x=>x.id===id);
+    row.sort_order = i;
+    return db.from('depth_assignments').update({position_slot: row.position_slot, sort_order: i}).eq('id', id);
+  });
+  const results = await Promise.all(updates);
+  const err = results.find(r=>r.error);
+  if (err){ toast('Save failed: '+err.error.message); await loadAge(); return; }
+  if (toSlot!==fromSlot){
+    const p = playersById[a.player_id];
+    toast(`${p.name}: ${LABEL[fromSlot]||fromSlot} → ${LABEL[toSlot]||toSlot} ✓`);
+  }
+  render();
+}
+
+// ── Card menu ──
+const ORDER = ['grey','yellow','green','red'];
+const STATUS_LABEL = {red:'Red Bulls', green:'Bring in', yellow:'Monitor', grey:'Database'};
+function openCardMenu(ev, aid){
+  ev.stopPropagation();
+  const a = assignments.find(x=>x.id===aid);
+  const p = playersById[a.player_id];
+  const m = document.getElementById('cardMenu');
+  m.innerHTML = `
+    <button onclick="cycleStatus('${aid}')">Status: ${STATUS_LABEL[p.rating_status]} → ${STATUS_LABEL[ORDER[(ORDER.indexOf(p.rating_status)+1)%4]]}</button>
+    <button onclick="copyToOther('${aid}')">Copy to ${a.chart_type==='depth'?'succession plan':'depth chart'}</button>
+    <button onclick="location.href='players.html'">View in database</button>
+    <button class="danger" onclick="removeFromChart('${aid}')">Remove from this chart</button>`;
+  m.style.display='block';
+  const r = ev.target.getBoundingClientRect();
+  m.style.left = Math.min(r.left, innerWidth-220)+'px';
+  m.style.top = (r.bottom+4)+'px';
+}
+document.addEventListener('click', ()=>document.getElementById('cardMenu').style.display='none');
+
+async function cycleStatus(aid){
+  if (!await Auth.requireAuth()) return;
+  const a = assignments.find(x=>x.id===aid);
+  const p = playersById[a.player_id];
+  const next = ORDER[(ORDER.indexOf(p.rating_status)+1)%4];
+  const { error } = await db.from('academy_players').update({rating_status: next}).eq('id', p.id);
+  if (error) return toast('Failed: '+error.message);
+  p.rating_status = next;
+  toast(`${p.name} → ${STATUS_LABEL[next]}`);
+  render();
+}
+
+async function copyToOther(aid){
+  if (!await Auth.requireAuth()) return;
+  const a = assignments.find(x=>x.id===aid);
+  const other = a.chart_type==='depth'?'succession':'depth';
+  const { data, error } = await db.from('depth_assignments').insert({
+    player_id: a.player_id, age_group: a.age_group, chart_type: other,
+    position_slot: a.position_slot==='BENCH'?'CM1':a.position_slot, sort_order: 999
+  }).select().single();
+  if (error) return toast(error.message.includes('duplicate') ? 'Already on that chart.' : 'Failed: '+error.message);
+  assignments.push(data);
+  toast(`${playersById[a.player_id].name} copied to ${other==='depth'?'depth chart':'succession plan'}`);
+  render();
+}
+
+async function removeFromChart(aid){
+  if (!await Auth.requireAuth()) return;
+  const a = assignments.find(x=>x.id===aid);
+  const { error } = await db.from('depth_assignments').delete().eq('id', aid);
+  if (error) return toast('Failed: '+error.message);
+  assignments = assignments.filter(x=>x.id!==aid);
+  toast(`${playersById[a.player_id].name} removed (still in database)`);
+  render();
+}
+
+// ── Search & add ──
+function searchDB(q){
+  const box = document.getElementById('searchResults');
+  if (!q || q.length<2){ box.innerHTML=''; return; }
+  const onChart = new Set(assignments.filter(a=>a.chart_type===chartType).map(a=>a.player_id));
+  const hits = Object.values(playersById)
+    .filter(p=>(p.name+' '+(p.club||'')).toLowerCase().includes(q.toLowerCase()))
+    .slice(0,6);
+  const fKey = formations[currentAge];
+  const slotOpts = FORMATIONS[fKey].slots.map(([s])=>`<option value="${s}">${LABEL[s]||s}</option>`).join('')
+    + (chartType==='depth'?'<option value="BENCH">Bench</option>':'');
+  box.innerHTML = hits.map(p=>{
+    const taken = onChart.has(p.id);
+    return `<div class="result">
+      <div class="pcard ${p.rating_status}" style="cursor:default"><span>${esc(p.name)}<div class="meta">${esc(p.club||'')}${p.position?' · '+esc(p.position):''}${taken?' · already on chart':''}</div></span></div>
+      ${taken?'':`<select id="slot-${p.id}">${slotOpts}</select><button class="dots" style="border:0;background:var(--red);color:#fff;border-radius:6px;padding:6px 9px;cursor:pointer;font-weight:700" onclick="addFromSearch('${p.id}')">＋</button>`}
+    </div>`;
+  }).join('') || '<p class="hint" style="margin:0">No matches — <a href="players.html">add them in the Database</a>.</p>';
+}
+
+async function addFromSearch(pid){
+  if (!await Auth.requireAuth()) return;
+  const slot = document.getElementById('slot-'+pid).value;
+  const { data, error } = await db.from('depth_assignments').insert({
+    player_id: pid, age_group: currentAge, chart_type: chartType, position_slot: slot, sort_order: 999
+  }).select().single();
+  if (error) return toast('Failed: '+error.message);
+  assignments.push(data);
+  toast(`${playersById[pid].name} → ${LABEL[slot]||slot}`);
+  document.getElementById('searchBox').value='';
+  document.getElementById('searchResults').innerHTML='';
+  render();
+}
+
+// ── Controls ──
+function setChart(t){
+  chartType = t;
+  document.getElementById('segDepth').classList.toggle('active', t==='depth');
+  document.getElementById('segSucc').classList.toggle('active', t==='succession');
+  document.getElementById('chartHint').textContent = t==='depth'
+    ? 'Drag cards between positions — changes save automatically'
+    : 'Succession plan — minimum 4 candidates per position. Red outline = gap.';
+  render();
+}
+
+async function changeFormation(key){
+  formations[currentAge] = key;
+  render();
+  if (!await Auth.requireAuth()) return;
+  await db.from('academy_settings').upsert({key: 'formation:'+currentAge, value: key, updated_at: new Date().toISOString()});
+  toast(`${currentAge} formation → ${FORMATIONS[key].name}`);
+}
+
+document.querySelectorAll('.age').forEach(b=>b.onclick=async ()=>{
+  document.querySelectorAll('.age').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  currentAge = b.dataset.age;
+  await loadAge();
+});
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',3200);
+}
+
+init();
+</script>
+</body>
+</html>

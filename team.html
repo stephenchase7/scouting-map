@@ -1295,20 +1295,6 @@ th.select-col, td.select-col {
   <span>Refreshing...</span>
 </div>
 
-<!-- Password Modal -->
-<div id="password-modal" class="modal-overlay">
-  <div class="modal">
-    <h3>Authentication Required</h3>
-    <p class="field-label">Enter password to edit data:</p>
-    <input type="password" id="password-input" placeholder="Password">
-    <div id="password-error" class="error" style="display:none;">Incorrect password</div>
-    <div class="modal-buttons">
-      <button class="modal-btn secondary" onclick="closePasswordModal()">Cancel</button>
-      <button class="modal-btn primary" onclick="verifyPassword()">Unlock</button>
-    </div>
-  </div>
-</div>
-
 <!-- Edit Modal -->
 <div id="edit-modal" class="modal-overlay">
   <div class="modal">
@@ -1938,15 +1924,14 @@ var clubsData = {
 var playersData = {};
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // SUPABASE INTEGRATION (Primary data source - no fallback)
+// Config + client live in auth.js (window.sbClient)
 // ══════════════════════════════════════════════════════════════
 
-const SUPABASE_URL = 'https://pjorqdzlzgwqpivoibyx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q';
-
-let supabaseClient = null;
+let supabaseClient = window.sbClient || null;
 let supabaseDataLoaded = false;
 
 // Scouted players cache: { playerKey: scoutPlayerId }
@@ -1956,11 +1941,8 @@ var scoutedPlayerKeys = {};
 var playerMatchStats = {};
 var currentPlayerKey = null; // Set when opening player detail modal
 
-// Initialize Supabase client
-try {
-  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (e) {
-  console.warn('[Supabase] Failed to initialize client:', e);
+if (!supabaseClient) {
+  console.warn('[Supabase] Shared client (auth.js) not available');
 }
 
 // Validate club data from Supabase
@@ -2123,20 +2105,6 @@ function generatePlayerKey(clubId, squad, jersey, name) {
   return clubId + '_' + squad + '_' + jersey + '_' + safeName;
 }
 
-// Open scouts.html with player pre-filled for scouting
-function scoutPlayer(playerKey, name, jersey, yob, clubName, squad) {
-  var params = new URLSearchParams({
-    prefill: '1',
-    name: name || '',
-    jersey: jersey || '',
-    yob: yob || '',
-    club: clubName || '',
-    squad: squad || '',
-    linkedKey: playerKey
-  });
-  window.location.href = 'scouts.html?' + params.toString();
-}
-
 // Open scouts.html to view existing scouted player
 function openScoutedPlayer(playerKey) {
   var scoutPlayerId = getScoutPlayerId(playerKey);
@@ -2297,6 +2265,16 @@ async function init() {
   document.title = 'Team Roster – ' + currentClub.name;
   renderPage();
 
+  // Restore unlocked state if the scout is already signed in (auth.js session)
+  if (window.Auth) {
+    Auth.isSignedIn().then(function(signedIn) {
+      if (signedIn) {
+        isAuthenticated = true;
+        updateAuthStatus();
+      }
+    });
+  }
+
   // Show squad from hash, or first available squad as fallback
   var availableSquads = getAvailableSquads();
 
@@ -2310,25 +2288,21 @@ async function init() {
   showTeam(squadToShow);
 }
 
-// XSS prevention helpers
-function escapeHtml(str) {
+// XSS prevention helpers — canonical escaper lives in auth.js (window.escapeHtml).
+// Local fallback keeps the page working if auth.js fails to load.
+var escapeHtml = window.escapeHtml || function(str) {
   if (str === null || str === undefined) return '';
   return String(str).replace(/[&<>"']/g, function(c) {
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
-}
-function escapeAttr(str) {
-  if (str === null || str === undefined) return '';
-  return String(str).replace(/[&<>"']/g, function(c) {
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
+};
+var escapeAttr = escapeHtml; // full escaping is safe in attribute contexts too
 
 function showError(title, message) {
   document.getElementById('page-content').innerHTML =
     '<div class="error-page">' +
-    '<h1>' + title + '</h1>' +
-    '<p>' + message + '</p>' +
+    '<h1>' + escapeHtml(title) + '</h1>' +
+    '<p>' + escapeHtml(message) + '</p>' +
     '<a href="index.html">← Back to Map</a>' +
     '</div>';
 }
@@ -2360,8 +2334,8 @@ function generateTabsHtml() {
   var tabsHtml = '<div class="tabs">';
   availableSquads.forEach(function(squad, i) {
     var activeClass = squad === currentTeam ? ' active' : '';
-    tabsHtml += '<div class="tab' + activeClass + '" onclick="showTeam(\'' + squad + '\')">' +
-                squad.toUpperCase() + '</div>';
+    tabsHtml += '<div class="tab' + activeClass + '" onclick="showTeam(\'' + escapeAttr(squad) + '\')">' +
+                escapeHtml(squad.toUpperCase()) + '</div>';
   });
   tabsHtml += '</div>';
 
@@ -2426,9 +2400,9 @@ function renderClubInfo() {
     directors.forEach(function(dir, idx) {
       html += '<tr>';
       // Always show clickable cells - password modal will appear if not authenticated
-      html += '<td><span class="editable-cell' + (dir.name ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'name\')">' + (dir.name || 'Click to add') + '</span></td>';
-      html += '<td><span class="editable-cell' + (dir.email ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'email\')">' + (dir.email || '—') + '</span></td>';
-      html += '<td><span class="editable-cell' + (dir.phone ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'phone\')">' + (dir.phone || '—') + '</span></td>';
+      html += '<td><span class="editable-cell' + (dir.name ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'name\')">' + (escapeHtml(dir.name) || 'Click to add') + '</span></td>';
+      html += '<td><span class="editable-cell' + (dir.email ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'email\')">' + (escapeHtml(dir.email) || '—') + '</span></td>';
+      html += '<td><span class="editable-cell' + (dir.phone ? '' : ' empty') + '" onclick="editDirectorField(' + idx + ', \'phone\')">' + (escapeHtml(dir.phone) || '—') + '</span></td>';
       if (isAuthenticated) {
         html += '<td><button class="remove-director-btn" onclick="removeDirector(' + idx + ')" title="Remove director">×</button></td>';
       }
@@ -2466,18 +2440,18 @@ function renderPage() {
     clubId.replace(/^ecnl_/, '').toUpperCase();
 
   var logoHtml = currentClub.logo
-    ? '<img src="' + currentClub.logo + '" alt="' + currentClub.name + '" onerror="this.style.display=\'none\'">'
-    : '<div class="header-initials">' + initials + '</div>';
+    ? '<img src="' + escapeAttr(currentClub.logo) + '" alt="' + escapeAttr(currentClub.name) + '" onerror="this.style.display=\'none\'">'
+    : '<div class="header-initials">' + escapeHtml(initials) + '</div>';
 
   var websiteHtml = currentClub.website
-    ? '<a href="' + currentClub.website + '" target="_blank">' + currentClub.website.replace(/^https?:\/\/(www\.)?/, '') + '</a>'
+    ? '<a href="' + escapeAttr(currentClub.website) + '" target="_blank">' + escapeHtml(currentClub.website.replace(/^https?:\/\/(www\.)?/, '')) + '</a>'
     : '—';
 
   var html =
     '<div class="header">' +
       logoHtml +
       '<div class="header-info">' +
-        '<h1>' + currentClub.name + '</h1>' +
+        '<h1>' + escapeHtml(currentClub.name) + '</h1>' +
         '<p>' + websiteHtml + '</p>' +
       '</div>' +
       '<div class="header-season-selector">' +
@@ -2488,6 +2462,8 @@ function renderPage() {
           '<option value="2026-2027"' + (currentSeason === '2026-2027' ? ' selected' : '') + '>2026-2027</option>' +
         '</select>' +
       '</div>' +
+      '<a href="players.html" class="back-btn">Database</a>' +
+      '<a href="roster.html" class="back-btn">Depth Charts</a>' +
       '<a href="index.html" class="back-btn">← Back to Map</a>' +
     '</div>' +
 
@@ -2575,7 +2551,7 @@ function renderRoster() {
   if (data.dateRange) {
     html += '<div class="stat-item">' +
       '<span class="label">Data Range</span>' +
-      '<span class="value">' + data.dateRange + '</span>' +
+      '<span class="value">' + escapeHtml(data.dateRange) + '</span>' +
       '</div>';
   }
 
@@ -2653,6 +2629,7 @@ function renderRoster() {
     '<th>A1v1</th>' +
     '<th>D1v1</th>' +
     '<th>SV</th>' +
+    '<th title="Add to depth chart / succession plan">＋</th>' +
     '</tr>' +
     '<tr class="filter-row">' +
     '<th></th>' +
@@ -2660,11 +2637,11 @@ function renderRoster() {
     '<th><input type="text" class="filter-input" placeholder="Filter..." oninput="setFilter(\'name\', this.value)" value="' + (activeFilters.name || '') + '"></th>' +
     '<th><select class="filter-select" onchange="setFilter(\'yob\', this.value)">' +
     '<option value="">All</option>' +
-    yobs.map(function(y) { return '<option value="' + y + '"' + (activeFilters.yob == y ? ' selected' : '') + '>' + y + '</option>'; }).join('') +
+    yobs.map(function(y) { return '<option value="' + escapeAttr(y) + '"' + (activeFilters.yob == y ? ' selected' : '') + '>' + escapeHtml(y) + '</option>'; }).join('') +
     '</select></th>' +
     '<th><select class="filter-select" onchange="setFilter(\'position\', this.value)">' +
     '<option value="">All</option>' +
-    positions.map(function(pos) { return '<option value="' + pos + '"' + (activeFilters.position === pos.toLowerCase() ? ' selected' : '') + '>' + pos + '</option>'; }).join('') +
+    positions.map(function(pos) { return '<option value="' + escapeAttr(pos) + '"' + (activeFilters.position === pos.toLowerCase() ? ' selected' : '') + '>' + escapeHtml(pos) + '</option>'; }).join('') +
     '</select></th>' +
     '<th></th>' +
     '<th></th>' +
@@ -2673,6 +2650,7 @@ function renderRoster() {
     '<th></th>' +
     '<th></th>' +
     '<th><button class="clear-btn" style="font-size:10px;padding:4px 8px;" onclick="clearFilters()">Clear</button></th>' +
+    '<th></th>' +
     '</tr>' +
     '</thead><tbody>';
 
@@ -2686,21 +2664,21 @@ function renderRoster() {
 
     var displayPos = p.primaryPosition || p.position || p.originalPosition || '';
     var secondaryPos = p.secondaryPosition || '';
-    var posHtml = displayPos ? '<span class="position">' + displayPos + (secondaryPos ? ' <span style="color:#5a5a5a;">(' + secondaryPos + ')</span>' : '') + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
+    var posHtml = displayPos ? '<span class="position">' + escapeHtml(displayPos) + (secondaryPos ? ' <span style="color:#5a5a5a;">(' + escapeHtml(secondaryPos) + ')</span>' : '') + '</span>' : '<span class="position" style="color:#ccc;">—</span>';
     var goalsHtml = displayGoals > 0 ? '<span class="goals">' + displayGoals + '</span>' : '0';
-    var linkHtml = p.link ? '<a href="' + p.link + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
+    var linkHtml = p.link ? '<a href="' + escapeAttr(p.link) + '" target="_blank" class="link-btn">View</a>' : '<span class="link-btn empty">—</span>';
 
     // Check for pending changes to highlight cells
     var editedClass = function(field) {
       return hasPendingChange(originalPlayer, field) ? ' edited-cell' : '';
     };
 
-    // Store full player data for detail modal
-    var fullPlayerData = JSON.stringify({
+    // Store full player data for detail modal (HTML-escaped for the attribute context)
+    var fullPlayerData = escapeAttr(JSON.stringify({
       name: p.name, jersey: p.jersey, position: p.position, games: p.games,
       goals: displayGoals, yob: p.yob, goalsByMatch: p.goalsByMatch || [],
       club: currentClub ? currentClub.name : '', squad: currentTeam
-    }).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }));
 
     // Generate player key for scouting link
     var playerKey = generatePlayerKey(clubId, currentTeam, p.jersey, p.name);
@@ -2719,17 +2697,18 @@ function renderRoster() {
 
     html += '<tr class="player-row" data-player="' + fullPlayerData + '" data-idx="' + idx + '" data-playerkey="' + playerKey + '">' +
       '<td class="select-col"><input type="checkbox" class="select-checkbox row-checkbox" onchange="togglePlayerSelect(this)" data-name="' + escapeAttr(p.name) + '" data-pos="' + (displayPos || '') + '" data-yob="' + (p.yob || '') + '"></td>' +
-      '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + p.jersey + '</span></td>' +
-      '<td class="player-name-cell" onclick="openPlayerDetail(this.closest(\'tr\'))"><span class="player-name">' + p.name + '</span>' + scoutBadgeHtml + '</td>' +
-      '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (p.yob || '—') + '</td>' +
+      '<td class="editable' + editedClass('jersey') + '" onclick="handleCellClick(' + idx + ', \'jersey\')"><span class="jersey">' + escapeHtml(p.jersey) + '</span></td>' +
+      '<td class="player-name-cell" onclick="openPlayerDetail(this.closest(\'tr\'))"><span class="player-name">' + escapeHtml(p.name) + '</span>' + scoutBadgeHtml + '</td>' +
+      '<td class="editable' + editedClass('yob') + '" onclick="handleCellClick(' + idx + ', \'yob\')">' + (escapeHtml(p.yob) || '—') + '</td>' +
       '<td class="editable' + editedClass('position') + '" onclick="handleCellClick(' + idx + ', \'position\')">' + posHtml + '</td>' +
-      '<td class="editable' + editedClass('games') + '" onclick="handleCellClick(' + idx + ', \'games\')">' + p.games + '</td>' +
+      '<td class="editable' + editedClass('games') + '" onclick="handleCellClick(' + idx + ', \'games\')">' + escapeHtml(p.games) + '</td>' +
       '<td class="editable' + editedClass('goals') + '" onclick="handleCellClick(' + idx + ', \'goals\')">' + goalsHtml + '</td>' +
       '<td>' + (stats.assists || '-') + '</td>' +
       '<td>' + (stats.key_passes || '-') + '</td>' +
       '<td>' + a1v1 + '</td>' +
       '<td>' + d1v1 + '</td>' +
       '<td>' + (stats.saves || '-') + '</td>' +
+      '<td><button class="academy-chart-btn" title="Add to depth chart / succession plan" onclick="event.stopPropagation(); openAcademyChartModal(this)" data-name="' + escapeAttr(p.name) + '" data-yob="' + escapeAttr(p.yob || '') + '" data-pos="' + escapeAttr(displayPos || '') + '">＋</button></td>' +
       '</tr>';
   });
 
@@ -2737,10 +2716,10 @@ function renderRoster() {
 
   if (data.notes) {
     var noteText = data.notes.startsWith('Note:') ? data.notes : 'Note: ' + data.notes;
-    html += '<div class="updated" style="color:#cc0000;margin-top:15px;">' + noteText + '</div>';
+    html += '<div class="updated" style="color:#cc0000;margin-top:15px;">' + escapeHtml(noteText) + '</div>';
   }
 
-  html += '<div class="updated">Last updated: ' + (data.lastUpdated || 'Unknown') + '</div>';
+  html += '<div class="updated">Last updated: ' + escapeHtml(data.lastUpdated || 'Unknown') + '</div>';
 
   // Save focus state before rendering
   var activeElement = document.activeElement;
@@ -2763,15 +2742,17 @@ function renderRoster() {
 // AUTHENTICATION & EDITING
 // ══════════════════════════════════════════════════════════════
 
-var EDIT_PWD_HASH = '4d5f782b0efc36aab13b2361cb2cef05c57fd599a1e325d29130fd9b78ca0ed7';
+// Editing requires a Supabase account (auth.js / Auth.requireAuth).
 var isAuthenticated = false;
 
-async function hashPassword(password) {
-  var encoder = new TextEncoder();
-  var data = encoder.encode(password);
-  var hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  var hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+// Ensure the user is signed in via Supabase. Returns true when authenticated.
+async function ensureEditAuth() {
+  if (isAuthenticated) return true;
+  var user = await Auth.requireAuth();
+  if (!user) return false;
+  isAuthenticated = true;
+  updateAuthStatus();
+  return true;
 }
 var pendingEdit = null; // {playerIndex, field}
 var activeFilters = {};
@@ -2887,44 +2868,6 @@ function hasPendingChange(player, field) {
   return pendingOverrides[key] && pendingOverrides[key].hasOwnProperty(field);
 }
 
-// Password Modal
-function showPasswordModal(playerIndex, field) {
-  // Only set pendingEdit if parameters are provided (for player edits)
-  // Director edits set pendingEdit before calling this function
-  if (typeof playerIndex !== 'undefined') {
-    pendingEdit = {playerIndex: playerIndex, field: field};
-  }
-  document.getElementById('password-input').value = '';
-  document.getElementById('password-error').style.display = 'none';
-  document.getElementById('password-modal').classList.add('active');
-  document.getElementById('password-input').focus();
-}
-
-function closePasswordModal() {
-  document.getElementById('password-modal').classList.remove('active');
-  pendingEdit = null;
-}
-
-async function verifyPassword() {
-  var input = document.getElementById('password-input').value;
-  var hash = await hashPassword(input);
-  if (hash === EDIT_PWD_HASH) {
-    isAuthenticated = true;
-    closePasswordModal();
-    if (pendingEdit) {
-      // Check if this is a director edit or player edit
-      if (pendingEdit.type === 'director') {
-        editDirectorField(pendingEdit.directorIndex, pendingEdit.field);
-      } else {
-        showEditModal(pendingEdit.playerIndex, pendingEdit.field);
-      }
-    }
-    updateAuthStatus();
-  } else {
-    document.getElementById('password-error').style.display = 'block';
-  }
-}
-
 function updateAuthStatus() {
   var statusEl = document.getElementById('auth-status');
   if (statusEl) {
@@ -2940,18 +2883,14 @@ function updateAuthStatus() {
   refreshClubInfo();
 }
 
-function toggleAuth() {
+async function toggleAuth() {
   if (isAuthenticated) {
-    // Lock it
+    // Lock the UI (keeps the Supabase session; sign out is available via Auth.signOut())
     isAuthenticated = false;
     updateAuthStatus();
   } else {
-    // Show password modal to unlock
     pendingEdit = null;
-    document.getElementById('password-input').value = '';
-    document.getElementById('password-error').style.display = 'none';
-    document.getElementById('password-modal').classList.add('active');
-    document.getElementById('password-input').focus();
+    await ensureEditAuth();
   }
 }
 
@@ -3037,12 +2976,9 @@ function saveEdit() {
 }
 
 // Cell click handler
-function handleCellClick(playerIndex, field) {
-  if (isAuthenticated) {
-    showEditModal(playerIndex, field);
-  } else {
-    showPasswordModal(playerIndex, field);
-  }
+async function handleCellClick(playerIndex, field) {
+  if (!(await ensureEditAuth())) return;
+  showEditModal(playerIndex, field);
 }
 
 // ========== Player Detail Modal ==========
@@ -3050,7 +2986,7 @@ var currentPlayerData = null;
 
 function openPlayerDetail(row) {
   try {
-    var playerData = JSON.parse(row.dataset.player.replace(/&quot;/g, '"'));
+    var playerData = JSON.parse(row.dataset.player);
     currentPlayerData = playerData;
     currentPlayerKey = row.dataset.playerkey || generatePlayerKey(clubId, currentTeam, playerData.jersey, playerData.name);
     renderPlayerDetail(playerData);
@@ -3158,7 +3094,7 @@ var editingMatchId = null;
 
 function editMatchStats(matchId, matchDataStr) {
   try {
-    var m = JSON.parse(matchDataStr.replace(/&quot;/g, '"'));
+    var m = JSON.parse(matchDataStr);
     editingMatchId = matchId;
 
     document.getElementById('add-match-player-name').textContent = currentPlayerData.name + ' (Editing)';
@@ -3293,7 +3229,7 @@ function renderPlayerDetail(player) {
   var opponentsHtml = '';
   opponentsSorted.forEach(function(opp) {
     opponentsHtml += '<div class="opponent-row">' +
-      '<span class="opponent-name">' + opp + '</span>' +
+      '<span class="opponent-name">' + escapeHtml(opp) + '</span>' +
       '<span class="opponent-goals">' + goalsByOpponent[opp] + ' goal' + (goalsByOpponent[opp] > 1 ? 's' : '') + '</span>' +
       '</div>';
   });
@@ -3312,7 +3248,7 @@ function renderPlayerDetail(player) {
     for (var i = 0; i < goalsCount; i++) goalsIcons += '⚽';
     logHtml += '<div class="goal-log-item">' +
       '<span class="goal-log-date">' + dateStr + '</span>' +
-      '<span class="goal-log-opponent">vs ' + (match.opponent || 'Unknown') + '</span>' +
+      '<span class="goal-log-opponent">vs ' + escapeHtml(match.opponent || 'Unknown') + '</span>' +
       '<span class="goal-log-goals">' + goalsIcons + '</span>' +
       '</div>';
   });
@@ -3349,11 +3285,12 @@ function renderMatchStats() {
     var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     var a1v1 = m.atk_1v1_total ? (m.atk_1v1_won + '/' + m.atk_1v1_total) : '-';
     var d1v1 = m.def_1v1_total ? (m.def_1v1_won + '/' + m.def_1v1_total) : '-';
-    var matchData = JSON.stringify(m).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    // JS-string-escape (backslashes then quotes), then HTML-escape for the onclick attribute
+    var matchData = escapeAttr(JSON.stringify(m).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
 
     html += '<div class="match-stat-row">' +
       '<span class="match-stat-date">' + dateStr + '</span>' +
-      '<span class="match-stat-opponent">' + (m.opponent || 'vs Unknown') + '</span>' +
+      '<span class="match-stat-opponent">' + escapeHtml(m.opponent || 'vs Unknown') + '</span>' +
       '<span class="match-stat-values">' +
       '<span title="Assists">' + (m.assists || 0) + 'A</span>' +
       '<span title="Key Passes">' + (m.key_passes || 0) + 'KP</span>' +
@@ -3362,8 +3299,8 @@ function renderMatchStats() {
       '<span title="Saves">' + (m.saves || 0) + 'SV</span>' +
       '</span>' +
       '<span class="match-stat-actions">' +
-      '<button class="btn-edit-stat" onclick="editMatchStats(\'' + m.id + '\', \'' + matchData + '\')" title="Edit">✏️</button>' +
-      '<button class="btn-delete-stat" onclick="deleteMatchStats(\'' + m.id + '\')" title="Delete">🗑️</button>' +
+      '<button class="btn-edit-stat" onclick="editMatchStats(\'' + escapeAttr(m.id) + '\', \'' + matchData + '\')" title="Edit">✏️</button>' +
+      '<button class="btn-delete-stat" onclick="deleteMatchStats(\'' + escapeAttr(m.id) + '\')" title="Delete">🗑️</button>' +
       '</span>' +
       '</div>';
   });
@@ -3469,8 +3406,9 @@ async function saveNewPlayer() {
     closeAddPlayerModal();
     showToast('Player added: ' + name);
 
-    // Reload roster
-    loadTeamData(clubId);
+    // Reload roster from Supabase
+    await loadSupabaseData(clubId);
+    renderRoster();
 
   } catch (err) {
     console.error('Error saving player:', err);
@@ -3517,11 +3455,8 @@ function ensureDirectorsArray() {
   }
 }
 
-function addDirector() {
-  if (!isAuthenticated) {
-    showPasswordModal();
-    return;
-  }
+async function addDirector() {
+  if (!(await ensureEditAuth())) return;
   ensureDirectorsArray();
   currentClub.directors.push({ name: '', email: '', phone: '' });
   saveClubData();
@@ -3537,17 +3472,8 @@ function removeDirector(index) {
   }
 }
 
-function editDirectorField(directorIndex, field) {
-  if (!isAuthenticated) {
-    // Set pending edit before showing password modal
-    pendingEdit = {
-      type: 'director',
-      directorIndex: directorIndex,
-      field: field
-    };
-    showPasswordModal();
-    return;
-  }
+async function editDirectorField(directorIndex, field) {
+  if (!(await ensureEditAuth())) return;
 
   ensureDirectorsArray();
 
@@ -3632,10 +3558,6 @@ function refreshClubInfo() {
 }
 
 // Filtering
-function applyFilters() {
-  renderRoster();
-}
-
 function clearFilters() {
   activeFilters = {};
   dateFilterStart = null;
@@ -3707,104 +3629,19 @@ function calculateFilteredGoals(player) {
   return total;
 }
 
-// Export data
-// Password input enter key
+// Edit modal keyboard shortcuts
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
-    if (document.getElementById('password-modal').classList.contains('active')) {
-      verifyPassword();
-    } else if (document.getElementById('edit-modal').classList.contains('active')) {
+    if (document.getElementById('edit-modal').classList.contains('active')) {
       saveEdit();
     }
   }
   if (e.key === 'Escape') {
-    closePasswordModal();
     closeEditModal();
   }
 });
 
-// Import Missing Data Functions
-function showImportModal() {
-  var modal = document.getElementById('import-modal');
-  var clubNameEl = document.getElementById('modal-club-name');
-  var contentEl = document.getElementById('modal-content');
-
-  // Get current club info
-  var club = currentClub;
-  clubNameEl.textContent = club.name;
-
-  // Find missing age groups
-  var existingGroups = [];
-  var missingGroups = [];
-
-  ALL_AGE_GROUPS.forEach(function(ageGroup) {
-    if (playersData[clubId] && playersData[clubId][ageGroup] && playersData[clubId][ageGroup].players && playersData[clubId][ageGroup].players.length > 0) {
-      existingGroups.push({
-        age: ageGroup,
-        data: playersData[clubId][ageGroup]
-      });
-    } else {
-      missingGroups.push(ageGroup);
-    }
-  });
-
-  // Build UI
-  var html = '';
-
-  // Missing groups section
-  if (missingGroups.length > 0) {
-    html += '<h3 style="font-size:14px;margin-bottom:12px;color:#666;">Missing Age Groups (' + missingGroups.length + '):</h3>';
-    missingGroups.forEach(function(age) {
-      var scraperName = CLUB_ID_TO_SCRAPER_NAME[clubId] || clubId;
-      var fileName = 'scraped_data_' + scraperName + '_' + age.toUpperCase() + '.json';
-      html += '<div class="missing-group has-file">';
-      html += '  <div class="age-badge">' + age.toUpperCase() + '</div>';
-      html += '  <div class="file-status">Expected file: ' + fileName + '</div>';
-      html += '</div>';
-    });
-  } else {
-    html += '<p style="color:#666;font-size:13px;margin-bottom:20px;">✓ All age groups have data</p>';
-  }
-
-  // Existing groups section
-  if (existingGroups.length > 0) {
-    html += '<h3 style="font-size:14px;margin:20px 0 12px;color:#666;">Current Age Groups (' + existingGroups.length + '):</h3>';
-    existingGroups.forEach(function(group) {
-      var data = group.data;
-      html += '<div class="existing-group">';
-      html += '  <div class="age-badge" style="color:#28a745;">✓</div>';
-      html += '  <div class="age-badge">' + group.age.toUpperCase() + '</div>';
-      html += '  <div class="file-status">';
-      html += (data.players.length || 0) + ' players, last updated ' + (data.lastUpdated || 'unknown');
-      html += '  </div>';
-      html += '</div>';
-    });
-  }
-
-  // Commands section
-  if (missingGroups.length > 0) {
-    html += '<hr style="margin:20px 0;border:none;border-top:1px solid #e0e0e0;" />';
-    html += '<h3 style="font-size:14px;margin-bottom:12px;color:#666;">Commands to Run:</h3>';
-    html += '<p style="font-size:12px;color:#5a5a5a;margin-bottom:12px;">Copy and paste these commands into your terminal:</p>';
-
-    missingGroups.forEach(function(age) {
-      var scraperName = CLUB_ID_TO_SCRAPER_NAME[clubId] || clubId;
-      var fileName = 'scraped_data_' + scraperName + '_' + age.toUpperCase() + '.json';
-      var command = 'cd "/Users/stephenchase/Desktop/Kitman Database" && python3 import_to_scouting.py ' + fileName;
-
-      html += '<div class="command-box">';
-      html += '<pre>' + command + '</pre>';
-      html += '<button class="copy-btn" onclick="copyCommand(\'' + command.replace(/'/g, "\\'") + '\', event)">Copy</button>';
-      html += '</div>';
-    });
-
-    html += '<p style="font-size:11px;color:#5a5a5a;margin-top:12px;"><strong>Note:</strong> Make sure you\'ve scraped the data first using scraper3.py</p>';
-  }
-
-  contentEl.innerHTML = html;
-  modal.classList.add('active');
-}
-
+// Import Missing Data modal (opener removed — feature superseded by Supabase uploads)
 function closeImportModal(event) {
   if (!event || event.target.classList.contains('import-modal-overlay')) {
     document.getElementById('import-modal').classList.remove('active');
@@ -3879,21 +3716,6 @@ document.addEventListener('visibilitychange', async function() {
 // ══════════════════════════════════════════════════════════════
 
 var selectedPlayers = [];
-var scoutDbClient = null;
-
-// Initialize Supabase client for Scout DB
-function initScoutDb() {
-  if (!scoutDbClient && typeof supabase !== 'undefined') {
-    scoutDbClient = supabase.createClient(
-      'https://pjorqdzlzgwqpivoibyx.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqb3JxZHpsemd3cXBpdm9pYnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NjM5MjUsImV4cCI6MjA5MzEzOTkyNX0.TWTRGFbN9Pommqx6VW4N3M1KaO6L0FN0LXZ6lf2ZA5Q'
-    );
-  }
-}
-
-function escapeAttr(str) {
-  return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
 
 function togglePlayerSelect(checkbox) {
   var row = checkbox.closest('tr');
@@ -3969,8 +3791,7 @@ function updateActionBar() {
 async function addSelectedToScoutDb() {
   if (selectedPlayers.length === 0) return;
 
-  initScoutDb();
-  if (!scoutDbClient) {
+  if (!supabaseClient) {
     showToast('Failed to connect to database');
     return;
   }
@@ -3982,7 +3803,7 @@ async function addSelectedToScoutDb() {
     var p = selectedPlayers[i];
 
     // Check for duplicate
-    var { data: existing } = await scoutDbClient
+    var { data: existing } = await supabaseClient
       .from('database_players')
       .select('id')
       .eq('name', p.name)
@@ -3996,7 +3817,7 @@ async function addSelectedToScoutDb() {
     }
 
     // Insert new player
-    var { error } = await scoutDbClient.from('database_players').insert({
+    var { error } = await supabaseClient.from('database_players').insert({
       id: crypto.randomUUID(),
       name: p.name,
       club: p.club,
@@ -4023,11 +3844,7 @@ async function addSelectedToScoutDb() {
 
 async function deleteSelectedPlayers() {
   if (selectedPlayers.length === 0) return;
-  if (!isAuthenticated) {
-    pendingEdit = { type: 'bulkDelete' };
-    showPasswordModal();
-    return;
-  }
+  if (!(await ensureEditAuth())) return;
 
   if (!confirm('Delete ' + selectedPlayers.length + ' player(s) from the roster?')) return;
 
@@ -4070,5 +3887,112 @@ init();
 </div>
 
 <div style="position:fixed;bottom:8px;right:16px;font-size:10px;color:#5a5a5a;font-style:italic;z-index:100;">Created by Stephen Chase</div>
+
+<!-- ══════════ Academy chart integration (depth chart / succession) ══════════ -->
+<style>
+  .academy-chart-btn{border:0;background:#cc0000;color:#fff;border-radius:6px;width:22px;height:22px;font-size:13px;font-weight:700;cursor:pointer;line-height:1}
+  .academy-chart-btn:hover{background:#a00000}
+  #academyChartModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center;padding:16px}
+  #academyChartModal.open{display:flex}
+  #academyChartModal .acm{background:#fff;border-radius:14px;padding:24px;width:400px;max-width:94vw;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+  #academyChartModal h3{margin:0 0 4px;font-size:17px}
+  #academyChartModal .acm-sub{font-size:13px;color:#86868b;margin-bottom:8px}
+  #academyChartModal label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#86868b;margin:12px 0 4px}
+  #academyChartModal select{width:100%;border:1px solid #e5e5e7;border-radius:8px;padding:9px 10px;font-size:13px}
+  #academyChartModal .acm-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+  #academyChartModal button{border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  #academyChartModal .acm-save{background:#cc0000;color:#fff}
+  #academyChartModal .acm-cancel{background:#fff;border:1px solid #e5e5e7}
+  #academyChartModal .acm-err{color:#cc0000;font-size:12px;min-height:16px;margin-top:8px}
+</style>
+<div id="academyChartModal">
+  <div class="acm">
+    <h3 id="acmTitle">Add to Depth Chart / Succession</h3>
+    <div class="acm-sub" id="acmPlayer"></div>
+    <label>Chart</label>
+    <select id="acmChart"><option value="depth">Depth chart</option><option value="succession">Succession plan</option></select>
+    <label>Age group</label>
+    <select id="acmAge" onchange="acmFillSlots()"><option>U12</option><option>U13</option><option>U14</option><option>U15</option><option>U16</option><option>U18</option></select>
+    <label>Position</label>
+    <select id="acmSlot"></select>
+    <div class="acm-err" id="acmErr"></div>
+    <div class="acm-foot">
+      <button class="acm-cancel" onclick="document.getElementById('academyChartModal').classList.remove('open')">Cancel</button>
+      <button class="acm-save" onclick="acmSave()">Add</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  var ACM_SLOTS_11 = [['GK','GK'],['RB','RB'],['RCB','RCB'],['LCB','LCB'],['LB','LB'],['CDM','CDM'],['CM1','CM (1)'],['CM2','CM (2)'],['LW','LW'],['ST','ST'],['RW','RW'],['BENCH','Bench / Subs']];
+  var ACM_SLOTS_9  = [['GK','GK'],['RCB','RCB'],['LCB','LCB'],['CDM','CDM'],['LM','LM'],['CM1','CM (1)'],['CM2','CM (2)'],['RM','RM'],['ST','ST'],['BENCH','Bench / Subs']];
+  var acmPending = null;
+
+  window.acmFillSlots = function(){
+    var age = document.getElementById('acmAge').value;
+    var slots = age === 'U12' ? ACM_SLOTS_9 : ACM_SLOTS_11;
+    document.getElementById('acmSlot').innerHTML = slots.map(function(s){ return '<option value="'+s[0]+'">'+s[1]+'</option>'; }).join('');
+  };
+
+  window.openAcademyChartModal = function(btn){
+    acmPending = {
+      name: btn.dataset.name,
+      yob: btn.dataset.yob ? parseInt(btn.dataset.yob) : null,
+      position: btn.dataset.pos || null,
+      club: (typeof currentClub !== 'undefined' && currentClub) ? currentClub.name : (typeof clubId !== 'undefined' ? clubId : null)
+    };
+    document.getElementById('acmPlayer').textContent = acmPending.name + ' · ' + (acmPending.club || '') + (acmPending.position ? ' · ' + acmPending.position : '');
+    acmFillSlots();
+    var guess = acmPending.position === 'CM' ? 'CM1' : acmPending.position;
+    var slotSel = document.getElementById('acmSlot');
+    for (var i = 0; i < slotSel.options.length; i++) if (slotSel.options[i].value === guess) slotSel.value = guess;
+    document.getElementById('acmErr').textContent = '';
+    document.getElementById('academyChartModal').classList.add('open');
+  };
+
+  window.acmSave = async function(){
+    var err = document.getElementById('acmErr');
+    err.textContent = '';
+    if (!window.Auth || !window.sbClient){ err.textContent = 'Auth module not loaded.'; return; }
+    if (!await Auth.requireAuth()) return;
+    try {
+      // Find or create the player in academy_players (dedupe on name+yob)
+      var q = sbClient.from('academy_players').select('id').ilike('name', acmPending.name);
+      if (acmPending.yob) q = q.eq('yob', acmPending.yob);
+      var existing = await q.limit(1);
+      var playerId;
+      if (existing.data && existing.data.length){
+        playerId = existing.data[0].id;
+      } else {
+        var ins = await sbClient.from('academy_players').insert({
+          name: acmPending.name, yob: acmPending.yob, club: acmPending.club,
+          position: acmPending.position, rating_status: 'grey', source: 'map_import',
+          map_club_id: (typeof clubId !== 'undefined') ? clubId : null
+        }).select('id').single();
+        if (ins.error) throw ins.error;
+        playerId = ins.data.id;
+      }
+      var row = {
+        player_id: playerId,
+        age_group: document.getElementById('acmAge').value,
+        chart_type: document.getElementById('acmChart').value,
+        position_slot: document.getElementById('acmSlot').value,
+        sort_order: 999
+      };
+      var res = await sbClient.from('depth_assignments').insert(row);
+      if (res.error){
+        err.textContent = res.error.message.indexOf('duplicate') > -1 ? 'Already on that chart.' : res.error.message;
+        return;
+      }
+      document.getElementById('academyChartModal').classList.remove('open');
+      if (typeof showToast === 'function') showToast(acmPending.name + ' added to ' + row.age_group + ' ' + (row.chart_type === 'depth' ? 'depth chart' : 'succession plan'));
+      else alert(acmPending.name + ' added to ' + row.age_group + ' ' + (row.chart_type === 'depth' ? 'depth chart' : 'succession plan') + '. View it on the Depth Charts page.');
+    } catch(e){
+      err.textContent = e.message || 'Failed — has supabase_academy_schema.sql been run?';
+    }
+  };
+})();
+</script>
 </body>
 </html>
