@@ -1145,6 +1145,24 @@ body {
   .modal-content, .search-modal-content { width: 95%; max-width: none; margin: 10px; max-height: 90vh; }
   .search-modal-content { width: 95%; margin: 20px auto; }
 }
+
+/* ══ Apple UI layer (override) ══ */
+body{letter-spacing:-.01em}
+#sidebar-header{background:#161617 !important}
+#sidebar{border-right:1px solid #e8e8ed}
+.tool-link{border-radius:980px !important;transition:all .2s}
+.quick-filter-btn,.hg-chip,.catchment-toggle{border-radius:980px !important}
+.dropdown-checkbox-btn{border-radius:12px !important}
+.dropdown-checkbox-menu{border-radius:14px !important;box-shadow:0 12px 40px rgba(0,0,0,.18) !important;border:1px solid #e8e8ed !important}
+#sidebar input[type="text"],#sidebar input[type="search"],#sidebar select,#sidebar input[type="number"]{border-radius:10px;transition:all .2s}
+#sidebar input:focus,#sidebar select:focus{outline:none;border-color:#0071e3 !important;box-shadow:0 0 0 4px rgba(0,125,250,.18) !important}
+.modal-container{border-radius:18px !important;box-shadow:0 24px 70px rgba(0,0,0,.3) !important}
+.modal-header{border-radius:18px 18px 0 0 !important}
+.modal-btn{border-radius:980px !important;font-weight:400 !important}
+.modal-body input,.modal-body select,.modal-body textarea{border-radius:12px !important;transition:all .2s}
+.modal-body input:focus,.modal-body select:focus{outline:none;border-color:#0071e3 !important;box-shadow:0 0 0 4px rgba(0,125,250,.18) !important}
+.zoom-btn{border-radius:50% !important}
+.legend,.map-legend{border-radius:14px !important}
 </style>
 <script>
 // Initialize empty playersData - populated from Supabase
