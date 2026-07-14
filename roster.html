@@ -40,6 +40,13 @@
   .slot{position:absolute;width:160px;transform:translateX(-50%);background:rgba(255,255,255,.96);border-radius:8px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
   .slot h4{font-size:12px;font-weight:700;padding:2px 4px 6px;margin:0;display:flex;justify-content:space-between;align-items:center}
   .slot h4 .cnt{font-size:10px;color:var(--muted);font-weight:600}
+  .slot h4 .slot-add{border:0;background:var(--red);color:#fff;border-radius:5px;width:18px;height:18px;font-size:12px;font-weight:700;cursor:pointer;line-height:1;margin-left:auto}
+  .slot h4 .slot-add:hover{background:var(--red-dark)}
+  .slotpop{position:fixed;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:60;width:250px;padding:10px;display:none}
+  .slotpop h5{margin:0 0 8px;font-size:12px}
+  .slotpop input{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box}
+  .slotpop .res{margin-top:6px;max-height:220px;overflow:auto}
+  .slotpop .res .pcard{cursor:pointer;margin-bottom:4px}
   .slot.gap{outline:2px solid var(--red)}
   .slot .gap-msg{font-size:10px;color:var(--red);font-weight:700;padding:4px;text-align:center}
   .cards{min-height:26px;display:flex;flex-direction:column;gap:4px}
@@ -151,6 +158,11 @@
 </div>
 
 <div class="cardmenu" id="cardMenu"></div>
+<div class="slotpop" id="slotPop">
+  <h5 id="spTitle">Add to position</h5>
+  <input id="spSearch" placeholder="Search database…" oninput="spSearch(this.value)">
+  <div class="res" id="spResults"></div>
+</div>
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -247,7 +259,7 @@ function render(){
     const div = document.createElement('div');
     div.className = 'slot'+(isGap?' gap':'');
     div.style.left = x+'%'; div.style.top = y+'%';
-    div.innerHTML = `<h4>${LABEL[slot]||slot} <span class="cnt">${list.length}${chartType==='succession'?'/4':''}</span></h4>
+    div.innerHTML = `<h4>${LABEL[slot]||slot} <span class="cnt">${list.length}${chartType==='succession'?'/4':''}</span><button class="slot-add" title="Add player to ${LABEL[slot]||slot}" onclick="openSlotAdd(event,'${slot}')">＋</button></h4>
       <div class="cards" data-slot="${slot}">${list.map(cardHTML).join('')}</div>
       ${isGap?`<div class="gap-msg">needs ${4-list.length} more</div>`:''}`;
     wrap.appendChild(div);
@@ -355,6 +367,52 @@ async function removeFromChart(aid){
   if (error) return toast('Failed: '+error.message);
   assignments = assignments.filter(x=>x.id!==aid);
   toast(`${playersById[a.player_id].name} removed (still in database)`);
+  render();
+}
+
+// ── Per-slot quick add ──
+let spSlot = null;
+function openSlotAdd(ev, slot){
+  ev.stopPropagation();
+  spSlot = slot;
+  const pop = document.getElementById('slotPop');
+  document.getElementById('spTitle').textContent = `Add to ${LABEL[slot]||slot} — ${currentAge} ${chartType==='depth'?'depth chart':'succession plan'}`;
+  document.getElementById('spSearch').value = '';
+  spSearch('');
+  pop.style.display = 'block';
+  const r = ev.target.getBoundingClientRect();
+  pop.style.left = Math.min(r.left, innerWidth-270)+'px';
+  pop.style.top = Math.min(r.bottom+6, innerHeight-320)+'px';
+  document.getElementById('spSearch').focus();
+}
+document.addEventListener('click', e=>{ if(!e.target.closest('.slotpop') && !e.target.closest('.slot-add')) document.getElementById('slotPop').style.display='none'; });
+
+function spSearch(q){
+  const onChart = new Set(assignments.filter(a=>a.chart_type===chartType).map(a=>a.player_id));
+  let pool = Object.values(playersById).filter(p=>!onChart.has(p.id));
+  if (q && q.length>=1){
+    pool = pool.filter(p=>(p.name+' '+(p.club||'')).toLowerCase().includes(q.toLowerCase()));
+  } else {
+    // no query: suggest players whose primary position matches this slot
+    const posMatch = {CM1:'CM', CM2:'CM', LM:'LM', RM:'RM'};
+    const want = posMatch[spSlot] || spSlot;
+    const matches = pool.filter(p=>(p.position||'')===want || (p.position==='CM' && (spSlot==='CM1'||spSlot==='CM2')));
+    pool = matches.length ? matches : pool;
+  }
+  document.getElementById('spResults').innerHTML = pool.slice(0,8).map(p=>
+    `<div class="pcard ${p.rating_status}" onclick="spAdd('${p.id}')"><span>${esc(p.name)}<div class="meta">${esc(p.club||'')}${p.position?' · '+esc(p.position):''}${p.yob?' · '+p.yob:''}</div></span><span>＋</span></div>`
+  ).join('') || '<p class="hint" style="margin:6px 0 0">No matches — <a href="players.html">add them in the Database</a> first.</p>';
+}
+
+async function spAdd(pid){
+  if (!await Auth.requireAuth()) return;
+  const { data, error } = await db.from('depth_assignments').insert({
+    player_id: pid, age_group: currentAge, chart_type: chartType, position_slot: spSlot, sort_order: 999
+  }).select().single();
+  if (error) return toast('Failed: '+error.message);
+  assignments.push(data);
+  document.getElementById('slotPop').style.display='none';
+  toast(`${playersById[pid].name} → ${LABEL[spSlot]||spSlot}`);
   render();
 }
 

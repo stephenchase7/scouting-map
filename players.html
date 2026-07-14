@@ -100,6 +100,7 @@
     </div>
     <div class="actions">
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="importCSV(this.files[0])">
+      <button class="btn ghost" onclick="openTeamImport()">Import Team from Map</button>
       <button class="btn ghost" onclick="document.getElementById('csvFile').click()">Import CSV</button>
       <button class="btn red" onclick="openPlayerModal()">＋ Add Player</button>
     </div>
@@ -166,6 +167,35 @@
     <div class="foot">
       <button class="btn ghost" onclick="closeModal('playerModal')">Cancel</button>
       <button class="btn red" id="pmSave" onclick="savePlayer()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import team from map modal -->
+<div class="overlay" id="teamImportModal">
+  <div class="modal">
+    <h3>Import Team from Scouting Map</h3>
+    <div style="font-size:12px;color:var(--muted)">Pulls a full scraped roster into the player database. Players already in the database (same name + birth year) are skipped.</div>
+    <label>Club</label>
+    <select id="tiClub" onchange="tiLoadSquads()"><option value="">Loading clubs…</option></select>
+    <label>Squad</label>
+    <select id="tiSquad" onchange="tiLoadRoster()"><option value="">Select a club first</option></select>
+    <div id="tiRosterWrap" style="display:none">
+      <label style="display:flex;justify-content:space-between;align-items:center">Players <span style="font-weight:500;text-transform:none;letter-spacing:0">
+        <a href="#" onclick="tiCheckAll(true);return false">all</a> · <a href="#" onclick="tiCheckAll(false);return false">none</a> · <span id="tiCount"></span></span></label>
+      <div id="tiRoster" style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px"></div>
+    </div>
+    <label>Import as status</label>
+    <div class="statusgrid" id="tiStatus">
+      <button class="s-red" data-v="red" onclick="pickTiStatus(this)">Red Bulls player</button>
+      <button class="s-green" data-v="green" onclick="pickTiStatus(this)">Bring in</button>
+      <button class="s-yellow" data-v="yellow" onclick="pickTiStatus(this)">Monitor</button>
+      <button class="s-grey sel" data-v="grey" onclick="pickTiStatus(this)">Database</button>
+    </div>
+    <div class="err" id="tiErr"></div>
+    <div class="foot">
+      <button class="btn ghost" onclick="closeModal('teamImportModal')">Cancel</button>
+      <button class="btn red" id="tiGo" onclick="runTeamImport()">Import</button>
     </div>
   </div>
 </div>
@@ -410,6 +440,101 @@ async function saveAssignment(){
   toast(`${p.name} → ${row.age_group} ${row.chart_type==='depth'?'depth chart':'succession plan'} (${row.position_slot})`);
   closeModal('chartModal');
   render();
+}
+
+// ── Import team from map (squad_data) ──
+let tiClubs = [];
+function pickTiStatus(btn){
+  document.querySelectorAll('#tiStatus button').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+async function openTeamImport(){
+  document.getElementById('tiErr').textContent='';
+  document.getElementById('teamImportModal').classList.add('open');
+  if (!tiClubs.length){
+    const { data, error } = await db.from('clubs').select('club_id, name').order('name');
+    if (error){ document.getElementById('tiErr').textContent = 'Could not load clubs: '+error.message; return; }
+    tiClubs = data||[];
+  }
+  document.getElementById('tiClub').innerHTML = '<option value="">Select club…</option>' +
+    tiClubs.map(c=>`<option value="${esc(c.club_id)}">${esc(c.name)}</option>`).join('');
+}
+async function tiLoadSquads(){
+  const clubId = document.getElementById('tiClub').value;
+  const sq = document.getElementById('tiSquad');
+  document.getElementById('tiRosterWrap').style.display='none';
+  if (!clubId){ sq.innerHTML='<option value="">Select a club first</option>'; return; }
+  sq.innerHTML = '<option value="">Loading…</option>';
+  const { data, error } = await db.from('squad_data').select('squad, season').eq('club_id', clubId).order('season', {ascending:false});
+  if (error){ sq.innerHTML='<option value="">Error loading squads</option>'; return; }
+  if (!data.length){ sq.innerHTML='<option value="">No scraped squads for this club</option>'; return; }
+  sq.innerHTML = '<option value="">Select squad…</option>' +
+    data.map(s=>`<option value='${esc(JSON.stringify({squad:s.squad, season:s.season}))}'>${esc(s.squad)} · ${esc(s.season)}</option>`).join('');
+}
+
+let tiRosterCache = [];
+async function tiLoadRoster(){
+  const clubId = document.getElementById('tiClub').value;
+  const sqVal = document.getElementById('tiSquad').value;
+  const wrap = document.getElementById('tiRosterWrap');
+  if (!clubId || !sqVal){ wrap.style.display='none'; return; }
+  const {squad, season} = JSON.parse(sqVal);
+  const { data, error } = await db.from('squad_data').select('players').eq('club_id', clubId).eq('squad', squad).eq('season', season).single();
+  if (error){ document.getElementById('tiErr').textContent = error.message; return; }
+  const existing = new Set(players.map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
+  tiRosterCache = (data.players||[])
+    .filter(p=>p.name && !/^(away team|unknown|tbd|n\/a|player #)/i.test(p.name))
+    .map(p=>({
+      name: p.name, yob: p.yob?parseInt(p.yob):null,
+      position: p.primaryPosition || p.position || null,
+      dup: existing.has(p.name.toLowerCase()+'|'+(p.yob||''))
+    }))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('tiRoster').innerHTML = tiRosterCache.map((p,i)=>`
+    <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;padding:4px 2px;margin:0;text-transform:none;letter-spacing:0;font-weight:500;color:${p.dup?'var(--muted)':'var(--ink)'};cursor:pointer">
+      <input type="checkbox" data-i="${i}" ${p.dup?'disabled':'checked'} onchange="tiUpdateCount()" style="width:auto">
+      <span style="flex:1">${esc(p.name)}${p.dup?' <i>(already in database)</i>':''}</span>
+      <span style="color:var(--muted)">${p.yob||''} ${esc(p.position||'')}</span>
+    </label>`).join('') || '<div style="padding:8px;font-size:12px;color:var(--muted)">No players in this squad.</div>';
+  wrap.style.display='';
+  tiUpdateCount();
+}
+function tiCheckAll(on){
+  document.querySelectorAll('#tiRoster input:not(:disabled)').forEach(c=>c.checked=on);
+  tiUpdateCount();
+}
+function tiUpdateCount(){
+  const n = document.querySelectorAll('#tiRoster input:checked').length;
+  document.getElementById('tiCount').textContent = n+' selected';
+  document.getElementById('tiGo').textContent = n ? `Import ${n} player${n>1?'s':''}` : 'Import';
+}
+
+async function runTeamImport(){
+  const clubId = document.getElementById('tiClub').value;
+  const errEl = document.getElementById('tiErr');
+  errEl.textContent='';
+  const checked = [...document.querySelectorAll('#tiRoster input:checked')].map(c=>tiRosterCache[parseInt(c.dataset.i)]);
+  if (!clubId || !checked.length){ errEl.textContent='Select a club, squad, and at least one player.'; return; }
+  if (!await guard()) return;
+  const club = tiClubs.find(c=>c.club_id===clubId);
+  const status = document.querySelector('#tiStatus button.sel').dataset.v;
+  document.getElementById('tiGo').disabled = true;
+  try {
+    const rows = checked.map(p=>({
+      name: p.name, yob: p.yob, club: club ? club.name : clubId, position: p.position,
+      rating_status: status, source: 'map_import', map_club_id: clubId
+    }));
+    const ins = await db.from('academy_players').insert(rows).select();
+    if (ins.error) throw ins.error;
+    players = players.concat(ins.data); players.sort((a,b)=>a.name.localeCompare(b.name));
+    toast(`Imported ${ins.data.length} player${ins.data.length>1?'s':''} from ${club?club.name:clubId}`);
+    closeModal('teamImportModal');
+    render();
+  } catch(e){
+    errEl.textContent = e.message || 'Import failed.';
+  } finally {
+    document.getElementById('tiGo').disabled = false;
+  }
 }
 
 // ── CSV import ──
