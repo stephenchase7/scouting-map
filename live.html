@@ -82,6 +82,7 @@
   .tabbar .pchip .x:hover{color:#ff3b30}
   .tabbar .addtab{border:1.5px dashed var(--line);background:transparent;border-radius:14px;width:40px;height:40px;font-size:18px;color:var(--muted);cursor:pointer;font-family:inherit}
   .tabbar .addtab:hover{border-color:var(--blue);color:var(--blue)}
+  .tabbar .pchip .dot{width:8px;height:8px;border-radius:50%;background:#ff3b30;flex:none}
   details.session{margin-bottom:16px}
   details.session summary{list-style:none;cursor:pointer}
   details.session summary::-webkit-details-marker{display:none}
@@ -274,6 +275,7 @@ function renderTabs(){
     <span class="pchip ${i===cur?'active':''}" onclick="switchTo(${i})">
       ${d.jersey?`<span class="j">${esc(d.jersey)}</span>`:''}
       <span>${esc(d.name)||'New player'}</span>
+      ${(!(d.name||'').trim()||!d.route)?'<span class="dot" title="Needs a name and an A–D routing call before it can save"></span>':''}
       ${drafts.length>1?`<span class="x" onclick="event.stopPropagation();discardDraft(${i})">✕</span>`:''}
     </span>`).join('') +
     `<button class="addtab" onclick="addDraft()" title="Scout another player in this game">＋</button>`;
@@ -316,7 +318,7 @@ function persist(){
   })); } catch(e){}
 }
 let _pt = null;
-function onFormChange(){ clearTimeout(_pt); _pt = setTimeout(persist, 400); }
+function onFormChange(){ clearTimeout(_pt); _pt = setTimeout(persist, 400); captureForm(); renderTabs(); }
 ['pJersey','pName','pYob','pClub','pNote','sEvent','sDate','sFixture'].forEach(id=>{
   document.getElementById(id).addEventListener('input', onFormChange);
 });
@@ -428,6 +430,8 @@ async function saveActive(){
     writeForm(drafts[cur]); renderTabs(); renderCaptured(); persist();
   } catch(e){
     err.textContent = e.message || 'Save failed.';
+    toast(e.message || 'Save failed.');
+    err.scrollIntoView({behavior:'smooth', block:'center'});
   } finally {
     document.getElementById('saveBtn').disabled = false;
   }
@@ -448,8 +452,13 @@ async function saveAll(){
   cur = 0;
   writeForm(drafts[cur]); renderTabs(); renderCaptured(); persist();
   document.getElementById('saveAllBtn').disabled = false;
-  if (failed.length) err.textContent = failed.join(' · ');
-  toast(`Saved ${saved} player${saved!==1?'s':''}${failed.length?` — ${failed.length} need attention`:''}`);
+  if (failed.length){
+    err.textContent = failed.join(' · ');
+    toast(`Saved ${saved} — fix: ${failed[0]}`);
+    err.scrollIntoView({behavior:'smooth', block:'center'});
+  } else {
+    toast(`Saved ${saved} player${saved!==1?'s':''}`);
+  }
 }
 
 function renderCaptured(){
