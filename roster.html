@@ -166,7 +166,7 @@
       <h3>Add from database</h3>
       <input class="search" id="searchBox" placeholder="Search all players…" oninput="searchDB(this.value)">
       <div id="searchResults"></div>
-      <p class="hint">Searches the full player database — academy, trialists, watchlist, map imports. Pick a position to drop them onto this chart. Missing someone? <a href="players.html">Add them in the Database</a>.</p>
+      <p class="hint">Searches the player database <b>and every scraped roster on the map</b>. Map players are added to the database automatically when you place them. Missing someone? <a href="players.html">Add them in the Database</a>.</p>
     </div>
     <div class="box" id="benchBox">
       <h3>Substitutes <span id="subCount"></span></h3>
@@ -492,9 +492,41 @@ function spSearch(q){
     const matches = pool.filter(p=>(p.position||'')===want || (p.position==='CM' && (spSlot==='CM1'||spSlot==='CM2')));
     pool = matches.length ? matches : pool;
   }
-  document.getElementById('spResults').innerHTML = pool.slice(0,8).map(p=>
+  document.getElementById('spResults').innerHTML = (pool.slice(0,8).map(p=>
     `<div class="pcard ${p.rating_status}" onclick="spAdd('${p.id}')"><span>${esc(p.name)}<div class="meta">${esc(p.club||'')}${p.position?' · '+esc(p.position):''}${p.yob?' · '+p.yob:''}</div></span><span>＋</span></div>`
-  ).join('') || '<p class="hint" style="margin:6px 0 0">No matches — <a href="players.html">add them in the Database</a> first.</p>';
+  ).join('') || '<p class="hint" style="margin:6px 0 0">No database matches.</p>') +
+  '<div id="spMapResults"></div>';
+  clearTimeout(_spTimer);
+  if (q && q.length>=2) _spTimer = setTimeout(()=>spSearchMap(q), 350);
+}
+let _spTimer = null;
+let spMapHits = [];
+async function spSearchMap(q){
+  const el = document.getElementById('spMapResults');
+  if (!el) return;
+  const { data, error } = await db.rpc('search_map_players', {q});
+  if (error) return;
+  const known = new Set(Object.values(playersById).map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
+  spMapHits = (data||[]).filter(m=>!known.has((m.player_name||'').toLowerCase()+'|'+(m.yob||''))).slice(0,5);
+  if (!spMapHits.length) return;
+  el.innerHTML = '<p class="hint" style="margin:8px 0 4px;font-weight:600;color:var(--ink)">From the map</p>' +
+    spMapHits.map((m,i)=>`<div class="pcard grey" onclick="spAddMap(${i})"><span>${esc(m.player_name)}<div class="meta">${esc(m.club_name||'')}${m.yob?' · '+m.yob:''}${m.pos?' · '+esc(m.pos):''}</div></span><span>＋</span></div>`).join('');
+}
+async function spAddMap(i){
+  if (!await Auth.requireAuth()) return;
+  const m = spMapHits[i];
+  if (!m) return;
+  try {
+    const player = await ensureMapPlayer(m);
+    const { data, error } = await db.from('depth_assignments').insert({
+      player_id: player.id, age_group: currentAge, chart_type: chartType, position_slot: spSlot, sort_order: 999
+    }).select().single();
+    if (error) throw error;
+    assignments.push(data);
+    document.getElementById('slotPop').style.display='none';
+    toast(`${player.name} → database + ${LABEL[spSlot]||spSlot}`);
+    render();
+  } catch(e){ toast('Failed: '+e.message); }
 }
 
 async function spAdd(pid){
@@ -510,23 +542,77 @@ async function spAdd(pid){
 }
 
 // ── Search & add ──
+let mapHits = [];
+let _mapTimer = null;
+function slotOptions(){
+  const fKey = formations[currentAge];
+  return FORMATIONS[fKey].slots.map(([s])=>`<option value="${s}">${LABEL[s]||s}</option>`).join('')
+    + (chartType==='depth'?'<option value="BENCH">Bench</option>':'');
+}
 function searchDB(q){
   const box = document.getElementById('searchResults');
+  clearTimeout(_mapTimer);
   if (!q || q.length<2){ box.innerHTML=''; return; }
   const onChart = new Set(assignments.filter(a=>a.chart_type===chartType).map(a=>a.player_id));
   const hits = Object.values(playersById)
     .filter(p=>(p.name+' '+(p.club||'')).toLowerCase().includes(q.toLowerCase()))
     .slice(0,6);
-  const fKey = formations[currentAge];
-  const slotOpts = FORMATIONS[fKey].slots.map(([s])=>`<option value="${s}">${LABEL[s]||s}</option>`).join('')
-    + (chartType==='depth'?'<option value="BENCH">Bench</option>':'');
-  box.innerHTML = hits.map(p=>{
+  const slotOpts = slotOptions();
+  box.innerHTML = (hits.map(p=>{
     const taken = onChart.has(p.id);
     return `<div class="result">
       <div class="pcard ${p.rating_status}" style="cursor:default"><span>${esc(p.name)}<div class="meta">${esc(p.club||'')}${p.position?' · '+esc(p.position):''}${taken?' · already on chart':''}</div></span></div>
-      ${taken?'':`<select id="slot-${p.id}">${slotOpts}</select><button class="dots" style="border:0;background:var(--red);color:#fff;border-radius:6px;padding:6px 9px;cursor:pointer;font-weight:700" onclick="addFromSearch('${p.id}')">＋</button>`}
+      ${taken?'':`<select id="slot-${p.id}">${slotOpts}</select><button class="dots" style="border:0;background:var(--blue);color:#fff;border-radius:6px;padding:6px 9px;cursor:pointer;font-weight:700" onclick="addFromSearch('${p.id}')">＋</button>`}
     </div>`;
-  }).join('') || '<p class="hint" style="margin:0">No matches — <a href="players.html">add them in the Database</a>.</p>';
+  }).join('') || '<p class="hint" style="margin:0">No database matches.</p>') +
+  '<div id="mapResults"><p class="hint" style="margin:6px 0 0">Searching map rosters…</p></div>';
+  _mapTimer = setTimeout(()=>searchMapRosters(q), 350);
+}
+async function searchMapRosters(q){
+  const el = document.getElementById('mapResults');
+  if (!el) return;
+  const { data, error } = await db.rpc('search_map_players', {q});
+  if (error){ el.innerHTML = '<p class="hint" style="margin:6px 0 0">Map roster search unavailable.</p>'; return; }
+  const known = new Set(Object.values(playersById).map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
+  mapHits = (data||[]).filter(m=>!known.has((m.player_name||'').toLowerCase()+'|'+(m.yob||''))).slice(0,6);
+  if (!mapHits.length){ el.innerHTML=''; return; }
+  const slotOpts = slotOptions();
+  el.innerHTML = '<p class="hint" style="margin:8px 0 4px;font-weight:600;color:var(--ink)">From the map — added to the database automatically</p>' +
+    mapHits.map((m,i)=>`<div class="result">
+      <div class="pcard grey" style="cursor:default"><span>${esc(m.player_name)}<div class="meta">${esc(m.club_name||'')} ${m.squad?('· '+esc(m.squad).toUpperCase()):''}${m.yob?' · '+m.yob:''}${m.pos?' · '+esc(m.pos):''}</div></span></div>
+      <select id="mslot-${i}">${slotOpts}</select><button class="dots" style="border:0;background:var(--blue);color:#fff;border-radius:6px;padding:6px 9px;cursor:pointer;font-weight:700" onclick="addMapFromSearch(${i}, 'mslot-${i}')">＋</button>
+    </div>`).join('');
+}
+async function ensureMapPlayer(m){
+  // reuse existing database record if present, else create one (source: map_import)
+  const existing = Object.values(playersById).find(p=>
+    p.name.toLowerCase()===(m.player_name||'').toLowerCase() && (p.yob||null)===(m.yob||null));
+  if (existing) return existing;
+  const { data, error } = await db.from('academy_players').insert({
+    name: m.player_name, yob: m.yob, club: m.club_name, position: m.pos,
+    rating_status: 'grey', source: 'map_import', map_club_id: m.club_id
+  }).select().single();
+  if (error) throw error;
+  playersById[data.id] = data;
+  return data;
+}
+async function addMapFromSearch(i, selId){
+  if (!await Auth.requireAuth()) return;
+  const m = mapHits[i];
+  if (!m) return;
+  const slot = document.getElementById(selId).value;
+  try {
+    const player = await ensureMapPlayer(m);
+    const { data, error } = await db.from('depth_assignments').insert({
+      player_id: player.id, age_group: currentAge, chart_type: chartType, position_slot: slot, sort_order: 999
+    }).select().single();
+    if (error) throw error;
+    assignments.push(data);
+    toast(`${player.name} → database + ${LABEL[slot]||slot}`);
+    document.getElementById('searchBox').value='';
+    document.getElementById('searchResults').innerHTML='';
+    render();
+  } catch(e){ toast('Failed: '+e.message); }
 }
 
 async function addFromSearch(pid){
