@@ -312,7 +312,7 @@ function render(){
   layout.forEach(([slot,dx,dy])=>{
     const pos = overrides[slot] || [dx,dy];
     const x = pos[0], y = pos[1];
-    const list = mine.filter(a=>a.position_slot===slot);
+    const list = mine.filter(a=>a.position_slot===slot).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
     const isGap = chartType==='succession' && list.length<4;
     const div = document.createElement('div');
     div.className = 'slot'+(isGap?' gap':'');
@@ -333,13 +333,13 @@ function render(){
   document.getElementById('pageTitle').textContent = chartType==='depth' ? 'Depth Charts' : 'Succession Plan';
 
   // bench (depth only)
-  const bench = mine.filter(a=>a.position_slot==='BENCH');
+  const bench = mine.filter(a=>a.position_slot==='BENCH').sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
   document.getElementById('benchBox').style.display = chartType==='depth' ? '' : 'none';
   document.getElementById('benchCards').innerHTML = bench.map(cardHTML).join('');
   document.getElementById('subCount').textContent = bench.length ? bench.length+' players' : '';
 
   // unassigned tray (slots not in this formation)
-  const tray = mine.filter(a=>!slotNames.includes(a.position_slot) && a.position_slot!=='BENCH');
+  const tray = mine.filter(a=>!slotNames.includes(a.position_slot) && a.position_slot!=='BENCH').sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
   document.getElementById('trayBox').style.display = tray.length ? '' : 'none';
   document.getElementById('trayCards').innerHTML = tray.map(cardHTML).join('');
 
@@ -374,9 +374,11 @@ async function onDrop(e){
   const results = await Promise.all(updates);
   const err = results.find(r=>r.error);
   if (err){ toast('Save failed: '+err.error.message); await loadAge(); return; }
+  const p = playersById[a.player_id];
   if (toSlot!==fromSlot){
-    const p = playersById[a.player_id];
     toast(`${p.name}: ${LABEL[fromSlot]||fromSlot} → ${LABEL[toSlot]||toSlot} ✓`);
+  } else {
+    toast(`${p.name}: order updated ✓`);
   }
   render();
 }
