@@ -88,8 +88,17 @@
   .result{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
   .result .pcard{flex:1;cursor:pointer}
   .result select{border:1px solid var(--line);border-radius:8px;font-size:11px;padding:4px;max-width:78px;font-family:inherit}
-  #gapList{font-size:13px;line-height:2;letter-spacing:-.01em}
-  #gapList b{color:#ff3b30;font-weight:600}
+  .prio{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--hair)}
+  .prio:last-child{border-bottom:none}
+  .prio .pos{font-size:14px;font-weight:600;width:40px}
+  .prio .detail{flex:1;font-size:11px;color:var(--muted);line-height:1.4}
+  .prio .detail b{display:block;font-size:12px;color:var(--ink);font-weight:600}
+  .ptier{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:980px;color:#fff;flex:none}
+  .ptier.crit{background:#ff3b30}
+  .ptier.watch{background:#ff9500}
+  .ptier.ok{background:#34c759}
+  details.covered summary{font-size:12px;color:var(--muted);cursor:pointer;list-style:none;padding:8px 2px}
+  details.covered summary::-webkit-details-marker{display:none}
   .cardmenu{position:fixed;background:#fff;border:1px solid var(--hair);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:50;width:230px;overflow:hidden;display:none;padding:6px 0}
   .cardmenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:10px 16px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:-.01em;color:var(--ink)}
   .cardmenu button:hover{background:var(--grey)}
@@ -170,9 +179,9 @@
       <p class="hint">These players are pinned to positions that don't exist in the current formation. Drag them onto the pitch.</p>
     </div>
     <div class="box" id="gapBox">
-      <h3>Succession gaps <span id="gapAge"></span></h3>
+      <h3>Recruitment priorities <span id="gapAge"></span></h3>
       <div id="gapList"></div>
-      <p class="hint">Positions with fewer than 4 succession candidates — the recruitment priority list.</p>
+      <p class="hint">Squad depth + succession pipeline, ranked by urgency. Critical = 1 or fewer in squad and under 2 in the pipeline.</p>
     </div>
   </div>
 </div>
@@ -343,11 +352,25 @@ function render(){
   document.getElementById('trayBox').style.display = tray.length ? '' : 'none';
   document.getElementById('trayCards').innerHTML = tray.map(cardHTML).join('');
 
-  // succession gaps
+  // recruitment priorities: squad depth + succession pipeline per slot
   document.getElementById('gapAge').textContent = currentAge;
-  const gaps = layout.filter(([s])=> succ.filter(a=>a.position_slot===s).length<4)
-    .map(([s])=>`<b>${LABEL[s]||s}</b> — ${succ.filter(a=>a.position_slot===s).length}/4`);
-  document.getElementById('gapList').innerHTML = gaps.length ? gaps.join('<br>') : '<span style="color:var(--c-green-b);font-weight:700">✓ All positions covered</span>';
+  const dep = assignments.filter(a=>a.chart_type==='depth' && a.position_slot!=='BENCH');
+  const rows = layout.map(([s])=>{
+    const sq = dep.filter(a=>a.position_slot===s).length;
+    const pp = succ.filter(a=>a.position_slot===s).length;
+    const tier = (sq<=1 && pp<2) ? 'crit' : (sq>=3 && pp>=4) ? 'ok' : 'watch';
+    return {s, label: LABEL[s]||s, sq, pp, tier};
+  });
+  const order = {crit:0, watch:1, ok:2};
+  rows.sort((a,b)=> order[a.tier]-order[b.tier] || (a.sq+a.pp)-(b.sq+b.pp));
+  const rowHTML = r => `<div class="prio"><span class="pos">${r.label}</span>
+    <div class="detail"><b>${r.sq} in squad · ${r.pp} in pipeline</b>${r.tier==='crit'?(r.sq===0?'no options at all':r.sq===1?'one injury from a hole':''):''}</div>
+    <span class="ptier ${r.tier}">${r.tier==='crit'?'CRITICAL':r.tier==='watch'?'WATCH':'COVERED'}</span></div>`;
+  const active = rows.filter(r=>r.tier!=='ok');
+  const covered = rows.filter(r=>r.tier==='ok');
+  document.getElementById('gapList').innerHTML =
+    (active.length ? active.map(rowHTML).join('') : '<div style="color:#34c759;font-weight:600;font-size:13px;padding:6px 2px">✓ Every position is covered</div>') +
+    (covered.length ? `<details class="covered"><summary>${covered.length} position${covered.length>1?'s':''} covered ▸</summary>${covered.map(rowHTML).join('')}</details>` : '');
 
   // drag & drop
   document.querySelectorAll('#pitch .cards, #benchCards, #trayCards').forEach(el=>{
