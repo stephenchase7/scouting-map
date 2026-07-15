@@ -1317,8 +1317,8 @@ var playersData = {};
           <input type="checkbox" id="catchment-1-check">
           <div class="catchment-indicator catchment-1"></div>
           <label for="catchment-1-check">
-            Primary (75mi radius)
-            <small>NJ, NYC, CT, Eastern PA</small>
+            Primary (75mi from Red Bull Arena)
+            <small>Excludes Philadelphia Union 25mi zone</small>
           </label>
         </div>
         <div class="catchment-toggle" onclick="toggleCatchment(2, this)">
@@ -2214,8 +2214,12 @@ function toggleSection(sectionName) {
 }
 
 // ── CATCHMENT AREAS ──
-var NYRB_LAT = 40.8167;
+var NYRB_LAT = 40.8167;   // training facility (drive distances)
 var NYRB_LNG = -74.4028;
+var ARENA_LAT = 40.7368;  // Red Bull Arena, Harrison NJ — territorial anchor
+var ARENA_LNG = -74.1503;
+var UNION_LAT = 39.8319;  // Subaru Park, Chester PA — Philadelphia Union anchor
+var UNION_LNG = -75.3785;
 var MILES_TO_METERS = 1609.34;
 
 // Catchment area layers
@@ -2240,7 +2244,7 @@ var CATCHMENT_2_STATES = ['DC', 'MD', 'VA', 'PA', 'CT', 'MA', 'NH', 'RI', 'NJ', 
 function drawCatchment1Circle() {
   if (!catchmentLayers.circle75) {
     catchmentLayers.circle75 = new google.maps.Circle({
-      center: {lat: NYRB_LAT, lng: NYRB_LNG},
+      center: {lat: ARENA_LAT, lng: ARENA_LNG},
       radius: 75 * MILES_TO_METERS,
       strokeColor: '#0071e3',
       strokeWeight: 2,
@@ -2248,28 +2252,39 @@ function drawCatchment1Circle() {
       fillOpacity: 0.08,
       map: map
     });
-
-    // Add label marker
     catchmentLayers.circle75Label = new google.maps.Marker({
-      position: {lat: NYRB_LAT + 0.9, lng: NYRB_LNG},
+      position: {lat: ARENA_LAT + 1.02, lng: ARENA_LNG},
       map: map,
       icon: {
-        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="70" height="20"><rect fill="#0071e3" width="70" height="20" rx="3"/><text x="35" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="600" font-family="sans-serif">75 mi radius</text></svg>'),
-        anchor: new google.maps.Point(35, 10)
+        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="130" height="20"><rect fill="#0071e3" width="130" height="20" rx="10"/><text x="65" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="600" font-family="sans-serif">75 mi — Red Bull Arena</text></svg>'),
+        anchor: new google.maps.Point(65, 10)
+      }
+    });
+    // Philadelphia Union 25-mile exclusion zone — off limits
+    catchmentLayers.unionCircle = new google.maps.Circle({
+      center: {lat: UNION_LAT, lng: UNION_LNG},
+      radius: 25 * MILES_TO_METERS,
+      strokeColor: '#ff3b30',
+      strokeWeight: 2,
+      fillColor: '#ff3b30',
+      fillOpacity: 0.12,
+      map: map
+    });
+    catchmentLayers.unionLabel = new google.maps.Marker({
+      position: {lat: UNION_LAT, lng: UNION_LNG},
+      map: map,
+      icon: {
+        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="150" height="20"><rect fill="#ff3b30" width="150" height="20" rx="10"/><text x="75" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="600" font-family="sans-serif">Union 25 mi — off limits</text></svg>'),
+        anchor: new google.maps.Point(75, 10)
       }
     });
   }
 }
 
 function removeCatchment1Circle() {
-  if (catchmentLayers.circle75) {
-    catchmentLayers.circle75.setMap(null);
-    catchmentLayers.circle75 = null;
-  }
-  if (catchmentLayers.circle75Label) {
-    catchmentLayers.circle75Label.setMap(null);
-    catchmentLayers.circle75Label = null;
-  }
+  ['circle75','circle75Label','unionCircle','unionLabel'].forEach(function(k){
+    if (catchmentLayers[k]) { catchmentLayers[k].setMap(null); catchmentLayers[k] = null; }
+  });
 }
 
 // Calculate distance from NYRB in miles
@@ -2278,10 +2293,17 @@ function distanceFromNYRB(lat, lng) {
 }
 
 // Check if club is in catchment area
+function distanceFromArena(lat, lng) {
+  return haversineMiles(ARENA_LAT, ARENA_LNG, lat, lng);
+}
+function distanceFromUnion(lat, lng) {
+  return haversineMiles(UNION_LAT, UNION_LNG, lat, lng);
+}
 function isInCatchment(club, catchmentNum) {
   if (catchmentNum === 1) {
-    // Within 75 miles of NYRB
-    return distanceFromNYRB(club.lat, club.lng) <= 75;
+    // Within 75 miles of Red Bull Arena AND outside the Union's 25-mile zone
+    return distanceFromArena(club.lat, club.lng) <= 75 &&
+           distanceFromUnion(club.lat, club.lng) > 25;
   } else if (catchmentNum === 2) {
     // Catchment 1 OR in regional states
     return isInCatchment(club, 1) || CATCHMENT_2_STATES.includes(club.state);
