@@ -3999,6 +3999,9 @@ init();
   var ACM_SLOTS_11 = [['GK','GK'],['RB','RB'],['RCB','RCB'],['LCB','LCB'],['LB','LB'],['CDM','CDM'],['CM1','CM (1)'],['CM2','CM (2)'],['LW','LW'],['ST','ST'],['RW','RW'],['BENCH','Bench / Subs']];
   var ACM_SLOTS_9  = [['GK','GK'],['RCB','RCB'],['LCB','LCB'],['CDM','CDM'],['LM','LM'],['CM1','CM (1)'],['CM2','CM (2)'],['RM','RM'],['ST','ST'],['BENCH','Bench / Subs']];
   var acmPending = null;
+  if (window.sbClient) sbClient.from('academy_settings').select('value').eq('key','season').single().then(function(r){
+    if (r.data && r.data.value && r.data.value.end_year) window.__acmSeasonEnd = r.data.value.end_year;
+  });
 
   window.acmFillSlots = function(){
     var age = document.getElementById('acmAge').value;
@@ -4014,9 +4017,9 @@ init();
       club: (typeof currentClub !== 'undefined' && currentClub) ? currentClub.name : (typeof clubId !== 'undefined' ? clubId : null)
     };
     document.getElementById('acmPlayer').textContent = acmPending.name + ' · ' + (acmPending.club || '') + (acmPending.position ? ' · ' + acmPending.position : '');
-    // Suggest age group from birth year (2026/27 season: U = 2027 - YOB)
+    // Suggest age group from birth year (U = season end year - YOB)
     if (acmPending.yob){
-      var band = 'U' + (2027 - acmPending.yob);
+      var band = 'U' + ((window.__acmSeasonEnd || 2027) - acmPending.yob);
       if (band === 'U17') band = 'U18';
       var ageSel = document.getElementById('acmAge');
       for (var k = 0; k < ageSel.options.length; k++) if (ageSel.options[k].value === band) ageSel.value = band;

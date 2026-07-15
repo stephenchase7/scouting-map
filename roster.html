@@ -119,6 +119,7 @@
         <button id="segSucc" onclick="setChart('succession')">Succession</button>
       </div>
       <span class="hinttext" id="chartHint">Drag cards between positions — changes save automatically</span>
+      <button id="seasonBtn" onclick="openRollover()" title="Season settings" style="margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:980px;padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--muted)">Season …</button>
     </div>
     <div class="pitch" id="pitch">
       <div class="line" style="left:5%;top:2%;width:90%;height:96%"></div>
@@ -204,6 +205,7 @@ const AGE_GROUPS = ['U12','U13','U14','U15','U16','U18'];
 
 let currentAge = 'U13';
 let chartType = 'depth';
+let seasonEndYear = 2027; // fallback; real value lives in academy_settings key 'season' 
 let formations = {};       // age → formation key (from academy_settings)
 let playersById = {};      // id → player
 let assignments = [];      // rows for current age group (both chart types)
@@ -220,7 +222,9 @@ async function init(){
   (s.data||[]).forEach(x=>{
     const m = x.key.match(/^formation:(U\d+)$/);
     if (m){ let val = x.value; if (typeof val === 'string') val = val.replace(/"/g,''); formations[m[1]] = val; }
+    if (x.key === 'season' && x.value && x.value.end_year) seasonEndYear = x.value.end_year;
   });
+  updateSeasonBtn();
   AGE_GROUPS.forEach(a=>{ if(!formations[a]||!FORMATIONS[formations[a]]) formations[a]=DEFAULT_FORMATION(a); });
   await loadAge();
 }
@@ -480,6 +484,55 @@ document.querySelectorAll('.age').forEach(b=>b.onclick=async ()=>{
   currentAge = b.dataset.age;
   await loadAge();
 });
+
+// ── Season rollover ──
+function seasonLabel(endYear){ return `${endYear-1}/${String(endYear).slice(2)}`; }
+function updateSeasonBtn(){
+  document.getElementById('seasonBtn').textContent = `Season ${seasonLabel(seasonEndYear)}`;
+}
+async function openRollover(){
+  const next = seasonEndYear + 1;
+  const msg = `Roll over to the ${seasonLabel(next)} season?\n\nThis will, on EVERY depth chart and succession plan:\n• Move U12 → U13, U13 → U14, U14 → U15, U15 → U16, U16 → U18\n• Remove U18 players from charts and mark them as graduates (they stay in the database)\n• Update the season used for age-group suggestions\n\nThis cannot be undone automatically. Continue?`;
+  if (!confirm(msg)) return;
+  if (!await Auth.requireAuth()) return;
+  toast('Rolling over season…');
+  try {
+    const { data: rows, error } = await db.from('depth_assignments').select('*');
+    if (error) throw error;
+    const PROMOTE = {U16:'U18', U15:'U16', U14:'U15', U13:'U14', U12:'U13'};
+    let promoted = 0, merged = 0;
+    // 1. U18 graduates: remove assignments, flag players
+    const grads = rows.filter(r=>r.age_group==='U18');
+    const gradPlayerIds = [...new Set(grads.map(r=>r.player_id))];
+    if (grads.length){
+      const del = await db.from('depth_assignments').delete().eq('age_group','U18');
+      if (del.error) throw del.error;
+      for (const pid of gradPlayerIds){
+        await db.from('academy_players').update({next_action: 'Graduated U18 ' + seasonLabel(seasonEndYear)}).eq('id', pid);
+      }
+    }
+    // 2. Promote bands, highest first to avoid collisions
+    for (const band of ['U16','U15','U14','U13','U12']){
+      for (const r of rows.filter(x=>x.age_group===band)){
+        const res = await db.from('depth_assignments').update({age_group: PROMOTE[band]}).eq('id', r.id);
+        if (res.error){
+          if ((res.error.message||'').includes('duplicate')){
+            await db.from('depth_assignments').delete().eq('id', r.id); // already on higher chart (was playing up)
+            merged++;
+          } else throw res.error;
+        } else promoted++;
+      }
+    }
+    // 3. Save new season
+    seasonEndYear = next;
+    await db.from('academy_settings').upsert({key:'season', value:{end_year: next, label: seasonLabel(next)}, updated_at:new Date().toISOString()});
+    updateSeasonBtn();
+    await loadAge();
+    toast(`Season ${seasonLabel(next)}: ${promoted} players promoted, ${gradPlayerIds.length} U18 graduates flagged${merged?`, ${merged} play-up duplicates merged`:''}`);
+  } catch(e){
+    toast('Rollover failed: ' + e.message);
+  }
+}
 
 function toast(msg){
   const t=document.getElementById('toast');
