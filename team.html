@@ -2589,15 +2589,6 @@ function renderRoster() {
       '</div>';
   }
 
-  // Goals per game average
-  if (data.totalTeamGoals && data.matchesPlayed) {
-    var gpg = (data.totalTeamGoals / data.matchesPlayed).toFixed(1);
-    html += '<div class="stat-item">' +
-      '<span class="label">Goals/Game</span>' +
-      '<span class="value">' + gpg + '</span>' +
-      '</div>';
-  }
-
   // Date filter (for future per-match data)
   html += '<div class="date-filter">' +
     '<label>Filter:</label>' +
