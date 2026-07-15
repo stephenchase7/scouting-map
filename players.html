@@ -433,12 +433,21 @@ function fillSlots(){
   const slots = age==='U12' ? SLOTS_9 : SLOTS_11;
   document.getElementById('cmSlot').innerHTML = slots.map(s=>`<option value="${s[0]}">${s[1]}</option>`).join('');
 }
+const SEASON_END_YEAR = 2027; // 2026/27 season — bump each July 1
+function ageGroupForYob(yob){
+  if (!yob) return null;
+  const band = 'U' + (SEASON_END_YEAR - yob);
+  return ['U12','U13','U14','U15','U16','U18'].includes(band) ? band
+       : (SEASON_END_YEAR - yob === 17 || SEASON_END_YEAR - yob === 18) ? 'U18' : null;
+}
 function openChartModal(playerId, chartType){
   chartPlayerId = playerId;
   const p = players.find(x=>x.id===playerId);
   document.getElementById('cmTitle').textContent = chartType==='depth' ? 'Add to Depth Chart' : 'Add to Succession Plan';
-  document.getElementById('cmPlayer').textContent = `${p.name} · ${p.club||'no club'} · ${p.position||'no position'}`;
+  document.getElementById('cmPlayer').textContent = `${p.name} · ${p.club||'no club'} · ${p.position||'no position'}${p.yob?` · ${p.yob} → ${ageGroupForYob(p.yob)||'?'} this season`:''}`;
   document.getElementById('cmChart').value = chartType;
+  const ag = ageGroupForYob(p.yob);
+  if (ag) document.getElementById('cmAge').value = ag;
   fillSlots();
   // preselect their primary position if it maps to a slot
   const map = {CM:'CM1', CB:'RCB'};

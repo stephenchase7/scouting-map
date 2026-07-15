@@ -4014,6 +4014,13 @@ init();
       club: (typeof currentClub !== 'undefined' && currentClub) ? currentClub.name : (typeof clubId !== 'undefined' ? clubId : null)
     };
     document.getElementById('acmPlayer').textContent = acmPending.name + ' · ' + (acmPending.club || '') + (acmPending.position ? ' · ' + acmPending.position : '');
+    // Suggest age group from birth year (2026/27 season: U = 2027 - YOB)
+    if (acmPending.yob){
+      var band = 'U' + (2027 - acmPending.yob);
+      if (band === 'U17') band = 'U18';
+      var ageSel = document.getElementById('acmAge');
+      for (var k = 0; k < ageSel.options.length; k++) if (ageSel.options[k].value === band) ageSel.value = band;
+    }
     acmFillSlots();
     var guess = acmPending.position === 'CM' ? 'CM1' : acmPending.position;
     var slotSel = document.getElementById('acmSlot');
