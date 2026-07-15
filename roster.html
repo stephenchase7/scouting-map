@@ -116,6 +116,26 @@
   .mdotpos .cnt{position:absolute;top:-6px;right:-6px;background:#fff;border-radius:50%;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.25)}
   .mdotpos.red{border-color:#cc0000}.mdotpos.yellow{border-color:#e6a700}.mdotpos.green{border-color:#2e9e4f}.mdotpos.blue{border-color:#0071e3}.mdotpos.purple{border-color:#7d3ce8}.mdotpos.grey{border-color:#98989d}
   .mdotpos.gap{border-color:#ff3b30;border-style:dashed}
+  .msheet{display:none;position:fixed;inset:0;z-index:75;background:rgba(120,140,125,.45);-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);padding:max(20px,env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));overflow:auto}
+  .msheet.open{display:block}
+  .msheet-head{display:flex;align-items:center;gap:10px;margin:26px 0 18px}
+  .msheet-head h2{margin:0;font-size:30px;font-weight:600;letter-spacing:-.015em;color:var(--ink);flex:1;line-height:1.15}
+  .msheet-head span{font-size:13px;color:rgba(29,29,31,.65);font-weight:500}
+  .msheet-btn{border:0;background:rgba(255,255,255,.75);border-radius:50%;width:36px;height:36px;font-size:17px;cursor:pointer;font-family:inherit;color:var(--ink);flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .mrow{display:flex;align-items:center;gap:14px;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.10)}
+  .mrow .avatar{width:52px;height:52px;border-radius:10px;background:#12385e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;flex:none}
+  .mrow .info{flex:1;min-width:0}
+  .mrow .info b{display:block;font-size:19px;font-weight:600;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mrow .info small{font-size:13px;color:rgba(29,29,31,.6);font-weight:500}
+  .mrow .dots{color:rgba(29,29,31,.55);font-size:17px;padding:8px 10px;border-radius:980px;cursor:pointer}
+  .mrow.red{background:#fbd9d7}
+  .mrow.yellow{background:#faeebc}
+  .mrow.green{background:#cdeed3}
+  .mrow.blue{background:#bfe0f2}
+  .mrow.purple{background:#e4d5f7}
+  .mrow.orange{background:#ffe3c2}
+  .mrow.grey{background:#e7e9ec}
+  .mrow.ghost{opacity:.4}
   .msec{background:#fff;border:1px solid var(--hair);border-radius:14px;margin-bottom:10px;padding:10px 12px}
   .msec h4{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
   .msec h4 .cnt{font-size:11px;color:var(--muted);font-weight:500}
@@ -221,15 +241,14 @@
   </div>
 </div>
 
-<div id="mSheetBack" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:70" onclick="closeSheet()"></div>
-<div id="mSheet" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;z-index:71;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:70vh;overflow:auto;box-shadow:0 -10px 40px rgba(0,0,0,.2)">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-    <b id="mSheetTitle" style="font-size:16px"></b>
-    <span id="mSheetCnt" style="font-size:12px;color:var(--muted)"></span>
-    <button class="slot-add" style="width:28px;height:28px;font-size:18px" onclick="openSlotAdd(event, sheetSlot)">＋</button>
-    <button style="margin-left:auto;border:0;background:var(--grey);border-radius:980px;width:28px;height:28px;font-size:13px;cursor:pointer" onclick="closeSheet()">✕</button>
+<div id="mSheet" class="msheet" onclick="if(event.target===this)closeSheet()">
+  <div class="msheet-head">
+    <h2 id="mSheetTitle"></h2>
+    <span id="mSheetCnt"></span>
+    <button class="msheet-btn" onclick="openSlotAdd(event, sheetSlot)">＋</button>
+    <button class="msheet-btn" onclick="closeSheet()">✕</button>
   </div>
-  <div class="cards" id="mSheetCards" style="max-height:none"></div>
+  <div id="mSheetCards"></div>
 </div>
 
 <div class="cardmenu" id="cardMenu"></div>
@@ -935,26 +954,42 @@ function renderMobile(layout, mine, succ, overrides){
   // refresh open sheet
   if (sheetSlot) fillSheet();
 }
+const FULLNAME = {GK:'Goalkeeper', RB:'Right Back', RCB:'Right Centre Back', LCB:'Left Centre Back',
+  CB:'Centre Back', LB:'Left Back', CDM:'Defensive Midfield', CM1:'Centre Midfield', CM2:'Centre Midfield',
+  AM:'Attacking Midfield', LM:'Left Midfield', RM:'Right Midfield', LW:'Left Wing', RW:'Right Wing',
+  ST:'Striker', BENCH:'Substitutes'};
+function initials(name){
+  return (name||'').split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
 function openSheet(slot){
   sheetSlot = slot;
-  document.getElementById('mSheetBack').style.display='';
-  document.getElementById('mSheet').style.display='';
+  document.getElementById('mSheet').classList.add('open');
   fillSheet();
+}
+function mrowHTML(a){
+  const p = playersById[a.player_id];
+  if (!p) return '';
+  const meta = chartStatusMeta(a);
+  const bits = [p.club, p.yob].filter(Boolean).join(' · ');
+  return `<div class="mrow ${meta[2]}" data-aid="${a.id}">
+    <span class="avatar">${initials(p.name)}</span>
+    <span class="info"><b>${esc(p.name)}</b><small>${esc(bits)} — ${meta[1]}</small></span>
+    <span class="dots" onclick="openCardMenu(event,'${a.id}')">⋮</span>
+  </div>`;
 }
 function fillSheet(){
   const mine = assignments.filter(a=>a.chart_type===chartType && a.position_slot===sheetSlot)
     .sort((a,b)=>(a.sort_order??0)-(b.sort_order??0));
-  document.getElementById('mSheetTitle').textContent = (LABEL[sheetSlot]||sheetSlot) + ' — ' + currentAge;
-  document.getElementById('mSheetCnt').textContent = mine.length + (chartType==='succession'?' / 4':'');
+  document.getElementById('mSheetTitle').textContent = FULLNAME[sheetSlot] || sheetSlot;
+  document.getElementById('mSheetCnt').textContent = currentAge + ' · ' + mine.length + (chartType==='succession'?' / 4':'');
   const el = document.getElementById('mSheetCards');
   el.dataset.slot = sheetSlot;
-  el.innerHTML = mine.map(cardHTML).join('') || '<p class="hint" style="margin:4px 0">No players yet — tap ＋ to add.</p>';
+  el.innerHTML = mine.map(mrowHTML).join('') || '<p style="font-size:14px;color:rgba(29,29,31,.65);margin:8px 2px">No players yet — tap ＋ to add.</p>';
   sortables.push(new Sortable(el,{group:'players',animation:150,ghostClass:'ghost',onEnd:onDrop}));
 }
 function closeSheet(){
   sheetSlot = null;
-  document.getElementById('mSheetBack').style.display='none';
-  document.getElementById('mSheet').style.display='none';
+  document.getElementById('mSheet').classList.remove('open');
 }
 let _rsz = null;
 window.addEventListener('resize', ()=>{ clearTimeout(_rsz); _rsz = setTimeout(render, 200); });
