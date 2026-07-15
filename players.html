@@ -244,11 +244,28 @@
   </div>
 </div>
 
+<!-- Merge modal -->
+<div class="overlay" id="mergeModal">
+  <div class="modal">
+    <h3>Merge duplicate</h3>
+    <div class="sub" id="mgSub" style="font-size:13px;color:var(--muted)"></div>
+    <label>This record will be merged INTO (and deleted):</label>
+    <select id="mgTarget"></select>
+    <p style="font-size:12px;color:var(--muted);line-height:1.5">All scouting reports and chart positions move to the surviving file. Missing details (birth year, position, foot, club) are filled in from this record. This cannot be undone.</p>
+    <div class="err" id="mgErr"></div>
+    <div class="foot">
+      <button class="btn ghost" onclick="closeModal('mergeModal')">Cancel</button>
+      <button class="btn red" onclick="runMerge()">Merge</button>
+    </div>
+  </div>
+</div>
+
 <!-- Scouting reports modal -->
 <div class="overlay" id="reportsModal">
   <div class="modal" style="width:520px">
     <h3 id="rpTitle">Scouting reports</h3>
     <div class="sub" id="rpSub" style="font-size:13px;color:var(--muted);margin-bottom:10px"></div>
+    <div id="rpStats" style="margin-bottom:12px"></div>
     <div id="rpList"></div>
     <div class="foot">
       <a class="btn ghost" href="live.html" style="text-decoration:none;display:inline-block">＋ New live report</a>
@@ -334,6 +351,7 @@ function render(){
           <button onclick="openChartModal('${p.id}','depth')">＋ Add to Depth Chart</button>
           <button onclick="openChartModal('${p.id}','succession')">＋ Add to Succession Plan</button>
           <button onclick="openReports('${p.id}')">View scouting reports</button>
+          <button onclick="openMerge('${p.id}')">Merge duplicate…</button>
           <button onclick="openPlayerModal('${p.id}')">Edit player</button>
           <button class="danger" onclick="deletePlayer('${p.id}')">Delete</button>
         </div>
@@ -432,8 +450,18 @@ async function savePlayer(){
     updated_at: new Date().toISOString()
   };
   if (!editingId){
-    const dup = players.find(p=>p.name.toLowerCase()===name.toLowerCase() && p.yob===row.yob);
-    if (dup && !confirm(`${name} (${row.yob||'?'}) already exists in the database. Add anyway?`)) return;
+    const nn = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const lastName = nn.split(' ').pop();
+    const near = players.filter(p=>{
+      const pn = p.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if (pn===nn && p.yob===row.yob) return true;                     // exact
+      if (row.yob && p.yob===row.yob && pn.split(' ').pop()===lastName) return true;  // same surname + YOB
+      return false;
+    });
+    if (near.length){
+      const list = near.map(p=>`• ${p.name} (${p.yob||'?'} · ${p.club||'no club'})`).join('\n');
+      if (!confirm(`Possible duplicate — one player, one file.\n\nExisting:\n${list}\n\nOK = create a NEW separate player anyway.\nCancel = stop (edit the existing file instead).`)) return;
+    }
     row.source = 'manual';
     const { data, error } = await db.from('academy_players').insert(row).select().single();
     if (error){ pmErr.textContent = error.message; return; }
@@ -602,12 +630,45 @@ const BENCH_NAMES = {gamesense:'Game understanding', technical:'Technical', phys
 const BENCH_STYLE = {below:'background:#fdf0dd;color:#b36b00', at:'background:#e3effd;color:#0059b3', above:'background:#e3f6e8;color:#1e7a3c'};
 const BENCH_LABEL = {below:'Below RB', at:'RB level', above:'Above RB'};
 const OVERALL_LABEL = {A:'A · Priority', B:'B · Monitor', C:'C · Database', D:'D · Pass'};
+function normName(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z ]/g,'').trim(); }
+async function loadScrapedStats(p){
+  // find their kitman stats: match by club, then name+yob inside the roster jsonb
+  try {
+    let clubId = p.map_club_id;
+    if (!clubId && p.club){
+      const c = await db.from('clubs').select('id').ilike('name', p.club).limit(1);
+      if (c.data && c.data.length) clubId = c.data[0].id;
+    }
+    if (!clubId) return null;
+    const sd = await db.from('squad_data').select('squad,season,players').eq('club_id', clubId);
+    if (sd.error || !sd.data) return null;
+    const rows = [];
+    sd.data.forEach(r=>{
+      (r.players||[]).forEach(pl=>{
+        if (normName(pl.name)===normName(p.name) && (!p.yob || !pl.yob || parseInt(pl.yob)===p.yob)){
+          rows.push({squad:r.squad, season:r.season, games:pl.games||0, goals:pl.goals||0, pos:pl.primaryPosition||pl.position||''});
+        }
+      });
+    });
+    return rows.length ? rows : null;
+  } catch(e){ return null; }
+}
 async function openReports(pid){
   const p = players.find(x=>x.id===pid);
   document.getElementById('rpTitle').textContent = p.name;
   document.getElementById('rpSub').textContent = [p.yob, p.club, p.position].filter(Boolean).join(' · ');
   document.getElementById('rpList').innerHTML = '<div class="empty" style="padding:20px">Loading…</div>';
   document.getElementById('reportsModal').classList.add('open');
+  loadScrapedStats(p).then(stats=>{
+    const el = document.getElementById('rpStats');
+    if (!el) return;
+    if (!stats){ el.innerHTML=''; return; }
+    el.innerHTML = '<div style="font-size:12px;font-weight:600;margin:2px 0 6px">Match data (Kitman)</div>' +
+      stats.map(s=>`<div style="display:flex;gap:14px;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--hair)">
+        <span style="font-weight:600;min-width:70px">${esc((s.squad||'').toUpperCase())} ${esc(s.season||'')}</span>
+        <span>${s.games} GP</span><span>${s.goals} G</span>${s.pos?`<span style="color:var(--muted)">${esc(s.pos)}</span>`:''}
+      </div>`).join('');
+  });
   const { data, error } = await db.from('live_reports').select('*').eq('player_id', pid).order('created_at', {ascending:false});
   if (error){ document.getElementById('rpList').innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
   if (!data.length){ document.getElementById('rpList').innerHTML = '<div class="empty" style="padding:24px">No live reports yet for this player.</div>'; return; }
@@ -624,6 +685,68 @@ async function openReports(pid){
       ${r.note?`<div style="font-size:13px;margin-top:8px;color:#3a3a3c">${esc(r.note)}</div>`:''}
     </div>`;
   }).join('');
+}
+
+// ── Merge duplicates: one player, one file ──
+let mergeSourceId = null;
+function openMerge(pid){
+  mergeSourceId = pid;
+  const src = players.find(x=>x.id===pid);
+  document.getElementById('mgSub').textContent = `Merging: ${src.name} (${src.yob||'?'} · ${src.club||'no club'})`;
+  const others = players.filter(x=>x.id!==pid).sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('mgTarget').innerHTML = others.map(x=>
+    `<option value="${x.id}">${esc(x.name)} — ${x.yob||'?'} · ${esc(x.club||'no club')}</option>`).join('');
+  // preselect the most likely duplicate (same surname + yob)
+  const ln = src.name.toLowerCase().split(' ').pop();
+  const likely = others.find(x=>x.yob===src.yob && x.name.toLowerCase().split(' ').pop()===ln);
+  if (likely) document.getElementById('mgTarget').value = likely.id;
+  document.getElementById('mgErr').textContent='';
+  document.getElementById('mergeModal').classList.add('open');
+}
+async function runMerge(){
+  const err = document.getElementById('mgErr');
+  err.textContent='';
+  const targetId = document.getElementById('mgTarget').value;
+  const src = players.find(x=>x.id===mergeSourceId);
+  const dst = players.find(x=>x.id===targetId);
+  if (!src || !dst || src.id===dst.id){ err.textContent='Pick a different player.'; return; }
+  if (!confirm(`Merge "${src.name}" into "${dst.name}"?\n\n"${src.name}" will be deleted.`)) return;
+  if (!await guard()) return;
+  try {
+    // move scouting reports
+    const r1 = await db.from('live_reports').update({player_id: dst.id}).eq('player_id', src.id);
+    if (r1.error) throw r1.error;
+    // move chart assignments; drop ones that would collide (dst already on that chart)
+    const asg = await db.from('depth_assignments').select('id,age_group,chart_type').eq('player_id', src.id);
+    if (asg.error) throw asg.error;
+    for (const a of (asg.data||[])){
+      const upd = await db.from('depth_assignments').update({player_id: dst.id}).eq('id', a.id);
+      if (upd.error){
+        if ((upd.error.message||'').includes('duplicate')) await db.from('depth_assignments').delete().eq('id', a.id);
+        else throw upd.error;
+      }
+    }
+    // fill missing fields on the survivor
+    const fill = {};
+    ['yob','club','position','secondary_position','foot','map_club_id','video_url'].forEach(f=>{
+      if (!dst[f] && src[f]) fill[f] = src[f];
+    });
+    if (src.notes) fill.notes = [dst.notes, src.notes].filter(Boolean).join(' | ');
+    if (Object.keys(fill).length){
+      fill.updated_at = new Date().toISOString();
+      const uf = await db.from('academy_players').update(fill).eq('id', dst.id);
+      if (uf.error) throw uf.error;
+      Object.assign(dst, fill);
+    }
+    // delete the duplicate
+    const del = await db.from('academy_players').delete().eq('id', src.id);
+    if (del.error) throw del.error;
+    players = players.filter(x=>x.id!==src.id);
+    assignments = assignments.map(a=>a.player_id===src.id ? {...a, player_id: dst.id} : a);
+    closeModal('mergeModal');
+    toast(`Merged into ${dst.name} — one file ✓`);
+    render();
+  } catch(e){ err.textContent = e.message || 'Merge failed.'; }
 }
 
 // ── CSV import ──
