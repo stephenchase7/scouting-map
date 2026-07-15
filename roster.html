@@ -66,6 +66,7 @@
   .pcard.grey{border-color:#8e8e93}
   .pcard.blue{border-color:#0071e3}
   .pcard.purple{border-color:#7d3ce8}
+  .pcard.orange{border-color:#ff9500}
   .pcard.ghost{opacity:.4}
   .legend{position:absolute;bottom:14px;left:14px;background:rgba(22,22,23,.82);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#fff;border-radius:14px;padding:12px 16px;font-size:11px;display:flex;flex-direction:column;gap:6px;z-index:5}
   .legend b{font-size:11px;font-weight:600;letter-spacing:.02em}
@@ -77,6 +78,7 @@
   .legend .sw.grey{background:#98989d}
   .legend .sw.blue{background:#0a84ff}
   .legend .sw.purple{background:#bf5af2}
+  .legend .sw.orange{background:#ff9f0a}
   .side{width:280px;flex:none;display:flex;flex-direction:column;gap:18px}
   .box{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
   .box h3{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em}
@@ -163,7 +165,7 @@
 
   <div class="side">
     <div class="box">
-      <h3>Add from database</h3>
+      <h3>Add Players</h3>
       <input class="search" id="searchBox" placeholder="Search all players…" oninput="searchDB(this.value)">
       <div id="searchResults"></div>
       <p class="hint">Searches the player database <b>and every scraped roster on the map</b>. Map players are added to the database automatically when you place them. Missing someone? <a href="players.html">Add them in the Database</a>.</p>
@@ -230,6 +232,7 @@ const CHART_STATUS = {
   depth: [
     ['top',     'Foundation player',        'red'],
     ['squad',   'Squad player',             'yellow'],
+    ['playup',  'Playing up',               'orange'],
     ['bubble',  'On the bubble',            'blue'],
     ['signing', 'Signing in progress',      'purple'],
     ['release', 'Transition / release',     'grey']
@@ -240,10 +243,23 @@ const CHART_STATUS = {
     ['database', 'Database',                 'yellow']
   ]
 };
+function naturalBand(yob){
+  if (!yob) return null;
+  let n = seasonEndYear - yob;
+  if (n === 17) n = 18;
+  return n;
+}
 function chartStatusOf(a){
   const keys = CHART_STATUS[a.chart_type].map(s=>s[0]);
   if (a.chart_status && keys.includes(a.chart_status)) return a.chart_status;
-  if (a.chart_type === 'depth') return 'squad';
+  if (a.chart_type === 'depth'){
+    // auto-detect playing up: natural age band below this chart's band
+    const p = playersById[a.player_id];
+    const nb = p ? naturalBand(p.yob) : null;
+    const chartN = parseInt(String(a.age_group).replace('U',''));
+    if (nb && chartN && nb < chartN) return 'playup';
+    return 'squad';
+  }
   const p = playersById[a.player_id];
   const rs = p ? p.rating_status : 'grey';
   return rs==='red' ? 'rb' : rs==='green' ? 'bring' : 'database';
@@ -412,7 +428,7 @@ function openCardMenu(ev, aid){
   const a = assignments.find(x=>x.id===aid);
   const cur = chartStatusOf(a);
   const m = document.getElementById('cardMenu');
-  const DOT = {red:'#ff453a', green:'#32d74b', yellow:'#ffd60a', grey:'#98989d', blue:'#0a84ff', purple:'#bf5af2'};
+  const DOT = {red:'#ff453a', green:'#32d74b', yellow:'#ffd60a', grey:'#98989d', blue:'#0a84ff', purple:'#bf5af2', orange:'#ff9f0a'};
   m.innerHTML =
     CHART_STATUS[a.chart_type].map(s=>
       `<button onclick="setChartStatus('${aid}','${s[0]}')"><span class="mdot" style="background:${DOT[s[2]]}"></span>${s[1]}${s[0]===cur?'<span class="chk">✓</span>':''}</button>`

@@ -65,7 +65,7 @@
   .rowmenu{position:relative;text-align:right}
   .rowmenu .dots{cursor:pointer;font-weight:700;color:var(--muted);padding:2px 10px;border-radius:980px}
   .rowmenu .dots:hover{background:var(--grey)}
-  .rowmenu .menu{display:none;position:absolute;right:8px;top:28px;background:#fff;border:1px solid var(--hair);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:90;width:210px;overflow:hidden;padding:6px 0}
+  .rowmenu .menu{display:none;position:fixed;background:#fff;border:1px solid var(--hair);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:300;width:210px;overflow:hidden;padding:6px 0}
   .rowmenu.open .menu{display:block}
   .rowmenu .menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 16px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:inherit;letter-spacing:-.01em;color:var(--ink)}
   .rowmenu .menu button:hover{background:var(--grey)}
@@ -344,8 +344,19 @@ function render(){
 function v(id){ const el=document.getElementById(id); return (el.value||'').toLowerCase(); }
 function toggleMenu(el){
   document.querySelectorAll('.rowmenu.open').forEach(m=>{ if(m!==el.parentElement) m.classList.remove('open'); });
-  el.parentElement.classList.toggle('open');
+  const rm = el.parentElement;
+  rm.classList.toggle('open');
+  if (rm.classList.contains('open')){
+    const menu = rm.querySelector('.menu');
+    const r = el.getBoundingClientRect();
+    const w = 210;
+    menu.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+    menu.style.top = (r.bottom + 4) + 'px';
+    const mh = menu.offsetHeight;
+    if (r.bottom + 4 + mh > innerHeight - 8) menu.style.top = Math.max(8, r.top - mh - 4) + 'px';
+  }
 }
+window.addEventListener('scroll', ()=>document.querySelectorAll('.rowmenu.open').forEach(m=>m.classList.remove('open')), true);
 document.addEventListener('click', e=>{ if(!e.target.closest('.rowmenu')) document.querySelectorAll('.rowmenu.open').forEach(m=>m.classList.remove('open')); });
 
 function setStatusFilter(btn){
