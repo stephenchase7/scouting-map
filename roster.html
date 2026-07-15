@@ -283,7 +283,7 @@ let sortables = [];
 // ── Load ──
 async function init(){
   const [p, s] = await Promise.all([
-    db.from('academy_players').select('id,name,yob,club,position,rating_status'),
+    db.from('academy_players').select('id,name,yob,club,position,rating_status,aka'),
     db.from('academy_settings').select('*')
   ]);
   if (p.error){ document.getElementById('slots').innerHTML = `<div class="loading">Could not load: ${esc(p.error.message)}<br><br>Has supabase_academy_schema.sql been run in Supabase?</div>`; return; }
@@ -523,8 +523,7 @@ async function spSearchMap(q){
   let data;
   try { data = await queryMapPlayers(q); }
   catch(e){ return; }
-  const known = new Set(Object.values(playersById).map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
-  spMapHits = (data||[]).filter(m=>!known.has((m.player_name||'').toLowerCase()+'|'+(m.yob||''))).slice(0,5);
+  spMapHits = (data||[]).filter(m=>!knownPlayer(m.player_name, m.yob)).slice(0,5);
   if (!spMapHits.length) return;
   el.innerHTML = '<p class="hint" style="margin:8px 0 4px;font-weight:600;color:var(--ink)">From the map</p>' +
     spMapHits.map((m,i)=>`<div class="pcard grey" onclick="spAddMap(${i})"><span>${esc(m.player_name)}<div class="meta">${esc(m.club_name||'')}${m.yob?' · '+m.yob:''}${m.pos?' · '+esc(m.pos):''}</div></span><span>＋</span></div>`).join('');
@@ -637,8 +636,7 @@ async function searchMapRosters(q){
   try { data = await queryMapPlayers(q); }
   catch(e){ el.innerHTML = '<p class="hint" style="margin:6px 0 0">Map roster search unavailable.</p>'; return; }
   const error = null;
-  const known = new Set(Object.values(playersById).map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
-  mapHits = (data||[]).filter(m=>!known.has((m.player_name||'').toLowerCase()+'|'+(m.yob||''))).slice(0,6);
+  mapHits = (data||[]).filter(m=>!knownPlayer(m.player_name, m.yob)).slice(0,6);
   if (!mapHits.length){ el.innerHTML=''; return; }
   const slotOpts = slotOptions();
   el.innerHTML = '<p class="hint" style="margin:8px 0 4px;font-weight:600;color:var(--ink)">From the map — added to the database automatically</p>' +
@@ -647,10 +645,17 @@ async function searchMapRosters(q){
       <select id="mslot-${i}">${slotOpts}</select><button class="dots" style="border:0;background:var(--blue);color:#fff;border-radius:6px;padding:6px 9px;cursor:pointer;font-weight:700" onclick="addMapFromSearch(${i}, 'mslot-${i}')">＋</button>
     </div>`).join('');
 }
+function normNameR(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z ]/g,'').trim(); }
+function knownPlayer(name, yob){
+  const n = normNameR(name);
+  return Object.values(playersById).find(p=>{
+    const names = [p.name].concat(Array.isArray(p.aka)?p.aka:[]);
+    return names.some(x=>normNameR(x)===n) && (!yob || !p.yob || p.yob===yob);
+  }) || null;
+}
 async function ensureMapPlayer(m){
-  // reuse existing database record if present, else create one (source: map_import)
-  const existing = Object.values(playersById).find(p=>
-    p.name.toLowerCase()===(m.player_name||'').toLowerCase() && (p.yob||null)===(m.yob||null));
+  // reuse existing database record (name or alias match), else create one
+  const existing = knownPlayer(m.player_name, m.yob);
   if (existing) return existing;
   const { data, error } = await db.from('academy_players').insert({
     name: m.player_name, yob: m.yob, club: m.club_name, position: m.pos,

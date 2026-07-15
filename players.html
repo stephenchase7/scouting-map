@@ -123,6 +123,7 @@
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="importCSV(this.files[0])">
       <button class="btn ghost" onclick="openTeamImport()">Import Team from Map</button>
       <button class="btn ghost" onclick="document.getElementById('csvFile').click()">Import CSV</button>
+      <button class="btn ghost" onclick="openRecon()">Link check</button>
       <button class="btn red" onclick="openPlayerModal()">＋ Add Player</button>
     </div>
   </div>
@@ -241,6 +242,23 @@
       <button class="btn ghost" onclick="closeModal('chartModal')">Cancel</button>
       <button class="btn red" onclick="saveAssignment()">Add</button>
     </div>
+  </div>
+</div>
+
+<!-- Link check (reconcile) modal -->
+<div class="overlay" id="reconModal">
+  <div class="modal" style="width:640px">
+    <h3>Link check</h3>
+    <div class="sub" style="font-size:13px;color:var(--muted);line-height:1.5">Matches scraped Kitman rosters against your player files. Linking saves the scraped spelling as an alias on the file — every future scrape, import, and search then recognizes both spellings as one player.</div>
+    <div class="grid2">
+      <div><label>Club</label><select id="rcClub"></select></div>
+      <div><label>Squad</label><select id="rcSquad"><option value="">All squads</option></select></div>
+    </div>
+    <div class="foot" style="justify-content:flex-start;margin-top:14px">
+      <button class="btn red" onclick="runRecon()">Run check</button>
+    </div>
+    <div id="rcResults" style="margin-top:6px"></div>
+    <div class="foot"><button class="btn ghost" onclick="closeModal('reconModal')">Done</button></div>
   </div>
 </div>
 
@@ -569,13 +587,13 @@ async function tiLoadRoster(){
   const {squad, season} = JSON.parse(sqVal);
   const { data, error } = await db.from('squad_data').select('players').eq('club_id', clubId).eq('squad', squad).eq('season', season).single();
   if (error){ document.getElementById('tiErr').textContent = error.message; return; }
-  const existing = new Set(players.map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
+  const isDup = (nm, yb)=>players.some(pl=>nameMatches(pl, nm) && (!yb || !pl.yob || pl.yob===yb));
   tiRosterCache = (data.players||[])
     .filter(p=>p.name && !/^(away team|unknown|tbd|n\/a|player #)/i.test(p.name))
     .map(p=>({
       name: p.name, yob: p.yob?parseInt(p.yob):null,
       position: p.primaryPosition || p.position || null,
-      dup: existing.has(p.name.toLowerCase()+'|'+(p.yob||''))
+      dup: isDup(p.name, p.yob?parseInt(p.yob):null)
     }))
     .sort((a,b)=>a.name.localeCompare(b.name));
   document.getElementById('tiRoster').innerHTML = tiRosterCache.map((p,i)=>`
@@ -631,6 +649,11 @@ const BENCH_STYLE = {below:'background:#fdf0dd;color:#b36b00', at:'background:#e
 const BENCH_LABEL = {below:'Below RB', at:'RB level', above:'Above RB'};
 const OVERALL_LABEL = {A:'A · Priority', B:'B · Monitor', C:'C · Database', D:'D · Pass'};
 function normName(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z ]/g,'').trim(); }
+function nameMatches(p, scrapedName){
+  const n = normName(scrapedName);
+  if (normName(p.name)===n) return true;
+  return Array.isArray(p.aka) && p.aka.some(a=>normName(a)===n);
+}
 async function loadScrapedStats(p){
   // find their kitman stats: match by club, then name+yob inside the roster jsonb
   try {
@@ -645,7 +668,7 @@ async function loadScrapedStats(p){
     const rows = [];
     sd.data.forEach(r=>{
       (r.players||[]).forEach(pl=>{
-        if (normName(pl.name)===normName(p.name) && (!p.yob || !pl.yob || parseInt(pl.yob)===p.yob)){
+        if (nameMatches(p, pl.name) && (!p.yob || !pl.yob || parseInt(pl.yob)===p.yob)){
           rows.push({squad:r.squad, season:r.season, games:pl.games||0, goals:pl.goals||0, pos:pl.primaryPosition||pl.position||''});
         }
       });
@@ -685,6 +708,107 @@ async function openReports(pid){
       ${r.note?`<div style="font-size:13px;margin-top:8px;color:#3a3a3c">${esc(r.note)}</div>`:''}
     </div>`;
   }).join('');
+}
+
+// ── Link check: reconcile scraped rosters to player files (aliases) ──
+let rcScraped = [];
+async function openRecon(){
+  document.getElementById('reconModal').classList.add('open');
+  document.getElementById('rcResults').innerHTML='';
+  if (!tiClubs.length){
+    const { data } = await db.from('clubs').select('id, name').order('name');
+    tiClubs = (data||[]).map(c=>({club_id:c.id, name:c.name}));
+  }
+  document.getElementById('rcClub').innerHTML = tiClubs.map(c=>
+    `<option value="${esc(c.club_id)}" ${c.club_id==='nyrb'?'selected':''}>${esc(c.name)}</option>`).join('');
+}
+async function runRecon(){
+  const clubId = document.getElementById('rcClub').value;
+  const squadF = document.getElementById('rcSquad').value;
+  const out = document.getElementById('rcResults');
+  out.innerHTML = '<div class="empty" style="padding:16px">Checking…</div>';
+  const sd = await db.from('squad_data').select('squad,season,players').eq('club_id', clubId);
+  if (sd.error){ out.innerHTML = `<div class="empty">${esc(sd.error.message)}</div>`; return; }
+  if (!(sd.data||[]).length){ out.innerHTML = '<div class="empty" style="padding:16px">No scraped rosters for this club yet.</div>'; return; }
+  const bySquad = {};
+  (sd.data||[]).forEach(r=>{ if(!bySquad[r.squad] || String(r.season)>String(bySquad[r.squad].season)) bySquad[r.squad]=r; });
+  document.getElementById('rcSquad').innerHTML = '<option value="">All squads</option>' +
+    Object.keys(bySquad).sort().map(s=>`<option ${s===squadF?'selected':''}>${s}</option>`).join('');
+  rcScraped = [];
+  const seen = new Set();
+  Object.values(bySquad).forEach(r=>{
+    if (squadF && r.squad!==squadF) return;
+    (r.players||[]).forEach(pl=>{
+      if (!pl.name || /^(away team|unknown|tbd|n\/a|player #)/i.test(pl.name)) return;
+      const k = normName(pl.name);
+      if (seen.has(k)) return;
+      seen.add(k);
+      rcScraped.push({name: pl.name, yob: pl.yob?parseInt(pl.yob):null, squad: r.squad,
+        pos: pl.primaryPosition||pl.position||null, clubId});
+    });
+  });
+  const club = tiClubs.find(c=>c.club_id===clubId);
+  const unlinked = rcScraped.map((s,i)=>({...s, i}))
+    .filter(s=>!players.some(pl=>nameMatches(pl, s.name) && (!s.yob || !pl.yob || pl.yob===s.yob)));
+  const clubFiles = players.filter(pl=>pl.map_club_id===clubId || (club && normName(pl.club||'')===normName(club.name)));
+  const unmatchedFiles = clubFiles.filter(pl=>!rcScraped.some(s=>nameMatches(pl, s.name)));
+  const candSelect = s=>{
+    const sLast = normName(s.name).split(' ').pop();
+    const cands = players.map(pl=>({pl,
+      score: (pl.yob===s.yob?2:0) + (normName(pl.name).split(' ').pop()===sLast?3:0) + (normName(pl.name)[0]===normName(s.name)[0]?1:0)}))
+      .filter(x=>x.score>=3).sort((a,b)=>b.score-a.score).slice(0,8);
+    if (!cands.length) return '<span class="yob" style="min-width:150px">no likely file</span>';
+    return `<select id="rc-t-${s.i}" style="max-width:220px;border:1px solid var(--line);border-radius:8px;padding:6px;font-size:12px;font-family:inherit">${
+      cands.map(x=>`<option value="${x.pl.id}">${esc(x.pl.name)} (${x.pl.yob||'?'})</option>`).join('')}</select>`;
+  };
+  out.innerHTML =
+    `<div style="font-size:13px;font-weight:600;margin:10px 0 4px">${unlinked.length
+      ? `On Kitman, not linked to any file (${unlinked.length})`
+      : '✓ Every scraped player is linked to a file'}</div>` +
+    unlinked.map(s=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--hair);font-size:13px" id="rc-row-${s.i}">
+      <span style="flex:1"><b>${esc(s.name)}</b> <span class="yob">${s.yob||'?'} · ${esc((s.squad||'').toUpperCase())}${s.pos?' · '+esc(s.pos):''}</span></span>
+      ${candSelect(s)}
+      <button class="btn ghost" style="padding:6px 12px;font-size:12px" onclick="rcLink(${s.i})">Link</button>
+      <button class="btn ghost" style="padding:6px 12px;font-size:12px" onclick="rcAdd(${s.i})">Add new</button>
+    </div>`).join('') +
+    (unmatchedFiles.length ? `<div style="font-size:13px;font-weight:600;margin:16px 0 4px">Your files with no Kitman match (${unmatchedFiles.length}) — spelling differences or no games yet</div>` +
+      unmatchedFiles.map(pl=>`<div style="font-size:12.5px;padding:3px 0;color:var(--muted)">• ${esc(pl.name)} (${pl.yob||'?'})</div>`).join('') : '');
+}
+async function rcLink(i){
+  if (!await guard()) return;
+  const s = rcScraped[i];
+  const sel = document.getElementById('rc-t-'+i);
+  const target = sel ? players.find(pl=>pl.id===sel.value) : null;
+  if (!target){ toast('No file selected — use Add new or create the player first.'); return; }
+  const aka = Array.isArray(target.aka) ? [...target.aka] : [];
+  if (!aka.some(a=>normName(a)===normName(s.name))) aka.push(s.name);
+  const upd = {aka, map_club_id: s.clubId, updated_at: new Date().toISOString()};
+  if (!target.yob && s.yob) upd.yob = s.yob;
+  if (!target.position && s.pos) upd.position = s.pos;
+  const { error } = await db.from('academy_players').update(upd).eq('id', target.id);
+  if (error){
+    toast((error.message||'').includes('aka') ? 'Run supabase_updates.sql first — aka column missing' : 'Failed: '+error.message);
+    return;
+  }
+  Object.assign(target, upd);
+  const row = document.getElementById('rc-row-'+i);
+  if (row){ row.style.opacity=.35; row.querySelectorAll('button').forEach(b=>b.disabled=true); }
+  toast(`"${s.name}" → linked to ${target.name}'s file ✓`);
+}
+async function rcAdd(i){
+  if (!await guard()) return;
+  const s = rcScraped[i];
+  const club = tiClubs.find(c=>c.club_id===s.clubId);
+  const { data, error } = await db.from('academy_players').insert({
+    name: s.name, yob: s.yob, club: club?club.name:s.clubId, position: s.pos,
+    rating_status:'grey', source:'map_import', map_club_id: s.clubId
+  }).select().single();
+  if (error){ toast('Failed: '+error.message); return; }
+  players.push(data); players.sort((a,b)=>a.name.localeCompare(b.name));
+  const row = document.getElementById('rc-row-'+i);
+  if (row){ row.style.opacity=.35; row.querySelectorAll('button').forEach(b=>b.disabled=true); }
+  toast(`${s.name} added as a new file`);
+  render();
 }
 
 // ── Merge duplicates: one player, one file ──

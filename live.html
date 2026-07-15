@@ -348,7 +348,7 @@ function restore(){
 }
 
 async function load(){
-  const { data } = await db.from('academy_players').select('id,name,yob,club,position,rating_status');
+  const { data } = await db.from('academy_players').select('id,name,yob,club,position,rating_status,aka');
   allPlayers = data||[];
 }
 
@@ -391,7 +391,11 @@ async function saveDraft(d){
   const foot = (d.foot||'').toLowerCase() || null;
   const routing = ROUTE_MAP[d.route];
 
-  let player = allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase() && (p.yob||null)===(yob||p.yob||null));
+  const normL = s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  let player = allPlayers.find(p=>{
+    const names = [p.name].concat(Array.isArray(p.aka)?p.aka:[]);
+    return names.some(x=>normL(x)===normL(name)) && (p.yob||null)===(yob||p.yob||null);
+  });
   if (player){
     const upd = { updated_at:new Date().toISOString() };
     const rank = {grey:0, yellow:1, green:2, red:3};
