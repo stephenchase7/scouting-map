@@ -37,10 +37,13 @@
   .seg button{border:0;background:transparent;padding:7px 20px;font-size:13px;font-weight:400;cursor:pointer;color:var(--ink);border-radius:980px;font-family:inherit;transition:all .2s;letter-spacing:-.01em}
   .seg button.active{background:#fff;color:var(--ink);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.12)}
   .hinttext{font-size:12px;color:var(--muted)}
-  .pitch{position:relative;background:linear-gradient(#2f9e44,#2b8a3e);border-radius:14px;height:920px;overflow:hidden}
+  .pitch{position:relative;background:linear-gradient(#3f9a56,#37884b);border-radius:18px;height:920px;overflow:hidden}
   .pitch .line{position:absolute;border:2px solid rgba(255,255,255,.5)}
   .slot{position:absolute;width:160px;transform:translateX(-50%);background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:12px;padding:7px;box-shadow:0 4px 16px rgba(0,0,0,.22)}
-  .slot h4{font-size:12px;font-weight:600;padding:2px 4px 7px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:6px;letter-spacing:-.01em}
+  .slot h4{font-size:12px;font-weight:600;padding:2px 4px 7px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:6px;letter-spacing:-.01em;cursor:grab;user-select:none;touch-action:none}
+  .slot h4:active{cursor:grabbing}
+  .slot:hover{z-index:25}
+  .slot.dragging{z-index:40;opacity:.92;box-shadow:0 16px 40px rgba(0,0,0,.35)}
   .slot h4 .cnt{font-size:10px;color:var(--muted);font-weight:500}
   .slot h4 .slot-add{border:0;background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;font-weight:600;cursor:pointer;line-height:1;margin-left:auto;transition:background .2s}
   .slot h4 .slot-add:hover{background:var(--blue-h)}
@@ -52,7 +55,7 @@
   .slotpop .res .pcard{cursor:pointer;margin-bottom:4px}
   .slot.gap{outline:2px solid #ff3b30}
   .slot .gap-msg{font-size:10px;color:#ff3b30;font-weight:600;padding:4px;text-align:center}
-  .cards{min-height:26px;display:flex;flex-direction:column;gap:4px}
+  .cards{min-height:26px;max-height:198px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin}
   .pcard{border-radius:8px;padding:6px 9px;font-size:12px;font-weight:500;cursor:grab;display:flex;justify-content:space-between;align-items:center;border-left:4px solid;background:#fff;letter-spacing:-.01em}
   .pcard .meta{font-size:10px;color:#555;font-weight:400}
   .pcard .dots{color:#888;cursor:pointer;padding:0 3px;border-radius:4px}
@@ -61,11 +64,19 @@
   .pcard.green{background:var(--c-green);border-color:var(--c-green-b)}
   .pcard.yellow{background:var(--c-yellow);border-color:var(--c-yellow-b)}
   .pcard.grey{background:var(--c-grey);border-color:var(--c-grey-b)}
+  .pcard.blue{background:#e3effd;border-color:#0071e3}
+  .pcard.purple{background:#ede4fd;border-color:#7d3ce8}
   .pcard.ghost{opacity:.4}
   .legend{position:absolute;bottom:14px;left:14px;background:rgba(22,22,23,.82);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#fff;border-radius:14px;padding:12px 16px;font-size:11px;display:flex;flex-direction:column;gap:6px;z-index:5}
   .legend b{font-size:11px;font-weight:600;letter-spacing:.02em}
   .legend .row{display:flex;align-items:center;gap:8px}
   .legend .sw{width:11px;height:11px;border-radius:4px;border-left:3px solid}
+  .legend .sw.red{background:var(--c-red);border-color:var(--c-red-b)}
+  .legend .sw.green{background:var(--c-green);border-color:var(--c-green-b)}
+  .legend .sw.yellow{background:var(--c-yellow);border-color:var(--c-yellow-b)}
+  .legend .sw.grey{background:var(--c-grey);border-color:var(--c-grey-b)}
+  .legend .sw.blue{background:#e3effd;border-color:#0071e3}
+  .legend .sw.purple{background:#ede4fd;border-color:#7d3ce8}
   .side{width:280px;flex:none;display:flex;flex-direction:column;gap:18px}
   .box{background:var(--card);border:none;border-radius:18px;padding:18px;box-shadow:0 2px 14px rgba(0,0,0,.08)}
   .box h3{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.01em}
@@ -100,6 +111,11 @@
   </div>
 </div>
 
+<div style="max-width:1400px;margin:0 auto;padding:36px 22px 0">
+  <h2 id="pageTitle" style="margin:0;font-size:40px;font-weight:600;letter-spacing:-.015em;line-height:1.1">Depth Charts</h2>
+  <p style="margin:6px 0 0;font-size:14px;color:var(--muted);letter-spacing:-.01em">Roster depth and succession planning. Drag player cards between positions, drag a position box anywhere on the pitch.</p>
+</div>
+
 <div class="agebar" id="agebar">
   <button class="age" data-age="U12">U12 <span style="font-size:10px;color:inherit;opacity:.6">9v9</span></button>
   <button class="age active" data-age="U13">U13</button>
@@ -119,6 +135,7 @@
         <button id="segSucc" onclick="setChart('succession')">Succession</button>
       </div>
       <span class="hinttext" id="chartHint">Drag cards between positions — changes save automatically</span>
+      <button onclick="resetLayout()" title="Reset position boxes to the default layout" style="border:1px solid var(--line);background:#fff;border-radius:980px;padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--muted)">Reset layout</button>
       <button id="seasonBtn" onclick="openRollover()" title="Season settings" style="margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:980px;padding:8px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--muted)">Season …</button>
     </div>
     <div class="pitch" id="pitch">
@@ -127,13 +144,7 @@
       <div class="line" style="left:50%;top:50%;width:110px;height:110px;border-radius:50%;transform:translate(-50%,-50%)"></div>
       <div class="line" style="left:30%;top:2%;width:40%;height:11%"></div>
       <div class="line" style="left:30%;bottom:2%;width:40%;height:11%"></div>
-      <div class="legend">
-        <b>Key</b>
-        <div class="row"><span class="sw" style="background:var(--c-red);border-color:var(--c-red-b)"></span> Red Bulls player</div>
-        <div class="row"><span class="sw" style="background:var(--c-green);border-color:var(--c-green-b)"></span> Highly rated / bring in</div>
-        <div class="row"><span class="sw" style="background:var(--c-yellow);border-color:var(--c-yellow-b)"></span> Monitor</div>
-        <div class="row"><span class="sw" style="background:var(--c-grey);border-color:var(--c-grey-b)"></span> Database</div>
-      </div>
+      <div class="legend" id="legendBox"></div>
       <div id="slots"><div class="loading">Loading…</div></div>
     </div>
   </div>
@@ -200,12 +211,42 @@ const FORMATIONS = {
     ['LW',16,20],['ST',50,11],['RW',84,20]]}
 };
 const LABEL = {CM1:'CM', CM2:'CM'};
+
+// Per-chart status: each assignment carries its own status, independent of
+// the database rating. Different vocabulary per chart type.
+const CHART_STATUS = {
+  depth: [
+    ['top',     'Foundation player',        'red'],
+    ['squad',   'Squad player',             'yellow'],
+    ['bubble',  'On the bubble',            'blue'],
+    ['signing', 'Signing in progress',      'purple'],
+    ['release', 'Transition / release',     'grey']
+  ],
+  succession: [
+    ['rb',       'Red Bulls level',          'red'],
+    ['bring',    'Highly rated / bring in',  'green'],
+    ['database', 'Database',                 'yellow']
+  ]
+};
+function chartStatusOf(a){
+  const keys = CHART_STATUS[a.chart_type].map(s=>s[0]);
+  if (a.chart_status && keys.includes(a.chart_status)) return a.chart_status;
+  if (a.chart_type === 'depth') return 'squad';
+  const p = playersById[a.player_id];
+  const rs = p ? p.rating_status : 'grey';
+  return rs==='red' ? 'rb' : rs==='green' ? 'bring' : 'database';
+}
+function chartStatusMeta(a){
+  const key = chartStatusOf(a);
+  return CHART_STATUS[a.chart_type].find(s=>s[0]===key);
+}
 const DEFAULT_FORMATION = age => age==='U12' ? '2141' : '433';
 const AGE_GROUPS = ['U12','U13','U14','U15','U16','U18'];
 
 let currentAge = 'U13';
 let chartType = 'depth';
-let seasonEndYear = 2027; // fallback; real value lives in academy_settings key 'season' 
+let seasonEndYear = 2027; // fallback; real value lives in academy_settings key 'season'
+let slotPos = {};             // 'U14:433' -> {GK:[x,y], ...} saved box positions
 let formations = {};       // age → formation key (from academy_settings)
 let playersById = {};      // id → player
 let assignments = [];      // rows for current age group (both chart types)
@@ -223,6 +264,7 @@ async function init(){
     const m = x.key.match(/^formation:(U\d+)$/);
     if (m){ let val = x.value; if (typeof val === 'string') val = val.replace(/"/g,''); formations[m[1]] = val; }
     if (x.key === 'season' && x.value && x.value.end_year) seasonEndYear = x.value.end_year;
+    if (x.key.startsWith('slotpos:')) slotPos[x.key.slice(8)] = x.value || {};
   });
   updateSeasonBtn();
   AGE_GROUPS.forEach(a=>{ if(!formations[a]||!FORMATIONS[formations[a]]) formations[a]=DEFAULT_FORMATION(a); });
@@ -240,7 +282,8 @@ async function loadAge(){
 function cardHTML(a){
   const p = playersById[a.player_id];
   if (!p) return '';
-  return `<div class="pcard ${p.rating_status}" data-aid="${a.id}">
+  const meta = chartStatusMeta(a);
+  return `<div class="pcard ${meta[2]}" data-aid="${a.id}" title="${meta[1]}">
     <span>${esc(p.name)}<div class="meta">${esc(p.club||'')}${p.yob?' · '+p.yob:''}</div></span>
     <span class="dots" onclick="openCardMenu(event,'${a.id}')">⋮</span></div>`;
 }
@@ -262,7 +305,10 @@ function render(){
   // pitch slots
   const wrap = document.getElementById('slots');
   wrap.innerHTML='';
-  layout.forEach(([slot,x,y])=>{
+  const overrides = slotPos[currentAge+':'+fKey] || {};
+  layout.forEach(([slot,dx,dy])=>{
+    const pos = overrides[slot] || [dx,dy];
+    const x = pos[0], y = pos[1];
     const list = mine.filter(a=>a.position_slot===slot);
     const isGap = chartType==='succession' && list.length<4;
     const div = document.createElement('div');
@@ -271,8 +317,17 @@ function render(){
     div.innerHTML = `<h4>${LABEL[slot]||slot} <span class="cnt">${list.length}${chartType==='succession'?'/4':''}</span><button class="slot-add" title="Add player to ${LABEL[slot]||slot}" onclick="openSlotAdd(event,'${slot}')">＋</button></h4>
       <div class="cards" data-slot="${slot}">${list.map(cardHTML).join('')}</div>
       ${isGap?`<div class="gap-msg">needs ${4-list.length} more</div>`:''}`;
+    div.querySelector('h4').addEventListener('pointerdown', e=>{
+      if (e.target.closest('.slot-add')) return;
+      startSlotDrag(e, div, slot);
+    });
     wrap.appendChild(div);
   });
+
+  // dynamic legend + page title per chart type
+  document.getElementById('legendBox').innerHTML = '<b>Key</b>' +
+    CHART_STATUS[chartType].map(s=>`<div class="row"><span class="sw ${s[2]}"></span> ${s[1]}</div>`).join('');
+  document.getElementById('pageTitle').textContent = chartType==='depth' ? 'Depth Charts' : 'Succession Plan';
 
   // bench (depth only)
   const bench = mine.filter(a=>a.position_slot==='BENCH');
@@ -324,16 +379,16 @@ async function onDrop(e){
 }
 
 // ── Card menu ──
-const ORDER = ['grey','yellow','green','red'];
-const STATUS_LABEL = {red:'Red Bulls', green:'Bring in', yellow:'Monitor', grey:'Database'};
 function openCardMenu(ev, aid){
   ev.stopPropagation();
   const a = assignments.find(x=>x.id===aid);
-  const p = playersById[a.player_id];
+  const cur = chartStatusOf(a);
   const m = document.getElementById('cardMenu');
-  m.innerHTML = `
-    <button onclick="cycleStatus('${aid}')">Status: ${STATUS_LABEL[p.rating_status]} → ${STATUS_LABEL[ORDER[(ORDER.indexOf(p.rating_status)+1)%4]]}</button>
-    <button onclick="copyToOther('${aid}')">Copy to ${a.chart_type==='depth'?'succession plan':'depth chart'}</button>
+  m.innerHTML =
+    CHART_STATUS[a.chart_type].map(s=>
+      `<button onclick="setChartStatus('${aid}','${s[0]}')"><span class="sw ${s[2]}" style="display:inline-block;width:10px;height:10px;border-radius:3px;border-left:3px solid;margin-right:8px;vertical-align:-1px" class="sw"></span>${s[1]}${s[0]===cur?' ✓':''}</button>`
+    ).join('') + `
+    <button style="border-top:1px solid var(--hair)" onclick="copyToOther('${aid}')">Copy to ${a.chart_type==='depth'?'succession plan':'depth chart'}</button>
     <button onclick="location.href='players.html'">View in database</button>
     <button class="danger" onclick="removeFromChart('${aid}')">Remove from this chart</button>`;
   m.style.display='block';
@@ -343,15 +398,14 @@ function openCardMenu(ev, aid){
 }
 document.addEventListener('click', ()=>document.getElementById('cardMenu').style.display='none');
 
-async function cycleStatus(aid){
+async function setChartStatus(aid, val){
   if (!await Auth.requireAuth()) return;
   const a = assignments.find(x=>x.id===aid);
-  const p = playersById[a.player_id];
-  const next = ORDER[(ORDER.indexOf(p.rating_status)+1)%4];
-  const { error } = await db.from('academy_players').update({rating_status: next}).eq('id', p.id);
+  const { error } = await db.from('depth_assignments').update({chart_status: val}).eq('id', aid);
   if (error) return toast('Failed: '+error.message);
-  p.rating_status = next;
-  toast(`${p.name} → ${STATUS_LABEL[next]}`);
+  a.chart_status = val;
+  const meta = CHART_STATUS[a.chart_type].find(s=>s[0]===val);
+  toast(`${playersById[a.player_id].name} → ${meta[1]}`);
   render();
 }
 
@@ -484,6 +538,50 @@ document.querySelectorAll('.age').forEach(b=>b.onclick=async ()=>{
   currentAge = b.dataset.age;
   await loadAge();
 });
+
+// ── Slot box dragging (drag a position box anywhere on the pitch) ──
+let dragState = null;
+function startSlotDrag(e, div, slot){
+  e.preventDefault();
+  const pitchRect = document.getElementById('pitch').getBoundingClientRect();
+  const boxRect = div.getBoundingClientRect();
+  dragState = {div, slot, pitchRect,
+    offX: e.clientX - (boxRect.left + boxRect.width/2),
+    offY: e.clientY - boxRect.top, moved: false};
+  div.classList.add('dragging');
+  const move = ev=>{
+    if (!dragState) return;
+    const x = Math.min(95, Math.max(5, (ev.clientX - dragState.offX - pitchRect.left)/pitchRect.width*100));
+    const y = Math.min(93, Math.max(0.5, (ev.clientY - dragState.offY - pitchRect.top)/pitchRect.height*100));
+    dragState.x = x; dragState.y = y; dragState.moved = true;
+    div.style.left = x+'%'; div.style.top = y+'%';
+  };
+  const up = async ()=>{
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    const ds = dragState; dragState = null;
+    ds.div.classList.remove('dragging');
+    if (!ds.moved) return;
+    const key = currentAge+':'+formations[currentAge];
+    slotPos[key] = slotPos[key] || {};
+    slotPos[key][ds.slot] = [Math.round(ds.x*10)/10, Math.round(ds.y*10)/10];
+    if (!await Auth.requireAuth()){ toast('Sign in to save the layout'); return; }
+    const r = await db.from('academy_settings').upsert({key:'slotpos:'+key, value: slotPos[key], updated_at:new Date().toISOString()});
+    if (r.error) toast('Layout save failed: '+r.error.message);
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+}
+async function resetLayout(){
+  const key = currentAge+':'+formations[currentAge];
+  if (!slotPos[key]) { toast('Layout is already default'); return; }
+  if (!confirm(`Reset ${currentAge} position boxes to the default ${FORMATIONS[formations[currentAge]].name} layout?`)) return;
+  if (!await Auth.requireAuth()) return;
+  delete slotPos[key];
+  await db.from('academy_settings').delete().eq('key','slotpos:'+key);
+  render();
+  toast('Layout reset');
+}
 
 // ── Season rollover ──
 function seasonLabel(endYear){ return `${endYear-1}/${String(endYear).slice(2)}`; }
