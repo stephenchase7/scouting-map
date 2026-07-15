@@ -225,6 +225,17 @@ tr:hover { background:#f5f5f7; transition:background 0.2s ease; }
   text-align:right;
 }
 
+.unrecorded-goals-note {
+  margin-top:16px;
+  font-size:12px;
+  color:#86868b;
+  text-align:left;
+}
+.unrecorded-goals-note .note-label {
+  font-weight:600;
+  color:#ff9500;
+}
+
 .stats-bar {
   background:#ffffff;
   padding:20px 26px;
@@ -1353,10 +1364,6 @@ th{text-transform:none !important;letter-spacing:-.01em !important;color:#6e6e73
         <div class="player-stat-box">
           <div class="value" id="player-detail-goals">0</div>
           <div class="label">Goals</div>
-        </div>
-        <div class="player-stat-box">
-          <div class="value" id="player-detail-ratio">0.00</div>
-          <div class="label">Goals/Game</div>
         </div>
       </div>
 
@@ -2719,6 +2726,17 @@ function renderRoster() {
 
   html += '</tbody></table>';
 
+  // Calculate unrecorded goals per match
+  var unrecordedMatches = calculateUnrecordedGoals(data);
+  if (unrecordedMatches.length > 0) {
+    html += '<div class="unrecorded-goals-note">';
+    html += '<span class="note-label">Unrecorded scorers:</span> ';
+    html += unrecordedMatches.map(function(m) {
+      return 'vs ' + escapeHtml(m.opponent || 'Unknown') + ' (' + m.unrecorded + ')';
+    }).join(', ');
+    html += '</div>';
+  }
+
   if (data.notes) {
     var noteText = data.notes.startsWith('Note:') ? data.notes : 'Note: ' + data.notes;
     html += '<div class="updated" style="color:#0071e3;margin-top:15px;">' + escapeHtml(noteText) + '</div>';
@@ -3161,10 +3179,8 @@ function renderPlayerDetail(player) {
   // Stats
   var games = player.games || 0;
   var goals = player.goals || 0;
-  var ratio = games > 0 ? (goals / games).toFixed(2) : '0.00';
   document.getElementById('player-detail-games').textContent = games;
   document.getElementById('player-detail-goals').textContent = goals;
-  document.getElementById('player-detail-ratio').textContent = ratio;
 
   // Goals by match data
   var goalsByMatch = player.goalsByMatch || [];
@@ -3613,6 +3629,56 @@ function filterPlayers(players, data) {
     }
     return true;
   });
+}
+
+// Calculate matches where team scored but individual scorers weren't recorded
+function calculateUnrecordedGoals(data) {
+  var unrecorded = [];
+  var metadata = data.scrapingMetadata || {};
+  var scrapedMatches = metadata.scrapedMatches || {};
+
+  // Build map of recorded goals by date
+  var recordedByDate = {};
+  (data.players || []).forEach(function(player) {
+    (player.goalsByMatch || []).forEach(function(g) {
+      var date = g.date;
+      if (!recordedByDate[date]) recordedByDate[date] = 0;
+      recordedByDate[date] += (g.goals || 0);
+    });
+  });
+
+  // Compare with match scores
+  Object.keys(scrapedMatches).forEach(function(matchId) {
+    var match = scrapedMatches[matchId];
+    var score = match.score || '';
+    var date = match.date;
+    var opponent = match.opponent || 'Unknown';
+
+    if (score.indexOf('-') !== -1) {
+      var parts = score.split('-');
+      if (parts.length === 2) {
+        var teamGoals = parseInt(parts[1]) || 0; // NYRB goals are second number
+        var recorded = recordedByDate[date] || 0;
+        var diff = teamGoals - recorded;
+        if (diff > 0) {
+          unrecorded.push({
+            date: date,
+            opponent: opponent,
+            teamGoals: teamGoals,
+            recorded: recorded,
+            unrecorded: diff
+          });
+        }
+      }
+    }
+  });
+
+  // Sort by date
+  unrecorded.sort(function(a, b) {
+    return a.date.localeCompare(b.date);
+  });
+
+  return unrecorded;
 }
 
 function calculateFilteredGoals(player) {
