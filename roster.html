@@ -116,25 +116,26 @@
   .mdotpos .cnt{position:absolute;top:-6px;right:-6px;background:#fff;border-radius:50%;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.25)}
   .mdotpos.red{border-color:#cc0000}.mdotpos.yellow{border-color:#e6a700}.mdotpos.green{border-color:#2e9e4f}.mdotpos.blue{border-color:#0071e3}.mdotpos.purple{border-color:#7d3ce8}.mdotpos.grey{border-color:#98989d}
   .mdotpos.gap{border-color:#ff3b30;border-style:dashed}
-  .msheet{display:none;position:fixed;inset:0;z-index:75;background:rgba(120,140,125,.45);-webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);padding:max(20px,env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));overflow:auto}
+  .msheet{display:none;position:fixed;inset:0;z-index:75;background:rgba(245,245,247,.82);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);padding:max(20px,env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));overflow:auto}
   .msheet.open{display:block}
   .msheet-head{display:flex;align-items:center;gap:10px;margin:26px 0 18px}
   .msheet-head h2{margin:0;font-size:30px;font-weight:600;letter-spacing:-.015em;color:var(--ink);flex:1;line-height:1.15}
-  .msheet-head span{font-size:13px;color:rgba(29,29,31,.65);font-weight:500}
-  .msheet-btn{border:0;background:rgba(255,255,255,.75);border-radius:50%;width:36px;height:36px;font-size:17px;cursor:pointer;font-family:inherit;color:var(--ink);flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)}
-  .mrow{display:flex;align-items:center;gap:14px;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.10)}
-  .mrow .avatar{width:52px;height:52px;border-radius:10px;background:#12385e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;flex:none}
+  .msheet-head span{font-size:13px;color:var(--muted);font-weight:500}
+  .msheet-btn{border:1px solid var(--hair);background:#fff;border-radius:50%;width:36px;height:36px;font-size:17px;cursor:pointer;font-family:inherit;color:var(--ink);flex:none;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .mrow{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--hair);border-left:5px solid;border-radius:16px;padding:14px 14px 14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);color:var(--ink)}
+  .mrow .avatar{width:48px;height:48px;border-radius:12px;background:var(--grey);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;flex:none;letter-spacing:0}
   .mrow .info{flex:1;min-width:0}
-  .mrow .info b{display:block;font-size:19px;font-weight:600;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mrow .info small{font-size:13px;color:rgba(29,29,31,.6);font-weight:500}
-  .mrow .dots{color:rgba(29,29,31,.55);font-size:17px;padding:8px 10px;border-radius:980px;cursor:pointer}
-  .mrow.red{background:#fbd9d7}
-  .mrow.yellow{background:#faeebc}
-  .mrow.green{background:#cdeed3}
-  .mrow.blue{background:#bfe0f2}
-  .mrow.purple{background:#e4d5f7}
-  .mrow.orange{background:#ffe3c2}
-  .mrow.grey{background:#e7e9ec}
+  .mrow .info b{display:block;font-size:18px;font-weight:600;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mrow .info small{font-size:13px;color:var(--muted);font-weight:400}
+  .mrow .dots{color:#6e6e73;font-size:17px;padding:8px 10px;border-radius:980px;cursor:pointer}
+  .mrow .dots:active{background:var(--grey)}
+  .mrow.red{border-left-color:#cc0000}
+  .mrow.yellow{border-left-color:#e6a700}
+  .mrow.green{border-left-color:#2e9e4f}
+  .mrow.blue{border-left-color:#0071e3}
+  .mrow.purple{border-left-color:#7d3ce8}
+  .mrow.orange{border-left-color:#ff9500}
+  .mrow.grey{border-left-color:#8e8e93}
   .mrow.ghost{opacity:.4}
   .msec{background:#fff;border:1px solid var(--hair);border-radius:14px;margin-bottom:10px;padding:10px 12px}
   .msec h4{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
