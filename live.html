@@ -83,6 +83,15 @@
   .tabbar .addtab{border:1.5px dashed var(--line);background:transparent;border-radius:14px;width:40px;height:40px;font-size:18px;color:var(--muted);cursor:pointer;font-family:inherit}
   .tabbar .addtab:hover{border-color:var(--blue);color:var(--blue)}
   .tabbar .pchip .dot{width:8px;height:8px;border-radius:50%;background:#ff3b30;flex:none}
+  .needs-banner{display:none;align-items:center;gap:10px;background:#fff;border:1px solid var(--hair);border-left:4px solid #ff3b30;border-radius:14px;padding:11px 16px;margin-bottom:16px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .needs-banner .flag{font-size:15px}
+  .needs-banner b{font-size:13px}
+  .needs-banner .grp{display:flex;align-items:center;gap:5px;font-size:12px}
+  .needs-banner .grp em{font-style:normal;font-weight:600;color:var(--muted);margin-right:2px}
+  .nchip{font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:980px;border:1.5px solid #ff3b30;color:#ff3b30;text-decoration:none}
+  .needs-banner a.viewlink{margin-left:auto;font-size:12px;color:var(--blue);text-decoration:none}
+  .needflag{display:none;align-items:center;gap:8px;margin-top:12px;background:#fff5f4;border:1px solid #ffd4d0;border-radius:12px;padding:10px 14px;font-size:12.5px}
+  .needflag b{color:#ff3b30}
   details.session{margin-bottom:16px}
   details.session summary{list-style:none;cursor:pointer}
   details.session summary::-webkit-details-marker{display:none}
@@ -106,6 +115,8 @@
     <span class="count" id="sessionCount"></span>
   </div>
   <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Every save goes straight into the Player Database.</p>
+
+  <div class="needs-banner" id="needsBanner"></div>
 
   <details class="session card" open id="sessionCard">
     <summary>
@@ -133,6 +144,7 @@
     <div class="pills" id="pPos">
       <button>GK</button><button>RB</button><button>CB</button><button>LB</button><button>CDM</button><button>CM</button><button>LM</button><button>RM</button><button>LW</button><button>RW</button><button>ST</button>
     </div>
+    <div class="needflag" id="needFlag"></div>
     <div class="grid2">
       <div>
         <label>Foot</label>
@@ -220,6 +232,7 @@ document.querySelectorAll('#pPos button, #pFoot button, #pPhys button').forEach(
     b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
     if (!was) b.classList.add('sel');
     onFormChange();
+    if (b.parentElement.id === 'pPos') updateNeedFlag();
   };
 });
 function pickBench(btn){
@@ -476,6 +489,74 @@ function toast(msg){
 }
 
 // init
+// ── Recruitment needs (squad depth + succession pipeline across age groups) ──
+const MERGE_SLOT = {CM1:'CM', CM2:'CM', RCB:'CB', LCB:'CB'};
+const STD_SLOTS = {U12:['GK','CB','CDM','CM','LM','RM','ST'], other:['GK','RB','CB','LB','CDM','CM','LW','ST','RW']};
+window.NEEDS = {};
+async function loadNeeds(){
+  const { data } = await db.from('depth_assignments').select('age_group,chart_type,position_slot');
+  if (!data) return;
+  const bands = {};
+  data.forEach(r=>{
+    if (r.position_slot==='BENCH') return;
+    const b = bands[r.age_group] = bands[r.age_group] || {dep:{}, suc:{}, depTotal:0};
+    const key = MERGE_SLOT[r.position_slot] || r.position_slot;
+    if (r.chart_type==='depth'){ b.dep[key]=(b.dep[key]||0)+1; b.depTotal++; }
+    else { b.suc[key]=(b.suc[key]||0)+1; }
+  });
+  window.NEEDS = {};
+  Object.entries(bands).forEach(([age,b])=>{
+    if (b.depTotal < 5) return; // chart not built out — don't alert
+    const std = STD_SLOTS[age==='U12'?'U12':'other'];
+    const keys = new Set([...Object.keys(b.dep), ...Object.keys(b.suc), ...std]);
+    const crit=[];
+    keys.forEach(k=>{
+      const sq=b.dep[k]||0, pp=b.suc[k]||0;
+      if (sq<=1 && pp<2) crit.push(k);
+    });
+    if (crit.length) window.NEEDS[age] = crit;
+  });
+  renderNeedsBanner();
+  updateNeedFlag();
+}
+function renderNeedsBanner(){
+  const el = document.getElementById('needsBanner');
+  if (!el) return;
+  const ages = Object.keys(window.NEEDS).sort();
+  if (!ages.length){ el.style.display='none'; return; }
+  el.innerHTML = '<span class="flag">⚑</span><b>Positions of need:</b>' +
+    ages.map(a=>`<span class="grp"><em>${a}</em>${window.NEEDS[a].map(p=>`<a class="nchip" href="roster.html">${p}</a>`).join('')}</span>`).join('') +
+    '<a class="viewlink" href="roster.html">View succession plans →</a>';
+  el.style.display='flex';
+}
+let liveSeasonEnd = 2027;
+db.from('academy_settings').select('value').eq('key','season').single().then(r=>{
+  if (r.data && r.data.value && r.data.value.end_year) liveSeasonEnd = r.data.value.end_year;
+});
+function bandForYob(yob){
+  if (!yob) return null;
+  let n = liveSeasonEnd - yob;
+  if (n === 17) n = 18;
+  const b = 'U'+n;
+  return ['U12','U13','U14','U15','U16','U18'].includes(b) ? b : null;
+}
+function updateNeedFlag(){
+  const el = document.getElementById('needFlag');
+  const pos = selVal('pPos');
+  if (!pos || !Object.keys(window.NEEDS||{}).length){ el.style.display='none'; return; }
+  const yobVal = document.getElementById('pYob').value;
+  const band = yobVal ? bandForYob(parseInt(yobVal)) : null;
+  let hit = null;
+  if (band){ if (window.NEEDS[band] && window.NEEDS[band].includes(pos)) hit = band; }
+  else { for (const a of Object.keys(window.NEEDS)) if (window.NEEDS[a].includes(pos)){ hit = a; break; } }
+  if (hit){
+    el.innerHTML = `⚑&nbsp;<span><b>Position of need</b> — ${pos} is CRITICAL on the ${hit} succession plan. Consider routing A or B.</span>`;
+    el.style.display='flex';
+  } else el.style.display='none';
+}
+document.getElementById('pYob').addEventListener('input', updateNeedFlag);
+loadNeeds();
+
 drafts = [newDraft()];
 restore();
 writeForm(drafts[cur]);
