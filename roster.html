@@ -504,8 +504,9 @@ let spMapHits = [];
 async function spSearchMap(q){
   const el = document.getElementById('spMapResults');
   if (!el) return;
-  const { data, error } = await db.rpc('search_map_players', {q});
-  if (error) return;
+  let data;
+  try { data = await queryMapPlayers(q); }
+  catch(e){ return; }
   const known = new Set(Object.values(playersById).map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
   spMapHits = (data||[]).filter(m=>!known.has((m.player_name||'').toLowerCase()+'|'+(m.yob||''))).slice(0,5);
   if (!spMapHits.length) return;
@@ -568,11 +569,58 @@ function searchDB(q){
   '<div id="mapResults"><p class="hint" style="margin:6px 0 0">Searching map rosters…</p></div>';
   _mapTimer = setTimeout(()=>searchMapRosters(q), 350);
 }
+// Map roster search: prefer the server-side RPC; fall back to a client-side
+// index built once from squad_data and cached for 24h.
+let mapIndex = null;
+let mapIndexPromise = null;
+async function getMapIndex(){
+  if (mapIndex) return mapIndex;
+  if (mapIndexPromise) return mapIndexPromise;
+  mapIndexPromise = (async ()=>{
+    try {
+      const cached = JSON.parse(localStorage.getItem('map_player_index_v1')||'null');
+      if (cached && Date.now()-cached.t < 86400000){ mapIndex = cached.idx; return mapIndex; }
+    } catch(e){}
+    const [sd, clubs] = await Promise.all([
+      db.from('squad_data').select('club_id,squad,season,players'),
+      db.from('clubs').select('id,name')
+    ]);
+    if (sd.error) throw sd.error;
+    const cname = {};
+    (clubs.data||[]).forEach(c=>cname[c.id]=c.name);
+    const seen = {};
+    const arr = [];
+    (sd.data||[]).sort((a,b)=>String(b.season||'').localeCompare(String(a.season||''))).forEach(row=>{
+      (row.players||[]).forEach(p=>{
+        if (!p.name || /^(away team|unknown|tbd|n\/a|player #)/i.test(p.name)) return;
+        const key = p.name.toLowerCase()+'|'+row.club_id;
+        if (seen[key]) return;
+        seen[key] = true;
+        arr.push({player_name:p.name, yob:p.yob?parseInt(p.yob):null,
+          pos:p.primaryPosition||p.position||null, club_id:row.club_id,
+          club_name:cname[row.club_id]||row.club_id, squad:row.squad});
+      });
+    });
+    mapIndex = arr;
+    try { localStorage.setItem('map_player_index_v1', JSON.stringify({t:Date.now(), idx:arr})); } catch(e){}
+    return mapIndex;
+  })();
+  return mapIndexPromise;
+}
+async function queryMapPlayers(q){
+  const r = await db.rpc('search_map_players', {q});
+  if (!r.error) return r.data||[];
+  const idx = await getMapIndex();
+  const ql = q.toLowerCase();
+  return idx.filter(m=>m.player_name.toLowerCase().includes(ql)).slice(0,25);
+}
 async function searchMapRosters(q){
   const el = document.getElementById('mapResults');
   if (!el) return;
-  const { data, error } = await db.rpc('search_map_players', {q});
-  if (error){ el.innerHTML = '<p class="hint" style="margin:6px 0 0">Map roster search unavailable.</p>'; return; }
+  let data;
+  try { data = await queryMapPlayers(q); }
+  catch(e){ el.innerHTML = '<p class="hint" style="margin:6px 0 0">Map roster search unavailable.</p>'; return; }
+  const error = null;
   const known = new Set(Object.values(playersById).map(p=>(p.name||'').toLowerCase()+'|'+(p.yob||'')));
   mapHits = (data||[]).filter(m=>!known.has((m.player_name||'').toLowerCase()+'|'+(m.yob||''))).slice(0,6);
   if (!mapHits.length){ el.innerHTML=''; return; }
