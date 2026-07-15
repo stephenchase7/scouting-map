@@ -1318,7 +1318,7 @@ var playersData = {};
           <div class="catchment-indicator catchment-1"></div>
           <label for="catchment-1-check">
             Primary (75mi from Red Bull Arena)
-            <small>Excludes Philadelphia Union 25mi zone</small>
+            <small>Red zone: Union 25mi — U13 &amp; under restricted, U14+ fair game</small>
           </label>
         </div>
         <div class="catchment-toggle" onclick="toggleCatchment(2, this)">
@@ -2274,8 +2274,8 @@ function drawCatchment1Circle() {
       position: {lat: UNION_LAT, lng: UNION_LNG},
       map: map,
       icon: {
-        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="150" height="20"><rect fill="#ff3b30" width="150" height="20" rx="10"/><text x="75" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="600" font-family="sans-serif">Union 25 mi — off limits</text></svg>'),
-        anchor: new google.maps.Point(75, 10)
+        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="190" height="20"><rect fill="#ff3b30" width="190" height="20" rx="10"/><text x="95" y="14" text-anchor="middle" fill="white" font-size="10" font-weight="600" font-family="sans-serif">Union 25 mi — U13 &amp; under no-go</text></svg>'),
+        anchor: new google.maps.Point(95, 10)
       }
     });
   }
@@ -2301,9 +2301,10 @@ function distanceFromUnion(lat, lng) {
 }
 function isInCatchment(club, catchmentNum) {
   if (catchmentNum === 1) {
-    // Within 75 miles of Red Bull Arena AND outside the Union's 25-mile zone
-    return distanceFromArena(club.lat, club.lng) <= 75 &&
-           distanceFromUnion(club.lat, club.lng) > 25;
+    // Within 75 miles of Red Bull Arena. Clubs inside the Union's 25-mile
+    // zone remain visible: only U13-and-under signings are restricted there;
+    // U14+ is fair game. The red circle marks the age-restricted zone.
+    return distanceFromArena(club.lat, club.lng) <= 75;
   } else if (catchmentNum === 2) {
     // Catchment 1 OR in regional states
     return isInCatchment(club, 1) || CATCHMENT_2_STATES.includes(club.state);
