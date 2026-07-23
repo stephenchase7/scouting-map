@@ -121,9 +121,16 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.club-name-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 .club-meta {
   font-size: 12px;
@@ -2502,11 +2509,6 @@ function zoomToCatchmentBounds(catchmentNum) {
 
 // Get catchment badge for club
 function getCatchmentBadge(club) {
-  // DEBUG: Log distance calculation for troubleshooting
-  var dist = distanceFromArena(club.lat, club.lng);
-  if (club.name && (club.name.includes('Player') || club.name.includes('Downtown') || club.name.includes('Cedar'))) {
-    console.log('[C1 Debug]', club.name, 'lat:', club.lat, 'lng:', club.lng, 'dist:', dist.toFixed(1), 'C1?:', dist <= 75);
-  }
   if (isInCatchment(club, 1)) {
     return '<span style="background:#0071e3;color:#fff;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">C1</span>';
   }
@@ -3086,14 +3088,9 @@ function buildList() {
     // Add catchment badge if any catchment is active
     var catchmentBadge = (catchmentState.catchment1 || catchmentState.catchment2 || catchmentState.catchment3) ? getCatchmentBadge(club) : '';
 
-    // DEBUG: Log which clubs get badges
-    if (club.name && (club.name.includes('Player') || club.name.includes('Downtown') || club.name.includes('Cedar'))) {
-      console.log('[Badge Debug]', club.name, 'catchmentState.catchment1:', catchmentState.catchment1, 'badge:', catchmentBadge ? 'YES' : 'NO');
-    }
-
     div.innerHTML = logoHtml +
       '<div class="club-info">' +
-      '<div class="club-name">' + escapeHtml(club.name) + catchmentBadge + '</div>' +
+      '<div class="club-name"><span class="club-name-text">' + escapeHtml(club.name) + '</span>' + catchmentBadge + '</div>' +
       '<div class="club-meta">' + escapeHtml(club.state) + ' &bull; ' + escapeHtml(club.division) + distanceText + '</div>' +
       '</div>' +
       '<div class="tier-badge">' + badge + '</div>';
