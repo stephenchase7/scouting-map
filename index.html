@@ -3086,6 +3086,11 @@ function buildList() {
     // Add catchment badge if any catchment is active
     var catchmentBadge = (catchmentState.catchment1 || catchmentState.catchment2 || catchmentState.catchment3) ? getCatchmentBadge(club) : '';
 
+    // DEBUG: Log which clubs get badges
+    if (club.name && (club.name.includes('Player') || club.name.includes('Downtown') || club.name.includes('Cedar'))) {
+      console.log('[Badge Debug]', club.name, 'catchmentState.catchment1:', catchmentState.catchment1, 'badge:', catchmentBadge ? 'YES' : 'NO');
+    }
+
     div.innerHTML = logoHtml +
       '<div class="club-info">' +
       '<div class="club-name">' + escapeHtml(club.name) + catchmentBadge + '</div>' +
