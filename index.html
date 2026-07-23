@@ -2502,6 +2502,11 @@ function zoomToCatchmentBounds(catchmentNum) {
 
 // Get catchment badge for club
 function getCatchmentBadge(club) {
+  // DEBUG: Log distance calculation for troubleshooting
+  var dist = distanceFromArena(club.lat, club.lng);
+  if (club.name && (club.name.includes('Player') || club.name.includes('Downtown') || club.name.includes('Cedar'))) {
+    console.log('[C1 Debug]', club.name, 'lat:', club.lat, 'lng:', club.lng, 'dist:', dist.toFixed(1), 'C1?:', dist <= 75);
+  }
   if (isInCatchment(club, 1)) {
     return '<span style="background:#0071e3;color:#fff;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:600;margin-left:4px;">C1</span>';
   }
