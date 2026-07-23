@@ -2377,6 +2377,22 @@ function toggleCatchment(num, element) {
     }
   }
 
+  // Auto-collapse Tools and Filters when any catchment is active
+  var anyCatchmentActive = catchmentState.catchment1 || catchmentState.catchment2 ||
+                           catchmentState.catchment3 || catchmentState.openTerritory;
+  if (anyCatchmentActive) {
+    // Collapse Tools
+    var toolsContent = document.getElementById('tools-content');
+    var toolsHeader = toolsContent.previousElementSibling;
+    toolsContent.classList.remove('expanded');
+    toolsHeader.classList.remove('expanded');
+    // Collapse Filters
+    var filtersContent = document.getElementById('filters-content');
+    var filtersHeader = filtersContent.previousElementSibling;
+    filtersContent.classList.remove('expanded');
+    filtersHeader.classList.remove('expanded');
+  }
+
   // Refresh the club list/map markers with filtering
   applyFilters();
 }
@@ -2389,6 +2405,20 @@ function toggleOpenTerritory(element) {
 
   if (element) {
     element.classList.toggle('active', checkbox.checked);
+  }
+
+  // Auto-collapse Tools and Filters when any catchment is active
+  var anyCatchmentActive = catchmentState.catchment1 || catchmentState.catchment2 ||
+                           catchmentState.catchment3 || catchmentState.openTerritory;
+  if (anyCatchmentActive) {
+    var toolsContent = document.getElementById('tools-content');
+    var toolsHeader = toolsContent.previousElementSibling;
+    toolsContent.classList.remove('expanded');
+    toolsHeader.classList.remove('expanded');
+    var filtersContent = document.getElementById('filters-content');
+    var filtersHeader = filtersContent.previousElementSibling;
+    filtersContent.classList.remove('expanded');
+    filtersHeader.classList.remove('expanded');
   }
 
   // Highlight open territory clubs
