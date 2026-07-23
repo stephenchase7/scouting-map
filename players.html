@@ -143,6 +143,7 @@
       <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="importCSV(this.files[0])">
       <button class="btn ghost" onclick="openTeamImport()">Import Team from Map</button>
       <button class="btn ghost" onclick="document.getElementById('csvFile').click()">Import CSV</button>
+      <button class="btn ghost" onclick="exportCSV()">Export CSV</button>
       <button class="btn ghost" onclick="openRecon()">Link check</button>
       <button class="btn red" onclick="openPlayerModal()">＋ Add Player</button>
     </div>
@@ -924,6 +925,37 @@ async function importCSV(file){
   toast(`Imported ${data.length} players`);
   document.getElementById('csvFile').value='';
   render();
+}
+
+// ── Export CSV ──
+function exportCSV(){
+  if (!players.length){ toast('No players to export'); return; }
+  const statusLabel = {red:'Red Bulls', green:'Bring in', yellow:'Monitor', grey:'Database'};
+  const headers = ['name','yob','club','position','foot','status'];
+  const escape = v => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const rows = players.map(p => [
+    escape(p.name),
+    p.yob || '',
+    escape(p.club || ''),
+    p.position || '',
+    p.foot || '',
+    statusLabel[p.rating_status] || p.rating_status || ''
+  ].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'academy_players_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Exported ${players.length} players`);
 }
 
 function toast(msg){
